@@ -5,6 +5,45 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Helper function to detect emotional context and adjust voice parameters
+function analyzeEmotionalContext(text: string): { speed: number; style?: string } {
+  const lowerText = text.toLowerCase()
+  
+  // Base configuration
+  let speed = 0.9
+  
+  // Alegría / felicitaciones - tono más cálido, velocidad ligeramente más rápida
+  const joyKeywords = ['perfecto', 'genial', 'estupendo', 'maravilloso', 'encanta', 'fantástico', '😊', '¡']
+  if (joyKeywords.some(keyword => lowerText.includes(keyword))) {
+    speed = 0.95 // +0.05
+    console.log('Detected joy context, adjusting speed to', speed)
+  }
+  
+  // Urgencia / aviso importante - tono firme, velocidad más rápida
+  const urgencyKeywords = ['atención', 'urgente', 'importante', 'empieza en', 'termina en', 'aviso']
+  if (urgencyKeywords.some(keyword => lowerText.includes(keyword))) {
+    speed = 1.0 // +0.1
+    console.log('Detected urgency context, adjusting speed to', speed)
+  }
+  
+  // Sorpresa - tono más elevado y expresivo
+  const surpriseKeywords = ['sorpresa', '¡qué', 'increíble', 'wow', '¿qué']
+  if (surpriseKeywords.some(keyword => lowerText.includes(keyword))) {
+    speed = 0.95 // +0.05
+    console.log('Detected surprise context, adjusting speed to', speed)
+  }
+  
+  // Calma / información - ritmo más relajado
+  const calmKeywords = ['hola', 'tienes', 'actividades', 'hoy', 'cerca']
+  if (calmKeywords.some(keyword => lowerText.includes(keyword)) && 
+      !urgencyKeywords.some(keyword => lowerText.includes(keyword))) {
+    speed = 0.85 // -0.05
+    console.log('Detected calm/informative context, adjusting speed to', speed)
+  }
+  
+  return { speed }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -25,10 +64,13 @@ serve(async (req) => {
 
     console.log('Generating speech for text:', text.substring(0, 50) + '...')
 
+    // Analyze emotional context and adjust parameters
+    const { speed } = analyzeEmotionalContext(text)
+
     // Generate speech from text using OpenAI TTS
-    // Using "shimmer" voice: warm, feminine voice perfect for the target audience
-    // Using "tts-1-hd" model for higher quality audio
-    // Speed 0.9 for a slower, more natural pace
+    // Using gpt-4o-mini-tts model with verse voice
+    // Verse: Natural, warm Spanish female voice (40-55 years apparent age)
+    // Speed adjusted automatically based on emotional context
     const response = await fetch('https://api.openai.com/v1/audio/speech', {
       method: 'POST',
       headers: {
@@ -36,11 +78,11 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'tts-1-hd',
+        model: 'gpt-4o-mini-tts',
         input: text,
-        voice: 'shimmer',
+        voice: 'verse',
         response_format: 'mp3',
-        speed: 0.9,
+        speed: speed,
       }),
     })
 

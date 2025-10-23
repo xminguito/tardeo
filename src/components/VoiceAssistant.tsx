@@ -22,12 +22,10 @@ const VoiceAssistant = () => {
 
       recognitionRef.current.onresult = async (event: any) => {
         const transcript = event.results[event.results.length - 1][0].transcript;
-        console.log('Escuché:', transcript);
         await handleVoiceInput(transcript);
       };
 
       recognitionRef.current.onerror = (event: any) => {
-        console.error('Error de reconocimiento:', event.error);
         if (event.error === 'no-speech') {
           toast({
             title: "No te escuché",
@@ -48,13 +46,24 @@ const VoiceAssistant = () => {
     messagesRef.current.push({ role: "user", content: text });
 
     try {
+      // Get user session for authenticated request
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "No autorizado",
+          description: "Debes iniciar sesión para usar el asistente",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-chat`,
+        "https://kzcowengsnnuglyrjuto.supabase.co/functions/v1/voice-chat",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            Authorization: `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({ messages: messagesRef.current }),
         }
@@ -99,7 +108,6 @@ const VoiceAssistant = () => {
         speakText(assistantMessage);
       }
     } catch (error: any) {
-      console.error("Error en asistente:", error);
       toast({
         title: "Error",
         description: "No pude procesar tu solicitud",

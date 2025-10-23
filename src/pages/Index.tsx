@@ -61,7 +61,6 @@ const Index = () => {
       if (error) throw error;
       setActivities(data || []);
     } catch (error) {
-      console.error("Error loading activities:", error);
       toast({
         title: "Error",
         description: "No pudimos cargar las actividades",

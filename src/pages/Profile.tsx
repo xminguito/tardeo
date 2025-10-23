@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { User, LogOut, ArrowLeft } from "lucide-react";
+import { z } from "zod";
 
 const Profile = () => {
   const [loading, setLoading] = useState(true);
@@ -58,9 +59,22 @@ const Profile = () => {
     if (data) setInterests(data);
   };
 
+  const profileSchema = z.object({
+    full_name: z.string().trim().min(2, "Nombre muy corto").max(100, "Nombre muy largo"),
+    bio: z.string().trim().max(500, "Biografía muy larga").optional().or(z.literal("")),
+    city: z.string().trim().max(100, "Ciudad muy larga").optional().or(z.literal("")),
+  });
+
   const handleSave = async () => {
     setSaving(true);
     try {
+      // Validate inputs
+      profileSchema.parse({
+        full_name: profile.full_name?.trim() || "",
+        bio: profile.bio?.trim() || "",
+        city: profile.city?.trim() || "",
+      });
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
@@ -93,11 +107,19 @@ const Profile = () => {
         description: "Tus cambios han sido guardados",
       });
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Error de validación",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     } finally {
       setSaving(false);
     }

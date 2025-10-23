@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -34,11 +35,23 @@ const Auth = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  const authSchema = z.object({
+    email: z.string().email("Email inválido").max(255, "Email muy largo"),
+    password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres").max(72, "Contraseña muy larga"),
+    fullName: z.string().trim().min(2, "Nombre muy corto").max(100, "Nombre muy largo").optional(),
+  });
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      // Validate inputs
+      authSchema.parse({
+        email: email.trim(),
+        password,
+        fullName: isLogin ? undefined : fullName.trim(),
+      });
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -65,11 +78,19 @@ const Auth = () => {
         });
       }
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Error de validación",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }

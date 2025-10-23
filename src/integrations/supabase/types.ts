@@ -14,7 +14,80 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      activities: {
+        Row: {
+          category: string
+          created_at: string | null
+          created_by: string | null
+          current_participants: number | null
+          date: string
+          description: string | null
+          id: string
+          image_url: string | null
+          location: string
+          max_participants: number | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          created_by?: string | null
+          current_participants?: number | null
+          date: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          location: string
+          max_participants?: number | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          created_by?: string | null
+          current_participants?: number | null
+          date?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          location?: string
+          max_participants?: number | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      activity_participants: {
+        Row: {
+          activity_id: string | null
+          id: string
+          joined_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          activity_id?: string | null
+          id?: string
+          joined_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          activity_id?: string | null
+          id?: string
+          joined_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_participants_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

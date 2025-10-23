@@ -70,23 +70,20 @@ const VoiceAssistant = () => {
         return;
       }
 
-      const response = await fetch(
-        "https://kzcowengsnnuglyrjuto.supabase.co/functions/v1/voice-chat",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({ messages: messagesRef.current }),
-        }
-      );
+      // Use supabase.functions.invoke for proper authentication handling
+      const { data, error } = await supabase.functions.invoke('voice-chat', {
+        body: { messages: messagesRef.current }
+      });
 
-      if (!response.ok || !response.body) {
+      if (error) {
+        throw error;
+      }
+
+      if (!data || !data.body) {
         throw new Error("Error en la respuesta");
       }
 
-      const reader = response.body.getReader();
+      const reader = data.body.getReader();
       const decoder = new TextDecoder();
       let assistantMessage = "";
       setIsSpeaking(true);

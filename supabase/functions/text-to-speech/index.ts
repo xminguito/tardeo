@@ -67,23 +67,26 @@ serve(async (req) => {
     // Analyze emotional context and adjust parameters
     const { speed } = analyzeEmotionalContext(text)
 
+    // CRITICAL: Always use verse voice (Spanish female voice)
+    // This is explicitly set and NOT dependent on any cache or session
+    const voiceConfig = {
+      model: 'gpt-4o-mini-tts',
+      input: text,
+      voice: 'verse', // FIXED: Always verse - Spanish female voice (40-55 years)
+      response_format: 'mp3',
+      speed: speed, // Dynamic based on emotional analysis
+    }
+
+    console.log('Voice configuration:', JSON.stringify({ voice: voiceConfig.voice, speed: voiceConfig.speed, model: voiceConfig.model }))
+
     // Generate speech from text using OpenAI TTS
-    // Using gpt-4o-mini-tts model with verse voice
-    // Verse: Natural, warm Spanish female voice (40-55 years apparent age)
-    // Speed adjusted automatically based on emotional context
     const response = await fetch('https://api.openai.com/v1/audio/speech', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini-tts',
-        input: text,
-        voice: 'verse',
-        response_format: 'mp3',
-        speed: speed,
-      }),
+      body: JSON.stringify(voiceConfig),
     })
 
     if (!response.ok) {
@@ -110,7 +113,13 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ audioContent: base64Audio }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
       },
     )
   } catch (error) {

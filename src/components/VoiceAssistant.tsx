@@ -132,7 +132,7 @@ const VoiceAssistant = () => {
         const assistantMsg = { role: "assistant", content: assistantMessage };
         messagesRef.current.push(assistantMsg);
         setMessages([...messagesRef.current]);
-        speakText(assistantMessage);
+        await speakText(assistantMessage);
       }
     } catch (error: any) {
       toast({
@@ -140,41 +140,69 @@ const VoiceAssistant = () => {
         description: "No pude procesar tu solicitud",
         variant: "destructive",
       });
-    } finally {
       setIsSpeaking(false);
     }
   };
 
-  const speakText = (text: string) => {
-    if ('speechSynthesis' in window) {
-      // Obtener voces disponibles
-      const voices = window.speechSynthesis.getVoices();
+  const speakText = async (text: string) => {
+    try {
+      setIsSpeaking(true);
       
-      // Buscar una voz femenina en español más natural
-      // Prioridad: voces de Google femeninas > voces mejoradas femeninas > cualquier voz femenina > voces masculinas naturales
-      const femaleVoice = voices.find(voice => 
-        voice.lang.startsWith('es') && 
-        !voice.name.toLowerCase().includes('male') &&
-        (voice.name.includes('Google') || voice.name.includes('Premium') || voice.name.includes('Enhanced'))
-      ) || voices.find(voice => 
-        voice.lang.startsWith('es') && 
-        (voice.name.toLowerCase().includes('female') || voice.name.toLowerCase().includes('mujer'))
-      ) || voices.find(voice => 
-        voice.lang.startsWith('es') && 
-        (voice.name.includes('Google') || voice.name.includes('Premium') || voice.name.includes('Enhanced'))
-      ) || voices.find(voice => voice.lang.startsWith('es'));
+      // Llamar a la edge function de text-to-speech
+      const response = await fetch(
+        "https://kzcowengsnnuglyrjuto.supabase.co/functions/v1/text-to-speech",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey:
+              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6Y293ZW5nc25udWdseXJqdXRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjExNjkyNTAsImV4cCI6MjA3Njc0NTI1MH0.ZwhhjRJgTKl3NQuTXy0unk2DFIDDjxi7T4zLN8EVyi0",
+          },
+          body: JSON.stringify({ text }),
+        }
+      );
 
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'es-ES';
-      utterance.rate = 0.95; // Velocidad ligeramente más lenta para sonar más natural
-      utterance.pitch = 1.05; // Tono suave y amigable
-      utterance.volume = 1.0; // Volumen máximo
-      
-      if (femaleVoice) {
-        utterance.voice = femaleVoice;
+      if (!response.ok) {
+        throw new Error("Error al generar el audio");
       }
 
-      window.speechSynthesis.speak(utterance);
+      const { audioContent } = await response.json();
+      
+      // Convertir base64 a blob y reproducir
+      const binaryString = atob(audioContent);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      
+      const audioBlob = new Blob([bytes], { type: 'audio/mpeg' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      
+      audio.onended = () => {
+        URL.revokeObjectURL(audioUrl);
+        setIsSpeaking(false);
+      };
+      
+      audio.onerror = () => {
+        URL.revokeObjectURL(audioUrl);
+        setIsSpeaking(false);
+        toast({
+          title: "Error de reproducción",
+          description: "No se pudo reproducir el audio",
+          variant: "destructive",
+        });
+      };
+      
+      await audio.play();
+    } catch (error) {
+      console.error('Error en speakText:', error);
+      setIsSpeaking(false);
+      toast({
+        title: "Error",
+        description: "No pude generar la respuesta de voz",
+        variant: "destructive",
+      });
     }
   };
 

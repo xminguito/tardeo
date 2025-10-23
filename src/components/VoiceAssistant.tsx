@@ -150,20 +150,28 @@ const VoiceAssistant = () => {
       // Obtener voces disponibles
       const voices = window.speechSynthesis.getVoices();
       
-      // Buscar una voz en español más natural (preferir voces de Google o mejoradas)
-      const spanishVoice = voices.find(voice => 
+      // Buscar una voz femenina en español más natural
+      // Prioridad: voces de Google femeninas > voces mejoradas femeninas > cualquier voz femenina > voces masculinas naturales
+      const femaleVoice = voices.find(voice => 
+        voice.lang.startsWith('es') && 
+        !voice.name.toLowerCase().includes('male') &&
+        (voice.name.includes('Google') || voice.name.includes('Premium') || voice.name.includes('Enhanced'))
+      ) || voices.find(voice => 
+        voice.lang.startsWith('es') && 
+        (voice.name.toLowerCase().includes('female') || voice.name.toLowerCase().includes('mujer'))
+      ) || voices.find(voice => 
         voice.lang.startsWith('es') && 
         (voice.name.includes('Google') || voice.name.includes('Premium') || voice.name.includes('Enhanced'))
       ) || voices.find(voice => voice.lang.startsWith('es'));
 
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'es-ES';
-      utterance.rate = 1.0; // Velocidad normal
-      utterance.pitch = 1.1; // Tono ligeramente más alto para sonar más amigable
+      utterance.rate = 0.95; // Velocidad ligeramente más lenta para sonar más natural
+      utterance.pitch = 1.05; // Tono suave y amigable
       utterance.volume = 1.0; // Volumen máximo
       
-      if (spanishVoice) {
-        utterance.voice = spanishVoice;
+      if (femaleVoice) {
+        utterance.voice = femaleVoice;
       }
 
       window.speechSynthesis.speak(utterance);

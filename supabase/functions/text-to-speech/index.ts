@@ -67,12 +67,12 @@ serve(async (req) => {
     // Analyze emotional context and adjust parameters
     const { speed } = analyzeEmotionalContext(text)
 
-    // CRITICAL: Always use verse voice (Spanish female voice)
+    // CRITICAL: Always use shimmer voice (Spanish female voice)
     // This is explicitly set and NOT dependent on any cache or session
     const voiceConfig = {
       model: 'gpt-4o-mini-tts',
       input: text,
-      voice: 'verse', // FIXED: Always verse - Spanish female voice (40-55 years)
+      voice: 'shimmer', // FIXED: Always shimmer - Clear feminine Spanish voice
       response_format: 'mp3',
       speed: speed, // Dynamic based on emotional analysis
     }

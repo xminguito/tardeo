@@ -57,7 +57,9 @@ const VoiceAssistant = () => {
       }
 
       console.log('Iniciando conversación con ElevenLabs...');
-      await conversation.startSession({ url: data.signedUrl });
+      await conversation.startSession({ 
+        signedUrl: data.signedUrl 
+      });
     } catch (error) {
       console.error('Error al iniciar conversación:', error);
       setIsConnecting(false);

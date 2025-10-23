@@ -1,12 +1,23 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Mic, MicOff } from "lucide-react";
+import { Mic, MicOff, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const VoiceAssistant = () => {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [showConversation, setShowConversation] = useState(false);
+  const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([]);
   const { toast } = useToast();
   const recognitionRef = useRef<any>(null);
   const messagesRef = useRef<any[]>([]);
@@ -43,7 +54,9 @@ const VoiceAssistant = () => {
   }, []);
 
   const handleVoiceInput = async (text: string) => {
-    messagesRef.current.push({ role: "user", content: text });
+    const userMessage = { role: "user", content: text };
+    messagesRef.current.push(userMessage);
+    setMessages([...messagesRef.current]);
 
     try {
       // Get user session for authenticated request
@@ -104,7 +117,9 @@ const VoiceAssistant = () => {
       }
 
       if (assistantMessage) {
-        messagesRef.current.push({ role: "assistant", content: assistantMessage });
+        const assistantMsg = { role: "assistant", content: assistantMessage };
+        messagesRef.current.push(assistantMsg);
+        setMessages([...messagesRef.current]);
         speakText(assistantMessage);
       }
     } catch (error: any) {
@@ -120,9 +135,25 @@ const VoiceAssistant = () => {
 
   const speakText = (text: string) => {
     if ('speechSynthesis' in window) {
+      // Obtener voces disponibles
+      const voices = window.speechSynthesis.getVoices();
+      
+      // Buscar una voz en español más natural (preferir voces de Google o mejoradas)
+      const spanishVoice = voices.find(voice => 
+        voice.lang.startsWith('es') && 
+        (voice.name.includes('Google') || voice.name.includes('Premium') || voice.name.includes('Enhanced'))
+      ) || voices.find(voice => voice.lang.startsWith('es'));
+
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'es-ES';
-      utterance.rate = 0.9;
+      utterance.rate = 1.0; // Velocidad normal
+      utterance.pitch = 1.1; // Tono ligeramente más alto para sonar más amigable
+      utterance.volume = 1.0; // Volumen máximo
+      
+      if (spanishVoice) {
+        utterance.voice = spanishVoice;
+      }
+
       window.speechSynthesis.speak(utterance);
     }
   };
@@ -155,7 +186,52 @@ const VoiceAssistant = () => {
   };
 
   return (
-    <div className="fixed bottom-8 right-8 z-50">
+    <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-4">
+      <Dialog open={showConversation} onOpenChange={setShowConversation}>
+        <DialogTrigger asChild>
+          <Button
+            size="lg"
+            variant="secondary"
+            className="rounded-full w-16 h-16 shadow-xl"
+          >
+            <MessageSquare className="h-8 w-8" />
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>Conversación con el Asistente</DialogTitle>
+            <DialogDescription>
+              Historial de tu conversación de voz
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="h-[500px] pr-4">
+            <div className="space-y-4">
+              {messages.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">
+                  Aún no hay mensajes. Activa el asistente para comenzar 🎤
+                </p>
+              ) : (
+                messages.map((msg, idx) => (
+                  <div
+                    key={idx}
+                    className={`p-4 rounded-lg ${
+                      msg.role === "user"
+                        ? "bg-primary/10 ml-8"
+                        : "bg-secondary mr-8"
+                    }`}
+                  >
+                    <p className="font-semibold mb-1">
+                      {msg.role === "user" ? "Tú" : "Asistente"}
+                    </p>
+                    <p className="text-sm">{msg.content}</p>
+                  </div>
+                ))
+              )}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
       <Button
         onClick={toggleListening}
         size="lg"

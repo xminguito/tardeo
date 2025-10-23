@@ -106,7 +106,7 @@ const Index = () => {
         <div className="container mx-auto">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-5xl font-bold mb-2">ConectaMás</h1>
+              <h1 className="text-5xl font-bold mb-2">Tardeo</h1>
               <p className="text-xl opacity-90">Encuentra actividades y amigos con tus mismos intereses</p>
             </div>
             <div className="flex gap-3">

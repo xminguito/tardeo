@@ -132,7 +132,7 @@ const VoiceAssistant = () => {
         const assistantMsg = { role: "assistant", content: assistantMessage };
         messagesRef.current.push(assistantMsg);
         setMessages([...messagesRef.current]);
-        // No llamamos a speakText - el audio ya viene del Edge Function
+        speakText(assistantMessage);
       }
     } catch (error: any) {
       toast({

@@ -70,20 +70,35 @@ const VoiceAssistant = () => {
         return;
       }
 
-      // Use supabase.functions.invoke for proper authentication handling
-      const { data, error } = await supabase.functions.invoke('voice-chat', {
-        body: { messages: messagesRef.current }
-      });
+      // Llamada directa al Edge Function con JWT del usuario y apikey pública
+      const response = await fetch(
+        "https://kzcowengsnnuglyrjuto.supabase.co/functions/v1/voice-chat",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+            apikey:
+              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6Y293ZW5nc25udWdseXJqdXRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjExNjkyNTAsImV4cCI6MjA3Njc0NTI1MH0.ZwhhjRJgTKl3NQuTXy0unk2DFIDDjxi7T4zLN8EVyi0",
+          },
+          body: JSON.stringify({ messages: messagesRef.current }),
+        }
+      );
 
-      if (error) {
-        throw error;
+      if (response.status === 401) {
+        toast({
+          title: "Sesión expirada",
+          description: "Vuelve a iniciar sesión para usar el asistente",
+          variant: "destructive",
+        });
+        return;
       }
 
-      if (!data || !data.body) {
+      if (!response.ok || !response.body) {
         throw new Error("Error en la respuesta");
       }
 
-      const reader = data.body.getReader();
+      const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let assistantMessage = "";
       setIsSpeaking(true);

@@ -33,6 +33,11 @@ const VoiceAssistant = () => {
 
       recognitionRef.current.onresult = async (event: any) => {
         const transcript = event.results[event.results.length - 1][0].transcript;
+        // Detener el micrófono automáticamente después de capturar la voz
+        if (recognitionRef.current) {
+          recognitionRef.current.stop();
+          setIsListening(false);
+        }
         await handleVoiceInput(transcript);
       };
 
@@ -127,7 +132,7 @@ const VoiceAssistant = () => {
         const assistantMsg = { role: "assistant", content: assistantMessage };
         messagesRef.current.push(assistantMsg);
         setMessages([...messagesRef.current]);
-        speakText(assistantMessage);
+        // No llamamos a speakText - el audio ya viene del Edge Function
       }
     } catch (error: any) {
       toast({

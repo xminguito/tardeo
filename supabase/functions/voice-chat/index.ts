@@ -9,33 +9,33 @@ const corsHeaders = {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  // Verify user authentication
+  try {
+  // Optional user authentication
   const authHeader = req.headers.get('Authorization');
-  if (!authHeader) {
-    return new Response(JSON.stringify({ error: 'No autorizado' }), {
-      status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+  let user: any = null;
+  if (authHeader) {
+    try {
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+        { global: { headers: { Authorization: authHeader } } }
+      );
+      const { data, error: authError } = await supabaseClient.auth.getUser();
+      if (authError) {
+        console.error('Auth verification failed:', authError);
+      } else {
+        user = data.user;
+      }
+    } catch (e) {
+      console.error('Auth check error:', e);
+    }
   }
 
-  try {
-    // Validate user session
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
-    );
-    
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
-    if (authError || !user) {
-      console.error('Auth verification failed:', authError);
-      return new Response(JSON.stringify({ error: 'No autorizado' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
+  if (user) {
     console.log('Authenticated user:', user.id);
+  } else {
+    console.log('Proceeding as guest (no auth)');
+  }
     
     const { messages } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");

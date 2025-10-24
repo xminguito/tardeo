@@ -47,7 +47,11 @@ export function ActivityRatings({ activityId }: ActivityRatingsProps) {
     return <div className="text-center py-8">{t('activities.ratings.loading')}</div>;
   }
 
-  const { ratings, stats } = data!;
+  if (!data) {
+    return <div className="text-center py-8">Error cargando valoraciones</div>;
+  }
+
+  const { ratings, stats } = data;
 
   return (
     <div className="space-y-6">

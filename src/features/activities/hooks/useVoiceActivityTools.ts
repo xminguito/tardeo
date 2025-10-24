@@ -339,7 +339,7 @@ export function useVoiceActivityTools(
           .from('activity_ratings')
           .select(`
             *,
-            profiles!activity_ratings_user_id_fkey (
+            profiles!user_id (
               full_name
             )
           `)

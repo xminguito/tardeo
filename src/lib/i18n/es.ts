@@ -41,6 +41,8 @@ export default {
       loading: 'Cargando valoraciones...',
       reviews: 'Opiniones',
       anonymous: 'Usuario anónimo',
+      loginRequired: 'Debes identificarte para dejar valoraciones',
+      loginButton: 'Iniciar sesión',
     },
     voice: {
       connected: 'Asistente conectado',

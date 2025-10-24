@@ -41,6 +41,8 @@ export default {
       loading: 'Carregant valoracions...',
       reviews: 'Opinions',
       anonymous: 'Usuari anònim',
+      loginRequired: 'Has d\'identificar-te per deixar valoracions',
+      loginButton: 'Iniciar sessió',
     },
     voice: {
       connected: 'Assistant connectat',

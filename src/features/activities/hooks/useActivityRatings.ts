@@ -53,7 +53,7 @@ export const useSubmitRating = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        throw new Error('Usuario no autenticado');
+        throw new Error('NOT_AUTHENTICATED');
       }
 
       const { data, error } = await supabase
@@ -80,11 +80,20 @@ export const useSubmitRating = () => {
     },
     onError: (error) => {
       console.error('Error submitting rating:', error);
-      toast({
-        title: 'Error',
-        description: 'No se pudo enviar tu valoración. Inténtalo de nuevo.',
-        variant: 'destructive',
-      });
+      
+      if (error.message === 'NOT_AUTHENTICATED') {
+        toast({
+          title: 'Inicia sesión',
+          description: 'Debes identificarte para dejar valoraciones.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'No se pudo enviar tu valoración. Inténtalo de nuevo.',
+          variant: 'destructive',
+        });
+      }
     },
   });
 };

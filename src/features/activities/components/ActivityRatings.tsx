@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Star } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,6 +16,7 @@ interface ActivityRatingsProps {
 
 export function ActivityRatings({ activityId }: ActivityRatingsProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { data, isLoading } = useActivityRatings(activityId);
   const { data: userRating } = useUserRating(activityId);
   const submitRating = useSubmitRating();
@@ -22,6 +25,16 @@ export function ActivityRatings({ activityId }: ActivityRatingsProps) {
   const [selectedRating, setSelectedRating] = useState(userRating?.rating || 0);
   const [comment, setComment] = useState(userRating?.comment || '');
   const [hoveredRating, setHoveredRating] = useState(0);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setIsAuthenticated(!!user);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,7 +107,16 @@ export function ActivityRatings({ activityId }: ActivityRatingsProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {!isEditing && userRating ? (
+          {!isAuthenticated ? (
+            <div className="text-center py-6 space-y-4">
+              <p className="text-muted-foreground">
+                {t('activities.ratings.loginRequired')}
+              </p>
+              <Button onClick={() => navigate('/auth')}>
+                {t('activities.ratings.loginButton')}
+              </Button>
+            </div>
+          ) : !isEditing && userRating ? (
             <div className="space-y-4">
               <div className="flex gap-1" role="img" aria-label={`Tu valoración: ${userRating.rating} de 5 estrellas`}>
                 {[1, 2, 3, 4, 5].map((star) => (

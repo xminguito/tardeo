@@ -41,6 +41,8 @@ export default {
       loading: 'Loading reviews...',
       reviews: 'Reviews',
       anonymous: 'Anonymous user',
+      loginRequired: 'You must sign in to leave reviews',
+      loginButton: 'Sign in',
     },
     voice: {
       connected: 'Assistant connected',

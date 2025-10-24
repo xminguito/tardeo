@@ -1,0 +1,44 @@
+export interface SearchActivitiesParams {
+  category?: string;
+  location?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  maxCost?: number;
+  availableOnly?: boolean;
+}
+
+export interface ReserveActivityParams {
+  activityId: string;
+  activityTitle: string;
+}
+
+export interface GetActivityDetailsParams {
+  activityId: string;
+}
+
+export interface SuggestActivitiesParams {
+  userPreferences?: string;
+  budget?: number;
+  date?: string;
+}
+
+export interface SetFilterParams {
+  filterType: 'category' | 'location' | 'cost' | 'date' | 'availability';
+  value: string | number | boolean;
+}
+
+export interface VoiceToolResponse {
+  success: boolean;
+  message: string;
+  data?: any;
+}
+
+export type VoiceToolsMap = {
+  searchActivities: (params: SearchActivitiesParams) => Promise<string>;
+  reserveActivity: (params: ReserveActivityParams) => Promise<string>;
+  getActivityDetails: (params: GetActivityDetailsParams) => Promise<string>;
+  suggestActivities: (params: SuggestActivitiesParams) => Promise<string>;
+  setFilter: (params: SetFilterParams) => Promise<string>;
+  clearFilters: () => Promise<string>;
+  getMyReservations: () => Promise<string>;
+};

@@ -17,6 +17,7 @@ export type Database = {
       activities: {
         Row: {
           category: string
+          cost: number
           created_at: string | null
           created_by: string | null
           current_participants: number | null
@@ -26,11 +27,13 @@ export type Database = {
           image_url: string | null
           location: string
           max_participants: number | null
+          time: string
           title: string
           updated_at: string | null
         }
         Insert: {
           category: string
+          cost?: number
           created_at?: string | null
           created_by?: string | null
           current_participants?: number | null
@@ -40,11 +43,13 @@ export type Database = {
           image_url?: string | null
           location: string
           max_participants?: number | null
+          time?: string
           title: string
           updated_at?: string | null
         }
         Update: {
           category?: string
+          cost?: number
           created_at?: string | null
           created_by?: string | null
           current_participants?: number | null
@@ -54,6 +59,7 @@ export type Database = {
           image_url?: string | null
           location?: string
           max_participants?: number | null
+          time?: string
           title?: string
           updated_at?: string | null
         }

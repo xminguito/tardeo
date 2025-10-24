@@ -7,6 +7,8 @@ import ActivityCard from "@/components/ActivityCard";
 import VoiceAssistant from "@/components/VoiceAssistant";
 import { User, Bell, Plus, LogIn } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useVoiceActivityTools } from "@/features/activities/hooks/useVoiceActivityTools";
+import type { ActivityFilters } from "@/features/activities/types/activity.types";
 
 interface Activity {
   id: string;
@@ -15,9 +17,14 @@ interface Activity {
   category: string;
   location: string;
   date: string;
+  time: string;
+  cost: number;
   current_participants: number;
   max_participants: number;
   image_url?: string;
+  created_by?: string | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 const Index = () => {
@@ -25,8 +32,10 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [filters, setFilters] = useState<ActivityFilters>({});
   const navigate = useNavigate();
   const { toast } = useToast();
+  const voiceTools = useVoiceActivityTools(setFilters, filters);
 
   useEffect(() => {
     checkUser();
@@ -186,16 +195,12 @@ const Index = () => {
               {activities.map((activity) => (
                 <ActivityCard
                   key={activity.id}
-                  id={activity.id}
-                  title={activity.title}
-                  description={activity.description}
-                  category={activity.category}
-                  location={activity.location}
-                  date={activity.date}
-                  currentParticipants={activity.current_participants}
-                  maxParticipants={activity.max_participants}
-                  imageUrl={activity.image_url}
-                  onJoin={handleJoinActivity}
+                  activity={{
+                    ...activity,
+                    isUserParticipating: false,
+                    availableSlots: activity.max_participants - activity.current_participants,
+                  }}
+                  onReserve={handleJoinActivity}
                 />
               ))}
             </div>
@@ -203,7 +208,7 @@ const Index = () => {
         </section>
       </main>
 
-      <VoiceAssistant />
+      <VoiceAssistant clientTools={voiceTools} />
     </div>
   );
 };

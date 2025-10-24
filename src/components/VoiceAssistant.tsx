@@ -4,12 +4,26 @@ import { Mic, MicOff, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useConversation } from "@11labs/react";
+import type { VoiceToolsMap } from '@/features/activities/types/voiceTools.types';
 
-const VoiceAssistant = () => {
+interface VoiceAssistantProps {
+  clientTools: VoiceToolsMap;
+}
+
+const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
   const [isConnecting, setIsConnecting] = useState(false);
   const { toast } = useToast();
   
   const conversation = useConversation({
+    clientTools: {
+      searchActivities: clientTools.searchActivities,
+      reserveActivity: clientTools.reserveActivity,
+      getActivityDetails: clientTools.getActivityDetails,
+      suggestActivities: clientTools.suggestActivities,
+      setFilter: clientTools.setFilter,
+      clearFilters: clientTools.clearFilters,
+      getMyReservations: clientTools.getMyReservations,
+    },
     onConnect: () => {
       setIsConnecting(false);
       toast({

@@ -9,6 +9,7 @@ import type {
   ReserveActivityParams,
   GetActivityDetailsParams,
   SuggestActivitiesParams,
+  NavigateToActivitiesParams,
   SetFilterParams,
   SubmitRatingParams,
   GetRatingsParams,
@@ -17,7 +18,8 @@ import type { ActivityFilters } from '../types/activity.types';
 
 export function useVoiceActivityTools(
   onFiltersChange: (filters: ActivityFilters) => void,
-  currentFilters: ActivityFilters
+  currentFilters: ActivityFilters,
+  navigate?: (path: string) => void
 ): VoiceToolsMap {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -377,11 +379,46 @@ export function useVoiceActivityTools(
     []
   );
 
+  const navigateToActivities = useCallback(
+    async (params: NavigateToActivitiesParams): Promise<string> => {
+      try {
+        console.log('[Voice Tool] navigateToActivities called with:', params);
+        
+        if (!navigate) {
+          return 'La función de navegación no está disponible en este momento.';
+        }
+
+        // Apply category filter if provided
+        if (params.category) {
+          const filters: ActivityFilters = {
+            category: params.category,
+          };
+          onFiltersChange(filters);
+        } else {
+          // Clear filters to show all activities
+          onFiltersChange({});
+        }
+
+        // Navigate to activities calendar page
+        navigate('/actividades');
+
+        return params.category 
+          ? `Te he llevado a la sección de actividades, mostrando solo actividades de ${params.category}.`
+          : 'Te he llevado a la sección de actividades donde puedes ver todas las opciones disponibles.';
+      } catch (error) {
+        console.error('[Voice Tool] Error in navigateToActivities:', error);
+        return 'No pude navegar a la sección de actividades.';
+      }
+    },
+    [navigate, onFiltersChange]
+  );
+
   return {
     searchActivities,
     reserveActivity,
     getActivityDetails,
     suggestActivities,
+    navigateToActivities,
     setFilter,
     clearFilters,
     getMyReservations,

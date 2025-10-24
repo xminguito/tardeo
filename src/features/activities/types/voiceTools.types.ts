@@ -36,6 +36,10 @@ export interface GetRatingsParams {
   activityTitle: string;
 }
 
+export interface NavigateToActivitiesParams {
+  category?: string;
+}
+
 export interface SetFilterParams {
   filterType: 'category' | 'location' | 'cost' | 'date' | 'availability';
   value: string | number | boolean;
@@ -52,6 +56,7 @@ export type VoiceToolsMap = {
   reserveActivity: (params: ReserveActivityParams) => Promise<string>;
   getActivityDetails: (params: GetActivityDetailsParams) => Promise<string>;
   suggestActivities: (params: SuggestActivitiesParams) => Promise<string>;
+  navigateToActivities: (params: NavigateToActivitiesParams) => Promise<string>;
   setFilter: (params: SetFilterParams) => Promise<string>;
   clearFilters: () => Promise<string>;
   getMyReservations: () => Promise<string>;

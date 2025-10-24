@@ -39,7 +39,7 @@ export default function ActivityDetail() {
   const [isParticipating, setIsParticipating] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [filters, setFilters] = useState<ActivityFilters>({});
-  const voiceTools = useVoiceActivityTools(setFilters, filters);
+  const voiceTools = useVoiceActivityTools(setFilters, filters, navigate);
 
   useEffect(() => {
     loadActivity();

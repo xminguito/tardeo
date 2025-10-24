@@ -35,7 +35,7 @@ const Index = () => {
   const [filters, setFilters] = useState<ActivityFilters>({});
   const navigate = useNavigate();
   const { toast } = useToast();
-  const voiceTools = useVoiceActivityTools(setFilters, filters);
+  const voiceTools = useVoiceActivityTools(setFilters, filters, navigate);
 
   useEffect(() => {
     checkUser();

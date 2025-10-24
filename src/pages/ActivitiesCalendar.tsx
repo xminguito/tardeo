@@ -22,7 +22,7 @@ export default function ActivitiesCalendarPage() {
   const [userId, setUserId] = useState<string | null>(null);
 
   const { data: activities, isLoading, error } = useActivities(filters);
-  const voiceTools = useVoiceActivityTools(setFilters, filters);
+  const voiceTools = useVoiceActivityTools(setFilters, filters, navigate);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {

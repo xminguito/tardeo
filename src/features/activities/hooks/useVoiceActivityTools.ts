@@ -10,6 +10,8 @@ import type {
   GetActivityDetailsParams,
   SuggestActivitiesParams,
   SetFilterParams,
+  SubmitRatingParams,
+  GetRatingsParams,
 } from '../types/voiceTools.types';
 import type { ActivityFilters } from '../types/activity.types';
 
@@ -297,6 +299,84 @@ export function useVoiceActivityTools(
     }
   }, []);
 
+  const submitRating = useCallback(
+    async (params: SubmitRatingParams): Promise<string> => {
+      try {
+        console.log('[Voice Tool] submitRating called with:', params);
+
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          return 'Necesitas iniciar sesión para dejar una valoración.';
+        }
+
+        const { error } = await supabase
+          .from('activity_ratings')
+          .upsert({
+            activity_id: params.activityId,
+            user_id: user.id,
+            rating: params.rating,
+            comment: params.comment || null,
+          });
+
+        if (error) throw error;
+
+        return `He registrado tu valoración de ${params.rating} estrellas para "${params.activityTitle}". ${params.comment ? 'Tu comentario ha sido guardado.' : ''}`;
+      } catch (error) {
+        console.error('[Voice Tool] Error in submitRating:', error);
+        return 'No pude guardar tu valoración. Inténtalo de nuevo.';
+      }
+    },
+    []
+  );
+
+  const getRatings = useCallback(
+    async (params: GetRatingsParams): Promise<string> => {
+      try {
+        console.log('[Voice Tool] getRatings called with:', params);
+
+        const { data: ratings, error } = await supabase
+          .from('activity_ratings')
+          .select(`
+            *,
+            profiles!activity_ratings_user_id_fkey (
+              full_name
+            )
+          `)
+          .eq('activity_id', params.activityId)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (!ratings || ratings.length === 0) {
+          return `La actividad "${params.activityTitle}" aún no tiene valoraciones.`;
+        }
+
+        const avgRating = (ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length).toFixed(1);
+        
+        const recentComments = ratings
+          .filter((r: any) => r.comment)
+          .slice(0, 3)
+          .map((r: any) => {
+            const name = r.profiles?.full_name || 'Usuario anónimo';
+            return `${name} (${r.rating} estrellas): "${r.comment}"`;
+          });
+
+        let response = `La actividad "${params.activityTitle}" tiene una valoración promedio de ${avgRating} estrellas con ${ratings.length} opiniones.`;
+        
+        if (recentComments.length > 0) {
+          response += ` Los comentarios más recientes son: ${recentComments.join('. ')}`;
+        }
+
+        return response;
+      } catch (error) {
+        console.error('[Voice Tool] Error in getRatings:', error);
+        return 'No pude obtener las valoraciones en este momento.';
+      }
+    },
+    []
+  );
+
   return {
     searchActivities,
     reserveActivity,
@@ -305,5 +385,7 @@ export function useVoiceActivityTools(
     setFilter,
     clearFilters,
     getMyReservations,
+    submitRating,
+    getRatings,
   };
 }

@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import VoiceAssistant from '@/components/VoiceAssistant';
 import { useVoiceActivityTools } from '@/features/activities/hooks/useVoiceActivityTools';
+import { ActivityRatings } from '@/features/activities/components/ActivityRatings';
 import type { ActivityFilters } from '@/features/activities/types/activity.types';
 
 interface Activity {
@@ -260,6 +261,11 @@ export default function ActivityDetail() {
               </CardContent>
             </Card>
           </div>
+        </div>
+
+        {/* Ratings Section */}
+        <div className="mt-12">
+          <ActivityRatings activityId={activity.id} />
         </div>
       </div>
 

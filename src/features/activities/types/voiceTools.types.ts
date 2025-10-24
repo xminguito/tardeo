@@ -22,6 +22,20 @@ export interface SuggestActivitiesParams {
   date?: string;
 }
 
+export interface GetMyReservationsParams {}
+
+export interface SubmitRatingParams {
+  activityId: string;
+  activityTitle: string;
+  rating: number;
+  comment?: string;
+}
+
+export interface GetRatingsParams {
+  activityId: string;
+  activityTitle: string;
+}
+
 export interface SetFilterParams {
   filterType: 'category' | 'location' | 'cost' | 'date' | 'availability';
   value: string | number | boolean;
@@ -41,4 +55,6 @@ export type VoiceToolsMap = {
   setFilter: (params: SetFilterParams) => Promise<string>;
   clearFilters: () => Promise<string>;
   getMyReservations: () => Promise<string>;
+  submitRating: (params: SubmitRatingParams) => Promise<string>;
+  getRatings: (params: GetRatingsParams) => Promise<string>;
 };

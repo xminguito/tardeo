@@ -20,9 +20,12 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
       reserveActivity: clientTools.reserveActivity,
       getActivityDetails: clientTools.getActivityDetails,
       suggestActivities: clientTools.suggestActivities,
+      navigateToActivities: clientTools.navigateToActivities,
       setFilter: clientTools.setFilter,
       clearFilters: clientTools.clearFilters,
       getMyReservations: clientTools.getMyReservations,
+      submitRating: clientTools.submitRating,
+      getRatings: clientTools.getRatings,
     },
     onConnect: () => {
       setIsConnecting(false);

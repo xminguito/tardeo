@@ -2,14 +2,12 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useActivities } from '@/features/activities/hooks/useActivities';
-import { useVoiceActivityTools } from '@/features/activities/hooks/useVoiceActivityTools';
 import { ActivityFiltersComponent } from '@/features/activities/components/ActivityFilters';
 import ActivityCard from '@/components/ActivityCard';
 import { ActivityCalendar } from '@/features/activities/components/ActivityCalendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import VoiceAssistant from '@/components/VoiceAssistant';
 import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft } from 'lucide-react';
 import type { ActivityFilters } from '@/features/activities/types/activity.types';
@@ -22,7 +20,6 @@ export default function ActivitiesCalendarPage() {
   const [userId, setUserId] = useState<string | null>(null);
 
   const { data: activities, isLoading, error } = useActivities(filters);
-  const voiceTools = useVoiceActivityTools(setFilters, filters, navigate);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -111,7 +108,6 @@ export default function ActivitiesCalendarPage() {
         </div>
       </div>
 
-      <VoiceAssistant clientTools={voiceTools} />
     </div>
   );
 }

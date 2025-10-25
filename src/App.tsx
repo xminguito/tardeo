@@ -1,8 +1,12 @@
+import { useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { useVoiceActivityTools } from "@/features/activities/hooks/useVoiceActivityTools";
+import VoiceAssistant from "@/components/VoiceAssistant";
+import type { ActivityFilters } from "@/features/activities/types/activity.types";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
@@ -12,21 +16,34 @@ import ActivityDetail from "./pages/ActivityDetail";
 
 const queryClient = new QueryClient();
 
+const AppContent = () => {
+  const navigate = useNavigate();
+  const [filters, setFilters] = useState<ActivityFilters>({});
+  const voiceTools = useVoiceActivityTools(setFilters, filters, navigate);
+
+  return (
+    <>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/actividades" element={<ActivitiesCalendar />} />
+        <Route path="/actividades/:id" element={<ActivityDetail />} />
+        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <VoiceAssistant clientTools={voiceTools} />
+    </>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/actividades" element={<ActivitiesCalendar />} />
-          <Route path="/actividades/:id" element={<ActivityDetail />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AppContent />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

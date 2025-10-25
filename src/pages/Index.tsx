@@ -4,11 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import ActivityCard from "@/components/ActivityCard";
-import VoiceAssistant from "@/components/VoiceAssistant";
 import { User, Bell, Plus, LogIn } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useVoiceActivityTools } from "@/features/activities/hooks/useVoiceActivityTools";
-import type { ActivityFilters } from "@/features/activities/types/activity.types";
 
 interface Activity {
   id: string;
@@ -32,10 +29,8 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
-  const [filters, setFilters] = useState<ActivityFilters>({});
   const navigate = useNavigate();
   const { toast } = useToast();
-  const voiceTools = useVoiceActivityTools(setFilters, filters, navigate);
 
   useEffect(() => {
     checkUser();
@@ -223,7 +218,6 @@ const Index = () => {
         </section>
       </main>
 
-      <VoiceAssistant clientTools={voiceTools} />
     </div>
   );
 };

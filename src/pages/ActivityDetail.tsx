@@ -38,8 +38,6 @@ export default function ActivityDetail() {
   const [loading, setLoading] = useState(true);
   const [isParticipating, setIsParticipating] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [filters, setFilters] = useState<ActivityFilters>({});
-  const voiceTools = useVoiceActivityTools(setFilters, filters, navigate);
 
   useEffect(() => {
     loadActivity();
@@ -99,13 +97,57 @@ export default function ActivityDetail() {
 
     if (!activity) return;
 
-    await voiceTools.reserveActivity({
-      activityId: activity.id,
-      activityTitle: activity.title,
-    });
+    try {
+      // Check if already participating
+      const { data: existingParticipation } = await supabase
+        .from('activity_participants')
+        .select('id')
+        .eq('activity_id', activity.id)
+        .eq('user_id', userId)
+        .single();
 
-    setIsParticipating(true);
-    loadActivity();
+      if (existingParticipation) {
+        toast({
+          title: 'Ya estás inscrito',
+          description: 'Ya tienes una reserva para esta actividad',
+        });
+        return;
+      }
+
+      // Create participation
+      const { error: participationError } = await supabase
+        .from('activity_participants')
+        .insert({
+          activity_id: activity.id,
+          user_id: userId,
+        });
+
+      if (participationError) throw participationError;
+
+      // Create notification
+      await supabase.from('notifications').insert({
+        user_id: userId,
+        activity_id: activity.id,
+        title: 'Reserva confirmada',
+        message: `Te has unido a ${activity.title}`,
+        type: 'info',
+      });
+
+      toast({
+        title: '¡Inscrito!',
+        description: `Te has unido a ${activity.title}`,
+      });
+
+      setIsParticipating(true);
+      loadActivity();
+    } catch (error) {
+      console.error('Error joining activity:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo completar la reserva',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleShare = () => {
@@ -269,7 +311,6 @@ export default function ActivityDetail() {
         </div>
       </div>
 
-      <VoiceAssistant clientTools={voiceTools} />
     </div>
   );
 }

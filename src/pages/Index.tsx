@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { generateActivitySlug } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import ActivityCard from "@/components/ActivityCard";
 import { User, Bell, Plus, LogIn } from "lucide-react";
@@ -194,7 +195,7 @@ const Index = () => {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {activities.map((activity) => (
-                  <div key={activity.id} onClick={() => navigate(`/actividades/${activity.id}`)} className="cursor-pointer">
+                  <div key={activity.id} onClick={() => navigate(`/actividades/${generateActivitySlug(activity.title, activity.id)}`)} className="cursor-pointer">
                     <ActivityCard
                       activity={{
                         ...activity,
@@ -202,7 +203,8 @@ const Index = () => {
                         availableSlots: activity.max_participants - activity.current_participants,
                       }}
                       onReserve={(id) => {
-                        navigate(`/actividades/${id}`);
+                        const act = activities.find(a => a.id === id);
+                        if (act) navigate(`/actividades/${generateActivitySlug(act.title, act.id)}`);
                       }}
                     />
                   </div>

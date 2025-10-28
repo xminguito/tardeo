@@ -13,6 +13,7 @@ import VoiceAssistant from '@/components/VoiceAssistant';
 import { useVoiceActivityTools } from '@/features/activities/hooks/useVoiceActivityTools';
 import { ActivityRatings } from '@/features/activities/components/ActivityRatings';
 import type { ActivityFilters } from '@/features/activities/types/activity.types';
+import { extractIdFromSlug } from '@/lib/utils';
 
 interface Activity {
   id: string;
@@ -30,7 +31,7 @@ interface Activity {
 }
 
 export default function ActivityDetail() {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -42,17 +43,18 @@ export default function ActivityDetail() {
   useEffect(() => {
     loadActivity();
     checkUser();
-  }, [id]);
+  }, [slug]);
 
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     setUserId(user?.id || null);
     
-    if (user && id) {
+    if (user && slug) {
+      const activityId = extractIdFromSlug(slug);
       const { data } = await supabase
         .from('activity_participants')
         .select('*')
-        .eq('activity_id', id)
+        .eq('activity_id', activityId)
         .eq('user_id', user.id)
         .maybeSingle();
       
@@ -61,13 +63,14 @@ export default function ActivityDetail() {
   };
 
   const loadActivity = async () => {
-    if (!id) return;
+    if (!slug) return;
     
     try {
+      const activityId = extractIdFromSlug(slug);
       const { data, error } = await supabase
         .from('activities')
         .select('*')
-        .eq('id', id)
+        .eq('id', activityId)
         .single();
 
       if (error) throw error;

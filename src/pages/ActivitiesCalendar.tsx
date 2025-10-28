@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft } from 'lucide-react';
 import type { ActivityFilters } from '@/features/activities/types/activity.types';
+import { generateActivitySlug } from '@/lib/utils';
 
 export default function ActivitiesCalendarPage() {
   const { t } = useTranslation();
@@ -30,7 +31,10 @@ export default function ActivitiesCalendarPage() {
   const categories = [...new Set(activities?.map((a) => a.category) || [])];
 
   const handleReserve = async (activityId: string) => {
-    navigate(`/actividades/${activityId}`);
+    const activity = activities?.find(a => a.id === activityId);
+    if (activity) {
+      navigate(`/actividades/${generateActivitySlug(activity.title, activity.id)}`);
+    }
   };
 
   if (error) {
@@ -76,7 +80,7 @@ export default function ActivitiesCalendarPage() {
                     {activities?.map((activity) => (
                       <div 
                         key={activity.id} 
-                        onClick={() => navigate(`/actividades/${activity.id}`)}
+                        onClick={() => navigate(`/actividades/${generateActivitySlug(activity.title, activity.id)}`)}
                         className="cursor-pointer"
                       >
                         <ActivityCard
@@ -98,7 +102,7 @@ export default function ActivitiesCalendarPage() {
                   <ActivityCalendar
                     activities={activities}
                     onSelectActivity={(activity) => {
-                      navigate(`/actividades/${activity.id}`);
+                      navigate(`/actividades/${generateActivitySlug(activity.title, activity.id)}`);
                     }}
                   />
                 )}

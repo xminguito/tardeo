@@ -28,7 +28,7 @@ const AppContent = () => {
         <Route path="/auth" element={<Auth />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/actividades" element={<ActivitiesCalendar />} />
-        <Route path="/actividades/:id" element={<ActivityDetail />} />
+        <Route path="/actividades/:slug" element={<ActivityDetail />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>

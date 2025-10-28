@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
+import { generateActivitySlug } from '@/lib/utils';
 import type {
   VoiceToolsMap,
   SearchActivitiesParams,
@@ -176,9 +177,10 @@ export function useVoiceActivityTools(
         const costText = activity.cost === 0 ? 'gratuita' : `${activity.cost} euros`;
         const isAvailable = availableSlots > 0;
 
-        // Navegar al detalle de la actividad
+        // Navegar al detalle de la actividad con slug amigable
         if (navigate) {
-          navigate(`/actividades/${activity.id}`);
+          const slug = generateActivitySlug(activity.title, activity.id);
+          navigate(`/actividades/${slug}`);
         }
 
         return `La actividad "${activity.title}" es el ${new Date(activity.date).toLocaleDateString('es-ES')} a las ${activity.time}. Se realiza en ${activity.location}. Es ${costText} y ${isAvailable ? `quedan ${availableSlots} plazas disponibles` : 'está completa'}. Te he llevado a su página de detalles.`;

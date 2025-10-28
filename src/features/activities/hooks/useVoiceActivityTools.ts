@@ -147,26 +147,47 @@ export function useVoiceActivityTools(
       try {
         console.log('[Voice Tool] getActivityDetails called with:', params);
 
-        const { data: activity, error } = await supabase
-          .from('activities')
-          .select('*')
-          .eq('id', params.activityId)
-          .single();
-
-        if (error || !activity) {
-          return 'No encontré esa actividad.';
+        // Buscar por ID o por nombre
+        let query = supabase.from('activities').select('*');
+        
+        if (params.activityId) {
+          query = query.eq('id', params.activityId);
+        } else if (params.activityTitle) {
+          query = query.ilike('title', `%${params.activityTitle}%`);
         }
 
+        const { data, error } = await query.maybeSingle();
+
+        if (error) {
+          console.error('[Voice Tool] Error querying activity:', error);
+          return 'Hubo un error al buscar la actividad.';
+        }
+
+        if (!data) {
+          // No se encontró, navegar a lista de actividades
+          if (navigate) {
+            navigate('/actividades');
+          }
+          return `No encontré ninguna actividad llamada "${params.activityTitle || params.activityId}". Te he llevado a la lista de actividades para que puedas explorar.`;
+        }
+
+        const activity = data;
         const availableSlots = activity.max_participants - activity.current_participants;
         const costText = activity.cost === 0 ? 'gratuita' : `${activity.cost} euros`;
+        const isAvailable = availableSlots > 0;
 
-        return `La actividad "${activity.title}" es el ${new Date(activity.date).toLocaleDateString('es-ES')} a las ${activity.time}. Se realiza en ${activity.location}. Es ${costText} y quedan ${availableSlots} plazas disponibles.`;
+        // Navegar al detalle de la actividad
+        if (navigate) {
+          navigate(`/actividades/${activity.id}`);
+        }
+
+        return `La actividad "${activity.title}" es el ${new Date(activity.date).toLocaleDateString('es-ES')} a las ${activity.time}. Se realiza en ${activity.location}. Es ${costText} y ${isAvailable ? `quedan ${availableSlots} plazas disponibles` : 'está completa'}. Te he llevado a su página de detalles.`;
       } catch (error) {
         console.error('[Voice Tool] Error in getActivityDetails:', error);
         return 'No pude obtener los detalles de esa actividad.';
       }
     },
-    []
+    [navigate]
   );
 
   const suggestActivities = useCallback(

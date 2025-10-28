@@ -13,7 +13,8 @@ export interface ReserveActivityParams {
 }
 
 export interface GetActivityDetailsParams {
-  activityId: string;
+  activityId?: string;
+  activityTitle?: string;
 }
 
 export interface SuggestActivitiesParams {

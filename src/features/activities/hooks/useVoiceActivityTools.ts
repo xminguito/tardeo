@@ -31,6 +31,42 @@ export function useVoiceActivityTools(
       try {
         console.log('[Voice Tool] searchActivities called with:', params);
 
+        // Si solo busca por categoría/título sin fechas, intentar buscar por título primero
+        const isSimpleSearch = params.category && !params.dateFrom && !params.dateTo && !params.location && !params.maxCost;
+        
+        if (isSimpleSearch && params.category) {
+          // Buscar por título primero
+          const { data: titleMatches } = await supabase
+            .from('activities')
+            .select('*')
+            .ilike('title', `%${params.category}%`)
+            .order('date', { ascending: true });
+
+          if (titleMatches && titleMatches.length === 1) {
+            // Solo una coincidencia, navegar directamente
+            const activity = titleMatches[0];
+            const availableSlots = activity.max_participants - activity.current_participants;
+            const isAvailable = availableSlots > 0;
+            
+            if (navigate) {
+              const slug = generateActivitySlug(activity.title, activity.id);
+              navigate(`/actividades/${slug}`);
+            }
+            
+            return `Encontré la actividad "${activity.title}". Es el ${new Date(activity.date).toLocaleDateString('es-ES')} a las ${activity.time} en ${activity.location}. ${isAvailable ? `Quedan ${availableSlots} plazas disponibles` : 'Está completa'}. Te he llevado a su página.`;
+          } else if (titleMatches && titleMatches.length > 1 && titleMatches.length <= 3) {
+            // Pocas coincidencias, navegar a la primera y listar
+            const activity = titleMatches[0];
+            if (navigate) {
+              const slug = generateActivitySlug(activity.title, activity.id);
+              navigate(`/actividades/${slug}`);
+            }
+            
+            const titles = titleMatches.map(a => a.title).join(', ');
+            return `Encontré ${titleMatches.length} actividades relacionadas: ${titles}. Te muestro la primera: "${activity.title}".`;
+          }
+        }
+
         const filters: ActivityFilters = {
           category: params.category || null,
           location: params.location || null,
@@ -47,7 +83,7 @@ export function useVoiceActivityTools(
           .select('*')
           .order('date', { ascending: true });
 
-        if (filters.category) query = query.eq('category', filters.category);
+        if (filters.category) query = query.ilike('title', `%${filters.category}%`);
         if (filters.location) query = query.ilike('location', `%${filters.location}%`);
         if (filters.dateFrom) query = query.gte('date', filters.dateFrom.toISOString());
         if (filters.dateTo) query = query.lte('date', filters.dateTo.toISOString());
@@ -61,13 +97,18 @@ export function useVoiceActivityTools(
         if (error) throw error;
 
         const count = activities?.length || 0;
-        return `He encontrado ${count} actividades que coinciden con tu búsqueda.`;
+        
+        if (navigate && count > 0) {
+          navigate('/actividades');
+        }
+        
+        return `He encontrado ${count} actividades que coinciden con tu búsqueda. ${count > 0 ? 'Te he llevado a la página de actividades.' : ''}`;
       } catch (error) {
         console.error('[Voice Tool] Error in searchActivities:', error);
         return 'No pude buscar actividades en este momento.';
       }
     },
-    [onFiltersChange]
+    [onFiltersChange, navigate]
   );
 
   const reserveActivity = useCallback(

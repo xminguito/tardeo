@@ -25,16 +25,116 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
   
   const conversation = useConversation({
     clientTools: {
-      searchActivities: clientTools.searchActivities,
-      reserveActivity: clientTools.reserveActivity,
-      getActivityDetails: clientTools.getActivityDetails,
-      suggestActivities: clientTools.suggestActivities,
-      navigateToActivities: clientTools.navigateToActivities,
-      setFilter: clientTools.setFilter,
-      clearFilters: clientTools.clearFilters,
-      getMyReservations: clientTools.getMyReservations,
-      submitRating: clientTools.submitRating,
-      getRatings: clientTools.getRatings,
+      searchActivities: async (params: any) => {
+        console.log('[Voice Tool Wrapper] searchActivities called with:', params);
+        try {
+          const result = await clientTools.searchActivities(params);
+          console.log('[Voice Tool Wrapper] searchActivities result:', result);
+          return result;
+        } catch (error) {
+          console.error('[Voice Tool Wrapper] searchActivities error:', error);
+          return 'Error al buscar actividades';
+        }
+      },
+      reserveActivity: async (params: any) => {
+        console.log('[Voice Tool Wrapper] reserveActivity called with:', params);
+        try {
+          const result = await clientTools.reserveActivity(params);
+          console.log('[Voice Tool Wrapper] reserveActivity result:', result);
+          return result;
+        } catch (error) {
+          console.error('[Voice Tool Wrapper] reserveActivity error:', error);
+          return 'Error al reservar actividad';
+        }
+      },
+      getActivityDetails: async (params: any) => {
+        console.log('[Voice Tool Wrapper] getActivityDetails called with:', params);
+        try {
+          const result = await clientTools.getActivityDetails(params);
+          console.log('[Voice Tool Wrapper] getActivityDetails result:', result);
+          return result;
+        } catch (error) {
+          console.error('[Voice Tool Wrapper] getActivityDetails error:', error);
+          return 'Error al obtener detalles';
+        }
+      },
+      suggestActivities: async (params: any) => {
+        console.log('[Voice Tool Wrapper] suggestActivities called with:', params);
+        try {
+          const result = await clientTools.suggestActivities(params);
+          console.log('[Voice Tool Wrapper] suggestActivities result:', result);
+          return result;
+        } catch (error) {
+          console.error('[Voice Tool Wrapper] suggestActivities error:', error);
+          return 'Error al sugerir actividades';
+        }
+      },
+      navigateToActivities: async (params: any) => {
+        console.log('[Voice Tool Wrapper] navigateToActivities called with:', params);
+        try {
+          const result = await clientTools.navigateToActivities(params);
+          console.log('[Voice Tool Wrapper] navigateToActivities result:', result);
+          return result;
+        } catch (error) {
+          console.error('[Voice Tool Wrapper] navigateToActivities error:', error);
+          return 'Error al navegar';
+        }
+      },
+      setFilter: async (params: any) => {
+        console.log('[Voice Tool Wrapper] setFilter called with:', params);
+        try {
+          const result = await clientTools.setFilter(params);
+          console.log('[Voice Tool Wrapper] setFilter result:', result);
+          return result;
+        } catch (error) {
+          console.error('[Voice Tool Wrapper] setFilter error:', error);
+          return 'Error al aplicar filtro';
+        }
+      },
+      clearFilters: async () => {
+        console.log('[Voice Tool Wrapper] clearFilters called');
+        try {
+          const result = await clientTools.clearFilters();
+          console.log('[Voice Tool Wrapper] clearFilters result:', result);
+          return result;
+        } catch (error) {
+          console.error('[Voice Tool Wrapper] clearFilters error:', error);
+          return 'Error al limpiar filtros';
+        }
+      },
+      getMyReservations: async () => {
+        console.log('[Voice Tool Wrapper] getMyReservations called');
+        try {
+          const result = await clientTools.getMyReservations();
+          console.log('[Voice Tool Wrapper] getMyReservations result:', result);
+          return result;
+        } catch (error) {
+          console.error('[Voice Tool Wrapper] getMyReservations error:', error);
+          return 'Error al obtener reservas';
+        }
+      },
+      submitRating: async (params: any) => {
+        console.log('[Voice Tool Wrapper] submitRating called with:', params);
+        try {
+          const result = await clientTools.submitRating(params);
+          console.log('[Voice Tool Wrapper] submitRating result:', result);
+          return result;
+        } catch (error) {
+          console.error('[Voice Tool Wrapper] submitRating error:', error);
+          return 'Error al enviar valoración';
+        }
+      },
+      getRatings: async (params: any) => {
+        console.log('[Voice Tool Wrapper] getRatings called with:', params);
+        try {
+          const result = await clientTools.getRatings(params);
+          console.log('[Voice Tool Wrapper] getRatings result:', result);
+          return result;
+        } catch (error) {
+          console.error('[Voice Tool Wrapper] getRatings error:', error);
+          return 'Error al obtener valoraciones';
+        }
+      },
     },
     onConnect: () => {
       setIsConnecting(false);

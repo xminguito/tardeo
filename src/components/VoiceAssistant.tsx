@@ -27,8 +27,9 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
     clientTools: {
       searchActivities: async (params: any) => {
         console.log('[Voice Tool Wrapper] searchActivities called with:', params);
+        const normalized = params?.searchActivities ?? params ?? {};
         try {
-          const result = await clientTools.searchActivities(params);
+          const result = await clientTools.searchActivities(normalized);
           console.log('[Voice Tool Wrapper] searchActivities result:', result);
           return result;
         } catch (error) {
@@ -38,8 +39,9 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
       },
       reserveActivity: async (params: any) => {
         console.log('[Voice Tool Wrapper] reserveActivity called with:', params);
+        const normalized = params?.reserveActivity ?? params ?? {};
         try {
-          const result = await clientTools.reserveActivity(params);
+          const result = await clientTools.reserveActivity(normalized);
           console.log('[Voice Tool Wrapper] reserveActivity result:', result);
           return result;
         } catch (error) {
@@ -49,8 +51,9 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
       },
       getActivityDetails: async (params: any) => {
         console.log('[Voice Tool Wrapper] getActivityDetails called with:', params);
+        const normalized = params?.getActivityDetails ?? params ?? {};
         try {
-          const result = await clientTools.getActivityDetails(params);
+          const result = await clientTools.getActivityDetails(normalized);
           console.log('[Voice Tool Wrapper] getActivityDetails result:', result);
           return result;
         } catch (error) {
@@ -60,8 +63,9 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
       },
       suggestActivities: async (params: any) => {
         console.log('[Voice Tool Wrapper] suggestActivities called with:', params);
+        const normalized = params?.suggestActivities ?? params ?? {};
         try {
-          const result = await clientTools.suggestActivities(params);
+          const result = await clientTools.suggestActivities(normalized);
           console.log('[Voice Tool Wrapper] suggestActivities result:', result);
           return result;
         } catch (error) {
@@ -71,8 +75,9 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
       },
       navigateToActivities: async (params: any) => {
         console.log('[Voice Tool Wrapper] navigateToActivities called with:', params);
+        const normalized = params?.navigateToActivities ?? params ?? {};
         try {
-          const result = await clientTools.navigateToActivities(params);
+          const result = await clientTools.navigateToActivities(normalized);
           console.log('[Voice Tool Wrapper] navigateToActivities result:', result);
           return result;
         } catch (error) {
@@ -82,8 +87,9 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
       },
       setFilter: async (params: any) => {
         console.log('[Voice Tool Wrapper] setFilter called with:', params);
+        const normalized = params?.setFilter ?? params ?? {};
         try {
-          const result = await clientTools.setFilter(params);
+          const result = await clientTools.setFilter(normalized);
           console.log('[Voice Tool Wrapper] setFilter result:', result);
           return result;
         } catch (error) {
@@ -115,8 +121,9 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
       },
       submitRating: async (params: any) => {
         console.log('[Voice Tool Wrapper] submitRating called with:', params);
+        const normalized = params?.submitRating ?? params ?? {};
         try {
-          const result = await clientTools.submitRating(params);
+          const result = await clientTools.submitRating(normalized);
           console.log('[Voice Tool Wrapper] submitRating result:', result);
           return result;
         } catch (error) {
@@ -126,8 +133,9 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
       },
       getRatings: async (params: any) => {
         console.log('[Voice Tool Wrapper] getRatings called with:', params);
+        const normalized = params?.getRatings ?? params ?? {};
         try {
-          const result = await clientTools.getRatings(params);
+          const result = await clientTools.getRatings(normalized);
           console.log('[Voice Tool Wrapper] getRatings result:', result);
           return result;
         } catch (error) {

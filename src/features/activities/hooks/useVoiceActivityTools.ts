@@ -27,7 +27,7 @@ export function useVoiceActivityTools(
   const { t } = useTranslation();
 
   const searchActivities = useCallback(
-    async (params: SearchActivitiesParams): Promise<string> => {
+    async (params: SearchActivitiesParams = {} as any): Promise<string> => {
       try {
         console.log('[Voice Tool] searchActivities called with:', params);
 
@@ -189,7 +189,7 @@ export function useVoiceActivityTools(
   );
 
   const getActivityDetails = useCallback(
-    async (params: GetActivityDetailsParams): Promise<string> => {
+    async (params: GetActivityDetailsParams = {} as any): Promise<string> => {
       try {
         console.log('[Voice Tool] getActivityDetails called with:', params);
 
@@ -449,7 +449,7 @@ export function useVoiceActivityTools(
   );
 
   const navigateToActivities = useCallback(
-    async (params: NavigateToActivitiesParams): Promise<string> => {
+    async (params: NavigateToActivitiesParams = {} as any): Promise<string> => {
       try {
         console.log('[Voice Tool] navigateToActivities called with:', params);
         

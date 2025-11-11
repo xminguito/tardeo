@@ -31,48 +31,54 @@ export function useVoiceActivityTools(
       try {
         console.log('[Voice Tool] searchActivities called with:', params);
 
-        // Si solo busca por categoría/título sin fechas, intentar buscar por título primero
-        const isSimpleSearch = params.category && !params.dateFrom && !params.dateTo && !params.location && !params.maxCost;
-        
-        if (isSimpleSearch && params.category) {
-          // Buscar por título primero
-          const { data: titleMatches } = await supabase
+        const queryText = params.category?.trim();
+        const isSimpleTitleQuery = !!queryText && !params.dateFrom && !params.dateTo && !params.location && !params.maxCost;
+
+        if (isSimpleTitleQuery) {
+          // 1) Buscar por título y navegar directamente al detalle si hay coincidencia clara
+          const { data: matches, error: titleError } = await supabase
             .from('activities')
             .select('*')
-            .ilike('title', `%${params.category}%`)
+            .ilike('title', `%${queryText}%`)
             .order('date', { ascending: true });
 
-          if (titleMatches && titleMatches.length === 1) {
-            // Solo una coincidencia, navegar directamente
-            const activity = titleMatches[0];
-            const availableSlots = activity.max_participants - activity.current_participants;
-            const isAvailable = availableSlots > 0;
-            
-            if (navigate) {
-              const slug = generateActivitySlug(activity.title, activity.id);
-              navigate(`/actividades/${slug}`);
-            }
-            
-            return `Encontré la actividad "${activity.title}". Es el ${new Date(activity.date).toLocaleDateString('es-ES')} a las ${activity.time} en ${activity.location}. ${isAvailable ? `Quedan ${availableSlots} plazas disponibles` : 'Está completa'}. Te he llevado a su página.`;
-          } else if (titleMatches && titleMatches.length > 1 && titleMatches.length <= 3) {
-            // Pocas coincidencias, navegar a la primera y listar
-            const activity = titleMatches[0];
-            if (navigate) {
-              const slug = generateActivitySlug(activity.title, activity.id);
-              navigate(`/actividades/${slug}`);
-            }
-            
-            const titles = titleMatches.map(a => a.title).join(', ');
-            return `Encontré ${titleMatches.length} actividades relacionadas: ${titles}. Te muestro la primera: "${activity.title}".`;
+          if (titleError) throw titleError;
+
+          if (!matches || matches.length === 0) {
+            if (navigate) navigate('/actividades');
+            return `No encontré "${queryText}". Te he llevado a la lista de actividades.`;
           }
+
+          const normalize = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+          const exact = matches.find(a => normalize(a.title) === normalize(queryText));
+          const chosen = exact || matches[0];
+
+          if (navigate && chosen) {
+            const slug = generateActivitySlug(chosen.title, chosen.id);
+            navigate(`/actividades/${slug}`);
+          }
+
+          const availableSlots = (chosen.max_participants ?? 0) - (chosen.current_participants ?? 0);
+          const isAvailable = availableSlots > 0;
+          const dateText = chosen.date ? new Date(chosen.date).toLocaleDateString('es-ES') : '';
+          const timeText = chosen.time ?? '';
+          const locText = chosen.location ?? '';
+
+          if (matches.length > 1 && !exact) {
+            const titles = matches.slice(0, 3).map(a => `"${a.title}"`).join(', ');
+            return `Encontré ${matches.length} actividades relacionadas: ${titles}. Te muestro "${chosen.title}" y te he llevado a su página.`;
+          }
+
+          return `Encontré la actividad "${chosen.title}". Es el ${dateText} a las ${timeText} en ${locText}. ${isAvailable ? `Quedan ${availableSlots} plazas` : 'Está completa'}. Te he llevado a su página.`;
         }
 
+        // 2) Búsqueda con filtros -> navegar a /actividades
         const filters: ActivityFilters = {
           category: params.category || null,
           location: params.location || null,
           dateFrom: params.dateFrom ? new Date(params.dateFrom) : null,
           dateTo: params.dateTo ? new Date(params.dateTo) : null,
-          maxCost: params.maxCost || null,
+          maxCost: params.maxCost ?? null,
           availableOnly: params.availableOnly || false,
         };
 
@@ -88,24 +94,22 @@ export function useVoiceActivityTools(
         if (filters.dateFrom) query = query.gte('date', filters.dateFrom.toISOString());
         if (filters.dateTo) query = query.lte('date', filters.dateTo.toISOString());
         if (filters.maxCost !== null) query = query.lte('cost', filters.maxCost);
-        if (filters.availableOnly) {
-          query = query.filter('current_participants', 'lt', 'max_participants');
-        }
+        // Importante: no comparar columnas en el servidor (causa 400). Filtramos disponibilidad en cliente.
 
         const { data: activities, error } = await query;
-
         if (error) throw error;
 
-        const count = activities?.length || 0;
-        
-        if (navigate && count > 0) {
-          navigate('/actividades');
-        }
-        
-        return `He encontrado ${count} actividades que coinciden con tu búsqueda. ${count > 0 ? 'Te he llevado a la página de actividades.' : ''}`;
+        const filtered = filters.availableOnly
+          ? (activities || []).filter((a: any) => (a.current_participants ?? 0) < (a.max_participants ?? 0))
+          : activities;
+
+        const count = filtered?.length || 0;
+        if (navigate) navigate('/actividades');
+        return `He encontrado ${count} actividades que coinciden con tu búsqueda. Te he llevado a la página de actividades.`;
       } catch (error) {
         console.error('[Voice Tool] Error in searchActivities:', error);
-        return 'No pude buscar actividades en este momento.';
+        if (navigate) navigate('/actividades');
+        return 'No pude buscar actividades en este momento. Te he llevado a la lista de actividades para que puedas explorar.';
       }
     },
     [onFiltersChange, navigate]
@@ -242,9 +246,8 @@ export function useVoiceActivityTools(
           .from('activities')
           .select('*')
           .gte('date', new Date().toISOString())
-          .filter('current_participants', 'lt', 'max_participants')
           .order('date', { ascending: true })
-          .limit(5);
+          .limit(20);
 
         if (params.budget) {
           query = query.lte('cost', params.budget);
@@ -258,16 +261,18 @@ export function useVoiceActivityTools(
         }
 
         const { data: activities, error } = await query;
-
         if (error) throw error;
 
-        if (!activities || activities.length === 0) {
+        const available = (activities || []).filter((a: any) => (a.current_participants ?? 0) < (a.max_participants ?? 0));
+        const top = available.slice(0, 5);
+
+        if (top.length === 0) {
           return 'No encontré actividades que se ajusten a tus preferencias en este momento.';
         }
 
-        const suggestions = activities
+        const suggestions = top
           .map(
-            (act, idx) =>
+            (act: any, idx: number) =>
               `${idx + 1}. "${act.title}" - ${new Date(act.date).toLocaleDateString('es-ES')} en ${act.location}${act.cost > 0 ? ` (${act.cost}€)` : ' (Gratis)'}`
           )
           .join('. ');

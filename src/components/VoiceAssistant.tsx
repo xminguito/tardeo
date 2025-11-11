@@ -21,105 +21,78 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [showHistory, setShowHistory] = useState(false);
-  const [textOnlyMode, setTextOnlyMode] = useState(false);
-  const [isToolExecuting, setIsToolExecuting] = useState(false);
   const { toast } = useToast();
   
   const conversation = useConversation({
     clientTools: {
       searchActivities: async (params: any) => {
         console.log('[Voice Tool Wrapper] searchActivities called with:', params);
-        const normalized = params?.searchActivities ?? params ?? {};
-        setIsToolExecuting(true);
         try {
-          const result = await clientTools.searchActivities(normalized);
+          const result = await clientTools.searchActivities(params);
           console.log('[Voice Tool Wrapper] searchActivities result:', result);
           return result;
         } catch (error) {
           console.error('[Voice Tool Wrapper] searchActivities error:', error);
           return 'Error al buscar actividades';
-        } finally {
-          setIsToolExecuting(false);
         }
       },
       reserveActivity: async (params: any) => {
         console.log('[Voice Tool Wrapper] reserveActivity called with:', params);
-        const normalized = params?.reserveActivity ?? params ?? {};
-        setIsToolExecuting(true);
         try {
-          const result = await clientTools.reserveActivity(normalized);
+          const result = await clientTools.reserveActivity(params);
           console.log('[Voice Tool Wrapper] reserveActivity result:', result);
           return result;
         } catch (error) {
           console.error('[Voice Tool Wrapper] reserveActivity error:', error);
           return 'Error al reservar actividad';
-        } finally {
-          setIsToolExecuting(false);
         }
       },
       getActivityDetails: async (params: any) => {
         console.log('[Voice Tool Wrapper] getActivityDetails called with:', params);
-        const normalized = params?.getActivityDetails ?? params ?? {};
-        setIsToolExecuting(true);
         try {
-          const result = await clientTools.getActivityDetails(normalized);
+          const result = await clientTools.getActivityDetails(params);
           console.log('[Voice Tool Wrapper] getActivityDetails result:', result);
           return result;
         } catch (error) {
           console.error('[Voice Tool Wrapper] getActivityDetails error:', error);
           return 'Error al obtener detalles';
-        } finally {
-          setIsToolExecuting(false);
         }
       },
       suggestActivities: async (params: any) => {
         console.log('[Voice Tool Wrapper] suggestActivities called with:', params);
-        const normalized = params?.suggestActivities ?? params ?? {};
-        setIsToolExecuting(true);
         try {
-          const result = await clientTools.suggestActivities(normalized);
+          const result = await clientTools.suggestActivities(params);
           console.log('[Voice Tool Wrapper] suggestActivities result:', result);
           return result;
         } catch (error) {
           console.error('[Voice Tool Wrapper] suggestActivities error:', error);
           return 'Error al sugerir actividades';
-        } finally {
-          setIsToolExecuting(false);
         }
       },
       navigateToActivities: async (params: any) => {
         console.log('[Voice Tool Wrapper] navigateToActivities called with:', params);
-        const normalized = params?.navigateToActivities ?? params ?? {};
-        setIsToolExecuting(true);
         try {
-          const result = await clientTools.navigateToActivities(normalized);
+          const result = await clientTools.navigateToActivities(params);
           console.log('[Voice Tool Wrapper] navigateToActivities result:', result);
           return result;
         } catch (error) {
           console.error('[Voice Tool Wrapper] navigateToActivities error:', error);
           return 'Error al navegar';
-        } finally {
-          setIsToolExecuting(false);
         }
       },
       setFilter: async (params: any) => {
         console.log('[Voice Tool Wrapper] setFilter called with:', params);
-        const normalized = params?.setFilter ?? params ?? {};
-        setIsToolExecuting(true);
         try {
-          const result = await clientTools.setFilter(normalized);
+          const result = await clientTools.setFilter(params);
           console.log('[Voice Tool Wrapper] setFilter result:', result);
           return result;
         } catch (error) {
           console.error('[Voice Tool Wrapper] setFilter error:', error);
           return 'Error al aplicar filtro';
-        } finally {
-          setIsToolExecuting(false);
         }
       },
       clearFilters: async () => {
         console.log('[Voice Tool Wrapper] clearFilters called');
-        setIsToolExecuting(true);
         try {
           const result = await clientTools.clearFilters();
           console.log('[Voice Tool Wrapper] clearFilters result:', result);
@@ -127,13 +100,10 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
         } catch (error) {
           console.error('[Voice Tool Wrapper] clearFilters error:', error);
           return 'Error al limpiar filtros';
-        } finally {
-          setIsToolExecuting(false);
         }
       },
       getMyReservations: async () => {
         console.log('[Voice Tool Wrapper] getMyReservations called');
-        setIsToolExecuting(true);
         try {
           const result = await clientTools.getMyReservations();
           console.log('[Voice Tool Wrapper] getMyReservations result:', result);
@@ -141,38 +111,28 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
         } catch (error) {
           console.error('[Voice Tool Wrapper] getMyReservations error:', error);
           return 'Error al obtener reservas';
-        } finally {
-          setIsToolExecuting(false);
         }
       },
       submitRating: async (params: any) => {
         console.log('[Voice Tool Wrapper] submitRating called with:', params);
-        const normalized = params?.submitRating ?? params ?? {};
-        setIsToolExecuting(true);
         try {
-          const result = await clientTools.submitRating(normalized);
+          const result = await clientTools.submitRating(params);
           console.log('[Voice Tool Wrapper] submitRating result:', result);
           return result;
         } catch (error) {
           console.error('[Voice Tool Wrapper] submitRating error:', error);
           return 'Error al enviar valoración';
-        } finally {
-          setIsToolExecuting(false);
         }
       },
       getRatings: async (params: any) => {
         console.log('[Voice Tool Wrapper] getRatings called with:', params);
-        const normalized = params?.getRatings ?? params ?? {};
-        setIsToolExecuting(true);
         try {
-          const result = await clientTools.getRatings(normalized);
+          const result = await clientTools.getRatings(params);
           console.log('[Voice Tool Wrapper] getRatings result:', result);
           return result;
         } catch (error) {
           console.error('[Voice Tool Wrapper] getRatings error:', error);
           return 'Error al obtener valoraciones';
-        } finally {
-          setIsToolExecuting(false);
         }
       },
     },
@@ -243,24 +203,6 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
     });
   }, []);
 
-  // Silenciar durante ejecución de herramientas
-  useEffect(() => {
-    if (conversation.status === 'connected') {
-      if (isToolExecuting) {
-        conversation.setVolume({ volume: 0 });
-      } else if (!textOnlyMode) {
-        conversation.setVolume({ volume: 1 });
-      }
-    }
-  }, [isToolExecuting, conversation, textOnlyMode]);
-
-  // Control de modo solo texto
-  useEffect(() => {
-    if (conversation.status === 'connected') {
-      conversation.setVolume({ volume: textOnlyMode ? 0 : 1 });
-    }
-  }, [textOnlyMode, conversation]);
-
   const startConversation = async () => {
     try {
       setIsConnecting(true);
@@ -303,28 +245,16 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
       <ConversationHistory messages={messages} isVisible={isConnected && showHistory} />
       
       <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-2 items-end">
-        {isConnected && (
-          <>
-            <Button
-              onClick={() => setTextOnlyMode(!textOnlyMode)}
-              size="sm"
-              variant={textOnlyMode ? "default" : "outline"}
-              className="rounded-full shadow-lg"
-            >
-              {textOnlyMode ? '🔇 Solo texto' : '🔊 Con voz'}
-            </Button>
-            {messages.length > 0 && (
-              <Button
-                onClick={() => setShowHistory(!showHistory)}
-                size="sm"
-                variant="secondary"
-                className="rounded-full shadow-lg"
-              >
-                <MessageSquare className="h-4 w-4 mr-2" />
-                {showHistory ? 'Ocultar' : 'Ver chat'}
-              </Button>
-            )}
-          </>
+        {isConnected && messages.length > 0 && (
+          <Button
+            onClick={() => setShowHistory(!showHistory)}
+            size="sm"
+            variant="secondary"
+            className="rounded-full shadow-lg"
+          >
+            <MessageSquare className="h-4 w-4 mr-2" />
+            {showHistory ? 'Ocultar' : 'Ver chat'}
+          </Button>
         )}
         
         {!isConnected && !isConnecting ? (
@@ -348,10 +278,8 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
             onClick={endConversation}
             size="lg"
             className={`rounded-full w-20 h-20 shadow-2xl transition-all duration-300 ${
-              isSpeaking && !textOnlyMode && !isToolExecuting
+              isSpeaking
                 ? "bg-accent hover:bg-accent/90 animate-pulse"
-                : isToolExecuting
-                ? "bg-muted hover:bg-muted/90"
                 : "bg-primary hover:bg-primary/90"
             }`}
           >

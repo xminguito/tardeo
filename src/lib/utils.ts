@@ -19,6 +19,7 @@ export function generateActivitySlug(title: string, id: string): string {
 }
 
 export function extractIdFromSlug(slug: string): string {
-  const parts = slug.split('-');
-  return parts[parts.length - 1];
+  // Extract the trailing UUID (xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx) from the slug
+  const match = slug.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/);
+  return match ? match[0] : slug;
 }

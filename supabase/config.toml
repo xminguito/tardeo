@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.send-activity-reminders]
 verify_jwt = false
+
+[functions.update-elevenlabs-agent]
+verify_jwt = false

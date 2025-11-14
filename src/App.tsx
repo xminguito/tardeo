@@ -13,6 +13,7 @@ import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import ActivitiesCalendar from "./pages/ActivitiesCalendar";
 import ActivityDetail from "./pages/ActivityDetail";
+import UpdateAgent from "./pages/UpdateAgent";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ const AppContent = () => {
         <Route path="/profile" element={<Profile />} />
         <Route path="/actividades" element={<ActivitiesCalendar />} />
         <Route path="/actividades/:slug" element={<ActivityDetail />} />
+        <Route path="/update-agent" element={<UpdateAgent />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>

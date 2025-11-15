@@ -204,7 +204,42 @@ serve(async (req) => {
 
     console.log(`Updating agent ${agentId} with optimized tools configuration`);
 
-    // Update the agent configuration
+    // 1) Fetch current agent to get existing tools (so we only update descriptions/params)
+    const getRes = await fetch(`https://api.elevenlabs.io/v1/convai/agents/${agentId}` , {
+      method: "GET",
+      headers: {
+        "xi-api-key": ELEVENLABS_API_KEY,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!getRes.ok) {
+      const errorText = await getRes.text();
+      console.error("ElevenLabs API (GET agent) error:", errorText);
+      throw new Error(`Failed to fetch agent: ${getRes.status} - ${errorText}`);
+    }
+
+    const agentJson = await getRes.json();
+
+    // The tools live under conversation_config.agent.prompt.tools (structure from EL logs)
+    const existingTools =
+      agentJson?.conversation_config?.agent?.prompt?.tools ??
+      agentJson?.agent?.prompt?.tools ?? [];
+
+    // Build a map of our optimized configs by tool name
+    const optimizedByName = toolsConfig.client_tools as Record<string, { description: string; parameters: unknown }>;    
+
+    const updatedTools = existingTools.map((tool: any) => {
+      const update = optimizedByName[tool?.name];
+      if (!update) return tool;
+      return {
+        ...tool,
+        description: update.description,
+        parameters: update.parameters,
+      };
+    });
+
+    // 2) Patch the agent with updated tool descriptions/parameters only
     const response = await fetch(`https://api.elevenlabs.io/v1/convai/agents/${agentId}`, {
       method: "PATCH",
       headers: {
@@ -213,8 +248,12 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         conversation_config: {
-          client_events: toolsConfig
-        }
+          agent: {
+            prompt: {
+              tools: updatedTools,
+            },
+          },
+        },
       }),
     });
 

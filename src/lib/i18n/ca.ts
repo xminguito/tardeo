@@ -27,6 +27,11 @@ export default {
     loginRequiredDesc: 'Has d\'iniciar sessió per apuntar-te a activitats',
     joined: 'Genial!',
     joinedDesc: 'T\'has apuntat a l\'activitat',
+    joinCommunity: 'Uneix-te a la nostra comunitat! 🌟',
+    joinCommunityDesc: 'Crea el teu compte gratis i comença a gaudir d\'experiències increïbles a prop de casa',
+    joinFree: 'Unir-me gratis',
+    notifications: 'Notificacions 🔔',
+    viewFullCalendar: 'Veure calendari complet',
   },
   auth: {
     welcome: 'Benvingut a Tardeo',

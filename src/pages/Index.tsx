@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { generateActivitySlug } from "@/lib/utils";
@@ -33,6 +34,7 @@ const Index = () => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     checkUser();
@@ -66,10 +68,10 @@ const Index = () => {
 
       if (error) throw error;
       setActivities(data || []);
-    } catch (error) {
+      } catch (error) {
       toast({
-        title: "Error",
-        description: "No pudimos cargar las actividades",
+        title: t('common.error'),
+        description: t('home.errorLoading'),
         variant: "destructive",
       });
     } finally {
@@ -92,16 +94,16 @@ const Index = () => {
   const handleJoinActivity = async (activityId: string) => {
     if (!user) {
       toast({
-        title: "Inicia sesión",
-        description: "Debes iniciar sesión para apuntarte a actividades",
+        title: t('home.loginRequired'),
+        description: t('home.loginRequiredDesc'),
         variant: "destructive",
       });
       return;
     }
 
     toast({
-      title: "¡Genial!",
-      description: "Te has apuntado a la actividad",
+      title: t('home.joined'),
+      description: t('home.joinedDesc'),
     });
   };
 
@@ -111,8 +113,8 @@ const Index = () => {
         <div className="container mx-auto">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-5xl font-bold mb-2">Tardeo</h1>
-              <p className="text-xl opacity-90">Encuentra actividades y amigos con tus mismos intereses</p>
+              <h1 className="text-5xl font-bold mb-2">{t('home.title')}</h1>
+              <p className="text-xl opacity-90">{t('home.subtitle')}</p>
             </div>
             <div className="flex gap-3 items-center">
               <LanguageSelector />
@@ -120,7 +122,7 @@ const Index = () => {
                 <>
                   <Button variant="secondary" onClick={() => navigate("/profile")}>
                     <User className="mr-2 h-5 w-5" />
-                    Perfil
+                    {t('home.profile')}
                   </Button>
                   {notifications.length > 0 && (
                     <div className="relative">
@@ -136,7 +138,7 @@ const Index = () => {
               ) : (
                 <Button variant="secondary" onClick={() => navigate("/auth")}>
                   <LogIn className="mr-2 h-5 w-5" />
-                  Iniciar sesión
+                  {t('home.login')}
                 </Button>
               )}
             </div>
@@ -176,23 +178,23 @@ const Index = () => {
 
         <section className="mb-12">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-semibold">Actividades próximas</h2>
+            <h2 className="text-3xl font-semibold">{t('home.featuredActivities')}</h2>
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => navigate("/actividades")}>
-                Ver todas las actividades
+                {t('home.viewAll')}
               </Button>
               {user && (
                 <Button>
                   <Plus className="mr-2 h-5 w-5" />
-                  Crear actividad
+                  {t('home.createActivity')}
                 </Button>
               )}
             </div>
           </div>
           {loading ? (
-            <p className="text-muted-foreground text-lg">Cargando actividades...</p>
+            <p className="text-muted-foreground text-lg">{t('common.loading')}</p>
           ) : activities.length === 0 ? (
-            <p className="text-muted-foreground text-lg">No hay actividades disponibles</p>
+            <p className="text-muted-foreground text-lg">{t('home.noActivitiesYet')}</p>
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

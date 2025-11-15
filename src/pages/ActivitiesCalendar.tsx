@@ -41,7 +41,7 @@ export default function ActivitiesCalendarPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center text-destructive">
-          Error al cargar actividades. Por favor, intenta de nuevo.
+          {t('activities.errorLoading')}
         </div>
       </div>
     );
@@ -50,13 +50,13 @@ export default function ActivitiesCalendarPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" onClick={() => navigate('/')}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Inicio
-          </Button>
-          <h1 className="text-4xl font-bold">{t('activities.title')}</h1>
-        </div>
+          <div className="flex items-center gap-4 mb-6">
+            <Button variant="ghost" onClick={() => navigate('/')}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {t('activities.home')}
+            </Button>
+            <h1 className="text-4xl font-bold">{t('activities.title')}</h1>
+          </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <aside className="lg:col-span-1">
@@ -66,14 +66,14 @@ export default function ActivitiesCalendarPage() {
           <main className="lg:col-span-3">
             <Tabs defaultValue="grid">
               <TabsList className="mb-6">
-                <TabsTrigger value="grid">Vista en cuadrícula</TabsTrigger>
-                <TabsTrigger value="calendar">Vista de calendario</TabsTrigger>
+                <TabsTrigger value="grid">{t('activities.gridView')}</TabsTrigger>
+                <TabsTrigger value="calendar">{t('activities.calendarView')}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="grid">
                 {isLoading ? (
                   <div className="text-center py-12">
-                    <p className="text-lg text-muted-foreground">Cargando actividades...</p>
+                    <p className="text-lg text-muted-foreground">{t('activities.loadingActivities')}</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

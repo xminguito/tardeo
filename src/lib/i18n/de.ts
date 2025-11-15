@@ -27,6 +27,11 @@ export default {
     loginRequiredDesc: 'Sie müssen sich anmelden, um an Aktivitäten teilzunehmen',
     joined: 'Großartig!',
     joinedDesc: 'Sie haben sich für die Aktivität angemeldet',
+    joinCommunity: 'Treten Sie unserer Community bei! 🌟',
+    joinCommunityDesc: 'Erstellen Sie Ihr kostenloses Konto und genießen Sie unglaubliche Erlebnisse in Ihrer Nähe',
+    joinFree: 'Kostenlos beitreten',
+    notifications: 'Benachrichtigungen 🔔',
+    viewFullCalendar: 'Vollständigen Kalender anzeigen',
   },
   auth: {
     welcome: 'Willkommen bei Tardeo',

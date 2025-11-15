@@ -149,19 +149,19 @@ const Index = () => {
       <main className="container mx-auto px-4 py-12">
         {!user && (
           <div className="bg-secondary/20 border-2 border-secondary rounded-2xl p-8 mb-12 text-center">
-            <h2 className="text-3xl font-semibold mb-4">¡Únete a nuestra comunidad! 🌟</h2>
+            <h2 className="text-3xl font-semibold mb-4">{t('home.joinCommunity')}</h2>
             <p className="text-lg text-muted-foreground mb-6">
-              Crea tu cuenta gratis y empieza a disfrutar de experiencias increíbles cerca de casa
+              {t('home.joinCommunityDesc')}
             </p>
             <Button size="lg" onClick={() => navigate("/auth")}>
-              Unirme gratis
+              {t('home.joinFree')}
             </Button>
           </div>
         )}
 
         {notifications.length > 0 && (
           <section className="mb-12">
-            <h2 className="text-3xl font-semibold mb-6">Notificaciones 🔔</h2>
+            <h2 className="text-3xl font-semibold mb-6">{t('home.notifications')}</h2>
             <div className="space-y-3">
               {notifications.map((notif) => (
                 <div
@@ -216,7 +216,7 @@ const Index = () => {
               </div>
               <div className="text-center mt-8">
                 <Button size="lg" variant="outline" onClick={() => navigate("/actividades")}>
-                  Ver calendario completo
+                  {t('home.viewFullCalendar')}
                 </Button>
               </div>
             </>

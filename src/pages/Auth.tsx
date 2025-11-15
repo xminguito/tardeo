@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,7 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const checkUser = async () => {
@@ -36,9 +38,9 @@ const Auth = () => {
   }, [navigate]);
 
   const authSchema = z.object({
-    email: z.string().email("Email inválido").max(255, "Email muy largo"),
-    password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres").max(72, "Contraseña muy larga"),
-    fullName: z.string().trim().min(2, "Nombre muy corto").max(100, "Nombre muy largo").optional(),
+    email: z.string().email(t('auth.emailInvalid')).max(255, t('auth.emailTooLong')),
+    password: z.string().min(8, t('auth.passwordShort')).max(72, t('auth.passwordTooLong')),
+    fullName: z.string().trim().min(2, t('auth.nameTooShort')).max(100, t('auth.nameTooLong')).optional(),
   });
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -59,8 +61,8 @@ const Auth = () => {
         });
         if (error) throw error;
         toast({
-          title: "¡Bienvenido de nuevo! 👋",
-          description: "Has iniciado sesión correctamente",
+          title: t('auth.welcomeBack'),
+          description: t('auth.welcomeBackDesc'),
         });
       } else {
         const { error } = await supabase.auth.signUp({
@@ -73,20 +75,20 @@ const Auth = () => {
         });
         if (error) throw error;
         toast({
-          title: "¡Cuenta creada! 🎉",
-          description: "Por favor, verifica tu email para continuar",
+          title: t('auth.accountCreated'),
+          description: t('auth.accountCreatedDesc'),
         });
       }
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         toast({
-          title: "Error de validación",
+          title: t('auth.validationError'),
           description: error.errors[0].message,
           variant: "destructive",
         });
       } else {
         toast({
-          title: "Error",
+          title: t('common.error'),
           description: error.message,
           variant: "destructive",
         });

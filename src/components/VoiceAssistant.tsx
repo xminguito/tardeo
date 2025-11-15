@@ -1,11 +1,19 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Mic, MicOff, Loader2, MessageSquare } from "lucide-react";
+import { Mic, MicOff, Loader2, MessageSquare, Languages } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useConversation } from "@11labs/react";
 import type { VoiceToolsMap } from '@/features/activities/types/voiceTools.types';
 import ConversationHistory from "./ConversationHistory";
+import { useTranslation } from "react-i18next";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -21,7 +29,12 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [voiceLanguage, setVoiceLanguage] = useState<string>(() => {
+    // Cargar idioma guardado o usar español por defecto
+    return localStorage.getItem('voiceAssistantLanguage') || 'es';
+  });
   const { toast } = useToast();
+  const { t } = useTranslation();
   
   const conversation = useConversation({
     clientTools: {
@@ -203,6 +216,15 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
     });
   }, []);
 
+  const handleLanguageChange = (language: string) => {
+    setVoiceLanguage(language);
+    localStorage.setItem('voiceAssistantLanguage', language);
+    toast({
+      title: t('activities.voice.selectLanguage'),
+      description: `${t(`activities.voice.languages.${language}`)} seleccionado`,
+    });
+  };
+
   const startConversation = async () => {
     try {
       setIsConnecting(true);
@@ -216,7 +238,12 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
 
       console.log('Iniciando conversación con ElevenLabs...');
       await conversation.startSession({ 
-        signedUrl: data.signedUrl 
+        signedUrl: data.signedUrl,
+        overrides: {
+          agent: {
+            language: voiceLanguage,
+          },
+        },
       });
     } catch (error) {
       console.error('Error al iniciar conversación:', error);
@@ -245,6 +272,29 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
       <ConversationHistory messages={messages} isVisible={isConnected && showHistory} />
       
       <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-2 items-end">
+        {/* Selector de idioma - solo visible cuando no está conectado */}
+        {!isConnected && !isConnecting && (
+          <div className="bg-background/95 backdrop-blur-sm rounded-lg shadow-lg p-3 border border-border">
+            <div className="flex items-center gap-2 mb-2">
+              <Languages className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium">{t('activities.voice.selectLanguage')}</span>
+            </div>
+            <Select value={voiceLanguage} onValueChange={handleLanguageChange}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="es">{t('activities.voice.languages.es')}</SelectItem>
+                <SelectItem value="en">{t('activities.voice.languages.en')}</SelectItem>
+                <SelectItem value="ca">{t('activities.voice.languages.ca')}</SelectItem>
+                <SelectItem value="fr">{t('activities.voice.languages.fr')}</SelectItem>
+                <SelectItem value="it">{t('activities.voice.languages.it')}</SelectItem>
+                <SelectItem value="de">{t('activities.voice.languages.de')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        
         {isConnected && messages.length > 0 && (
           <Button
             onClick={() => setShowHistory(!showHistory)}

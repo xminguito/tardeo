@@ -117,6 +117,7 @@ serve(async (req) => {
                 description: "Type of filter to apply"
               },
               value: {
+                type: "string",
                 description: "Filter value (string, number, or boolean depending on filterType)"
               }
             },

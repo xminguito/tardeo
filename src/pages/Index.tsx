@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { generateActivitySlug } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import ActivityCard from "@/components/ActivityCard";
+import LanguageSelector from "@/components/LanguageSelector";
 import { User, Bell, Plus, LogIn } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -113,7 +114,8 @@ const Index = () => {
               <h1 className="text-5xl font-bold mb-2">Tardeo</h1>
               <p className="text-xl opacity-90">Encuentra actividades y amigos con tus mismos intereses</p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-3 items-center">
+              <LanguageSelector />
               {user ? (
                 <>
                   <Button variant="secondary" onClick={() => navigate("/profile")}>

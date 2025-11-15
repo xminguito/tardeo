@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, MapPin, Users, Clock, Euro } from 'lucide-react';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { es, enUS, ca, fr, it, de } from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
 import type { ActivityWithParticipation } from '@/features/activities/types/activity.types';
 
@@ -13,8 +13,20 @@ interface ActivityCardProps {
 }
 
 export default function ActivityCard({ activity, onReserve }: ActivityCardProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const isFull = activity.availableSlots <= 0;
+
+  const getDateLocale = () => {
+    switch (i18n.language) {
+      case 'es': return es;
+      case 'en': return enUS;
+      case 'ca': return ca;
+      case 'fr': return fr;
+      case 'it': return it;
+      case 'de': return de;
+      default: return es;
+    }
+  };
 
   return (
     <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 border-2">
@@ -42,7 +54,7 @@ export default function ActivityCard({ activity, onReserve }: ActivityCardProps)
           <div className="flex items-center gap-2 text-sm">
             <Calendar className="h-4 w-4 text-primary" aria-hidden="true" />
             <time dateTime={activity.date}>
-              {format(new Date(activity.date), 'PPP', { locale: es })}
+              {format(new Date(activity.date), 'PPP', { locale: getDateLocale() })}
             </time>
           </div>
 

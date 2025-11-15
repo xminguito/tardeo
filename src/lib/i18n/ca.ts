@@ -51,6 +51,15 @@ export default {
       micPermission: 'Necessito accés al micròfon',
       searching: 'Cercant activitats...',
       reserving: 'Realitzant reserva...',
+      selectLanguage: 'Idioma de l\'assistant',
+      languages: {
+        es: 'Español',
+        en: 'English',
+        ca: 'Català',
+        fr: 'Français',
+        it: 'Italiano',
+        de: 'Deutsch',
+      },
     },
   },
 };

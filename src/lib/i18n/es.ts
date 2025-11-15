@@ -51,6 +51,15 @@ export default {
       micPermission: 'Necesito acceso al micrófono',
       searching: 'Buscando actividades...',
       reserving: 'Realizando reserva...',
+      selectLanguage: 'Idioma del asistente',
+      languages: {
+        es: 'Español',
+        en: 'English',
+        ca: 'Català',
+        fr: 'Français',
+        it: 'Italiano',
+        de: 'Deutsch',
+      },
     },
   },
 };

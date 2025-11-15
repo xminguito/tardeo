@@ -60,7 +60,7 @@ export function ActivityFiltersComponent({ onFiltersChange, categories }: Activi
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="minCost">{t('activities.filters.cost')} Min</Label>
+          <Label htmlFor="minCost">{t('activities.filters.priceMin')}</Label>
           <Input
             id="minCost"
             type="number"
@@ -71,7 +71,7 @@ export function ActivityFiltersComponent({ onFiltersChange, categories }: Activi
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="maxCost">{t('activities.filters.cost')} Max</Label>
+          <Label htmlFor="maxCost">{t('activities.filters.priceMax')}</Label>
           <Input
             id="maxCost"
             type="number"

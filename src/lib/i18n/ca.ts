@@ -86,6 +86,8 @@ export default {
       location: 'Ubicació',
       date: 'Data',
       cost: 'Preu',
+      priceMin: 'Preu mínim',
+      priceMax: 'Preu màxim',
       availableOnly: 'Només disponibles',
       free: 'Gratis',
       apply: 'Aplicar filtres',

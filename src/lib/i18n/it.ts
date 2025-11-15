@@ -86,6 +86,8 @@ export default {
       location: 'Luogo',
       date: 'Data',
       cost: 'Prezzo',
+      priceMin: 'Prezzo minimo',
+      priceMax: 'Prezzo massimo',
       availableOnly: 'Solo disponibili',
       free: 'Gratis',
       apply: 'Applica filtri',

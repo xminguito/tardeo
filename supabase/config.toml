@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.translate-activity]
 verify_jwt = true
+
+[functions.batch-translate-activities]
+verify_jwt = false

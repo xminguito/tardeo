@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Calendar, MapPin, Users, Clock, Euro, ArrowLeft, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { es, enUS, ca, fr, it, de } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import VoiceAssistant from '@/components/VoiceAssistant';
@@ -28,17 +28,53 @@ interface Activity {
   max_participants: number;
   image_url?: string | null;
   created_at?: string;
+  title_es?: string | null;
+  title_en?: string | null;
+  title_ca?: string | null;
+  title_fr?: string | null;
+  title_it?: string | null;
+  title_de?: string | null;
+  description_es?: string | null;
+  description_en?: string | null;
+  description_ca?: string | null;
+  description_fr?: string | null;
+  description_it?: string | null;
+  description_de?: string | null;
 }
 
 export default function ActivityDetail() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [activity, setActivity] = useState<Activity | null>(null);
   const [loading, setLoading] = useState(true);
   const [isParticipating, setIsParticipating] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+
+  const getDateLocale = () => {
+    switch (i18n.language) {
+      case 'es': return es;
+      case 'en': return enUS;
+      case 'ca': return ca;
+      case 'fr': return fr;
+      case 'it': return it;
+      case 'de': return de;
+      default: return es;
+    }
+  };
+
+  const getTranslatedTitle = (activity: Activity) => {
+    const lang = i18n.language;
+    const titleKey = `title_${lang}` as keyof Activity;
+    return (activity[titleKey] as string) || activity.title_es || activity.title;
+  };
+
+  const getTranslatedDescription = (activity: Activity) => {
+    const lang = i18n.language;
+    const descKey = `description_${lang}` as keyof Activity;
+    return (activity[descKey] as string) || activity.description_es || activity.description;
+  };
 
   useEffect(() => {
     loadActivity();
@@ -212,10 +248,10 @@ export default function ActivityDetail() {
               </div>
             )}
 
-            <div className="space-y-4">
+              <div className="space-y-4">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h1 className="text-4xl font-bold mb-2">{activity.title}</h1>
+                  <h1 className="text-4xl font-bold mb-2">{getTranslatedTitle(activity)}</h1>
                   <Badge className="text-lg px-4 py-1">{activity.category}</Badge>
                 </div>
                 <Button variant="outline" size="icon" onClick={handleShare}>
@@ -224,7 +260,7 @@ export default function ActivityDetail() {
               </div>
 
               <p className="text-lg text-muted-foreground leading-relaxed">
-                {activity.description}
+                {getTranslatedDescription(activity)}
               </p>
             </div>
           </div>
@@ -238,7 +274,7 @@ export default function ActivityDetail() {
                     <div>
                       <p className="font-semibold">Fecha</p>
                       <time dateTime={activity.date}>
-                        {format(new Date(activity.date), 'PPP', { locale: es })}
+                        {format(new Date(activity.date), 'PPP', { locale: getDateLocale() })}
                       </time>
                     </div>
                   </div>

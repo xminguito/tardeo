@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { generateActivitySlug } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import ActivityCard from "@/components/ActivityCard";
+import CreateActivityDialog from "@/components/CreateActivityDialog";
 import LanguageSelector from "@/components/LanguageSelector";
 import { User, Bell, Plus, LogIn } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -184,10 +185,7 @@ const Index = () => {
                 {t('home.viewAll')}
               </Button>
               {user && (
-                <Button>
-                  <Plus className="mr-2 h-5 w-5" />
-                  {t('home.createActivity')}
-                </Button>
+                <CreateActivityDialog onActivityCreated={loadActivities} />
               )}
             </div>
           </div>

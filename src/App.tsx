@@ -17,6 +17,8 @@ import UpdateAgent from "./pages/UpdateAgent";
 import TranslateActivities from "./pages/TranslateActivities";
 import Admin from "./pages/Admin";
 import Favorites from "./pages/Favorites";
+import MyAccount from "./pages/MyAccount";
+import Notifications from "./pages/Notifications";
 
 const queryClient = new QueryClient();
 
@@ -30,9 +32,11 @@ const AppContent = () => {
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/auth" element={<Auth />} />
+        <Route path="/mi-cuenta" element={<MyAccount />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/perfil" element={<Profile />} />
         <Route path="/favoritos" element={<Favorites />} />
+        <Route path="/notificaciones" element={<Notifications />} />
         <Route path="/actividades" element={<ActivitiesCalendar />} />
         <Route path="/actividades/:slug" element={<ActivityDetail />} />
         <Route path="/admin" element={<Admin />} />

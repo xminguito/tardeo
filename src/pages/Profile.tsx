@@ -166,7 +166,7 @@ const Profile = () => {
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-2xl mx-auto py-8 space-y-6">
         <div className="flex items-center justify-between">
-          <Button variant="ghost" onClick={() => navigate("/")}>
+          <Button variant="ghost" onClick={() => navigate("/mi-cuenta")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Volver
           </Button>

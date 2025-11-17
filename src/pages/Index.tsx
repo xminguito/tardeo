@@ -10,6 +10,7 @@ import CreateActivityDialog from "@/components/CreateActivityDialog";
 import LanguageSelector from "@/components/LanguageSelector";
 import { User, Bell, Plus, LogIn, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useFavorites } from "@/features/activities/hooks/useFavorites";
 
 interface Activity {
   id: string;
@@ -37,6 +38,7 @@ const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation();
+  const { isFavorite, toggleFavorite } = useFavorites(user?.id);
 
   useEffect(() => {
     checkUser();
@@ -230,6 +232,8 @@ const Index = () => {
                         const act = activities.find(a => a.id === id);
                         if (act) navigate(`/actividades/${generateActivitySlug(act.title, act.id)}`);
                       }}
+                      isFavorite={isFavorite(activity.id)}
+                      onToggleFavorite={toggleFavorite}
                     />
                   </div>
                 ))}

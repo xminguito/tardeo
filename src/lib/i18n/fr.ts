@@ -174,4 +174,15 @@ export default {
       },
     },
   },
+  favorites: {
+    add: 'Ajouter aux favoris',
+    remove: 'Retirer des favoris',
+    added: 'Ajouté aux favoris!',
+    addedDesc: 'L\'activité a été ajoutée à vos favoris',
+    removed: 'Retiré des favoris',
+    removedDesc: 'L\'activité a été retirée de vos favoris',
+    loginRequired: 'Connexion requise',
+    loginRequiredDesc: 'Vous devez vous connecter pour enregistrer des favoris',
+    error: 'Impossible de mettre à jour les favoris',
+  },
 };

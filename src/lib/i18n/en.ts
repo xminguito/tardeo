@@ -174,4 +174,15 @@ export default {
       },
     },
   },
+  favorites: {
+    add: 'Add to favorites',
+    remove: 'Remove from favorites',
+    added: 'Added to favorites!',
+    addedDesc: 'The activity has been added to your favorites',
+    removed: 'Removed from favorites',
+    removedDesc: 'The activity has been removed from your favorites',
+    loginRequired: 'Sign in required',
+    loginRequiredDesc: 'You must sign in to save favorites',
+    error: 'Could not update favorites',
+  },
 };

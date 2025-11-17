@@ -174,4 +174,15 @@ export default {
       },
     },
   },
+  favorites: {
+    add: 'Zu Favoriten hinzufügen',
+    remove: 'Aus Favoriten entfernen',
+    added: 'Zu Favoriten hinzugefügt!',
+    addedDesc: 'Die Aktivität wurde zu Ihren Favoriten hinzugefügt',
+    removed: 'Aus Favoriten entfernt',
+    removedDesc: 'Die Aktivität wurde aus Ihren Favoriten entfernt',
+    loginRequired: 'Anmeldung erforderlich',
+    loginRequiredDesc: 'Sie müssen sich anmelden, um Favoriten zu speichern',
+    error: 'Favoriten konnten nicht aktualisiert werden',
+  },
 };

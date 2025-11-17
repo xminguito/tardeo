@@ -1,7 +1,7 @@
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MapPin, Users, Clock, Euro } from 'lucide-react';
+import { Calendar, MapPin, Users, Clock, Euro, Heart } from 'lucide-react';
 import { format } from 'date-fns';
 import { es, enUS, ca, fr, it, de } from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
@@ -10,9 +10,11 @@ import type { ActivityWithParticipation } from '@/features/activities/types/acti
 interface ActivityCardProps {
   activity: ActivityWithParticipation;
   onReserve: (id: string) => void;
+  isFavorite?: boolean;
+  onToggleFavorite?: (id: string) => void;
 }
 
-export default function ActivityCard({ activity, onReserve }: ActivityCardProps) {
+export default function ActivityCard({ activity, onReserve, isFavorite = false, onToggleFavorite }: ActivityCardProps) {
   const { t, i18n } = useTranslation();
   const isFull = activity.availableSlots <= 0;
 
@@ -54,8 +56,28 @@ export default function ActivityCard({ activity, onReserve }: ActivityCardProps)
       
       <CardHeader>
         <div className="flex items-start justify-between gap-4">
-          <h3 className="text-xl font-bold leading-tight">{getTranslatedTitle()}</h3>
-          <Badge>{activity.category}</Badge>
+          <div className="flex-1">
+            <h3 className="text-xl font-bold leading-tight">{getTranslatedTitle()}</h3>
+          </div>
+          <div className="flex items-center gap-2">
+            {onToggleFavorite && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleFavorite(activity.id);
+                }}
+                className="h-8 w-8"
+                aria-label={isFavorite ? t('favorites.remove') : t('favorites.add')}
+              >
+                <Heart
+                  className={`h-5 w-5 ${isFavorite ? 'fill-primary text-primary' : ''}`}
+                />
+              </Button>
+            )}
+            <Badge>{activity.category}</Badge>
+          </div>
         </div>
       </CardHeader>
 

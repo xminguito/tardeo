@@ -174,4 +174,15 @@ export default {
       },
     },
   },
+  favorites: {
+    add: 'Afegir a favorits',
+    remove: 'Treure de favorits',
+    added: 'Afegit a favorits!',
+    addedDesc: 'L\'activitat s\'ha afegit als teus favorits',
+    removed: 'Eliminat de favorits',
+    removedDesc: 'L\'activitat s\'ha eliminat dels teus favorits',
+    loginRequired: 'Inicia sessió',
+    loginRequiredDesc: 'Has d\'iniciar sessió per guardar favorits',
+    error: 'No s\'han pogut actualitzar els favorits',
+  },
 };

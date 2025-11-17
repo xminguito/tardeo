@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft } from 'lucide-react';
 import type { ActivityFilters } from '@/features/activities/types/activity.types';
 import { generateActivitySlug } from '@/lib/utils';
+import { useFavorites } from '@/features/activities/hooks/useFavorites';
 
 export default function ActivitiesCalendarPage() {
   const { t } = useTranslation();
@@ -21,6 +22,7 @@ export default function ActivitiesCalendarPage() {
   const [userId, setUserId] = useState<string | null>(null);
 
   const { data: activities, isLoading, error } = useActivities(filters);
+  const { isFavorite, toggleFavorite } = useFavorites(userId);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -90,6 +92,8 @@ export default function ActivitiesCalendarPage() {
                             availableSlots: activity.max_participants - activity.current_participants,
                           }}
                           onReserve={handleReserve}
+                          isFavorite={isFavorite(activity.id)}
+                          onToggleFavorite={toggleFavorite}
                         />
                       </div>
                     ))}

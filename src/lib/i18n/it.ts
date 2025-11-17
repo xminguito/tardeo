@@ -174,4 +174,15 @@ export default {
       },
     },
   },
+  favorites: {
+    add: 'Aggiungi ai preferiti',
+    remove: 'Rimuovi dai preferiti',
+    added: 'Aggiunto ai preferiti!',
+    addedDesc: 'L\'attività è stata aggiunta ai tuoi preferiti',
+    removed: 'Rimosso dai preferiti',
+    removedDesc: 'L\'attività è stata rimossa dai tuoi preferiti',
+    loginRequired: 'Accesso richiesto',
+    loginRequiredDesc: 'Devi effettuare l\'accesso per salvare i preferiti',
+    error: 'Impossibile aggiornare i preferiti',
+  },
 };

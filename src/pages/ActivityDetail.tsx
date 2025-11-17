@@ -283,7 +283,7 @@ export default function ActivityDetail() {
                     <Clock className="h-6 w-6 text-primary flex-shrink-0" />
                     <div>
                       <p className="font-semibold">Hora</p>
-                      <span>{activity.time}</span>
+                      <span>{activity.time.slice(0, 5)}</span>
                     </div>
                   </div>
 

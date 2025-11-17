@@ -6,9 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, CheckCircle, AlertCircle, ArrowLeft } from "lucide-react";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 
 const UpdateAgent = () => {
   const navigate = useNavigate();
+  const { isAdmin, loading: adminLoading } = useAdminCheck(true);
   const [agentId, setAgentId] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
@@ -55,6 +57,18 @@ const UpdateAgent = () => {
       setIsUpdating(false);
     }
   };
+
+  if (adminLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-lg text-muted-foreground">Verificando permisos...</p>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background p-8">

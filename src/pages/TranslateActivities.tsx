@@ -6,10 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft, Languages, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAdminCheck } from '@/hooks/useAdminCheck';
 
 export default function TranslateActivities() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isAdmin, loading: adminLoading } = useAdminCheck(true);
   const [isTranslating, setIsTranslating] = useState(false);
   const [results, setResults] = useState<{
     total: number;
@@ -64,6 +66,18 @@ export default function TranslateActivities() {
       setIsTranslating(false);
     }
   };
+
+  if (adminLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-lg text-muted-foreground">Verificando permisos...</p>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background">

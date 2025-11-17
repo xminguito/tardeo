@@ -17,6 +17,7 @@ const Profile = () => {
   const [profile, setProfile] = useState<any>(null);
   const [interests, setInterests] = useState<any[]>([]);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -43,6 +44,16 @@ const Profile = () => {
         setProfile(profileData);
         setSelectedInterests(profileData.user_interests?.map((ui: any) => ui.interest_id) || []);
       }
+
+      // Check if user is admin
+      const { data: adminRole } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+      
+      setIsUserAdmin(!!adminRole);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -155,10 +166,12 @@ const Profile = () => {
             Volver
           </Button>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate("/admin")}>
-              <Settings className="mr-2 h-4 w-4" />
-              Admin
-            </Button>
+            {isUserAdmin && (
+              <Button variant="outline" onClick={() => navigate("/admin")}>
+                <Settings className="mr-2 h-4 w-4" />
+                Admin
+              </Button>
+            )}
             <Button variant="outline" onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
               Cerrar sesión

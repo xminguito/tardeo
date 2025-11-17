@@ -33,6 +33,7 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -47,16 +48,31 @@ const Index = () => {
     if (session?.user) {
       setUser(session.user);
       loadNotifications(session.user.id);
+      checkIfAdmin(session.user.id);
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user || null);
       if (session?.user) {
         loadNotifications(session.user.id);
+        checkIfAdmin(session.user.id);
+      } else {
+        setIsUserAdmin(false);
       }
     });
 
     return () => subscription.unsubscribe();
+  };
+
+  const checkIfAdmin = async (userId: string) => {
+    const { data } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .eq('role', 'admin')
+      .maybeSingle();
+    
+    setIsUserAdmin(!!data);
   };
 
   const loadActivities = async () => {
@@ -121,10 +137,12 @@ const Index = () => {
               <LanguageSelector />
               {user ? (
                 <>
-                  <Button variant="secondary" onClick={() => navigate("/admin")}>
-                    <Settings className="mr-2 h-5 w-5" />
-                    Admin
-                  </Button>
+                  {isUserAdmin && (
+                    <Button variant="secondary" onClick={() => navigate("/admin")}>
+                      <Settings className="mr-2 h-5 w-5" />
+                      Admin
+                    </Button>
+                  )}
                   <Button variant="secondary" onClick={() => navigate("/profile")}>
                     <User className="mr-2 h-5 w-5" />
                     {t('home.profile')}

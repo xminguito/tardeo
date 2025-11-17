@@ -3,10 +3,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Languages, Mic, ArrowLeft, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useAdminCheck } from '@/hooks/useAdminCheck';
 
 export default function Admin() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { isAdmin, loading } = useAdminCheck(true);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-lg text-muted-foreground">Verificando permisos...</p>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return null;
+  }
 
   const adminTools = [
     {

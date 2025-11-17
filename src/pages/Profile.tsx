@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { User, LogOut, ArrowLeft } from "lucide-react";
+import { User, LogOut, ArrowLeft, Settings } from "lucide-react";
 import { z } from "zod";
 
 const Profile = () => {
@@ -154,10 +154,16 @@ const Profile = () => {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Volver
           </Button>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Cerrar sesión
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate("/admin")}>
+              <Settings className="mr-2 h-4 w-4" />
+              Admin
+            </Button>
+            <Button variant="outline" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Cerrar sesión
+            </Button>
+          </div>
         </div>
 
         <Card>

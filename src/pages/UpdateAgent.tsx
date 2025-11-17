@@ -1,12 +1,14 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { Loader2, CheckCircle, AlertCircle, ArrowLeft } from "lucide-react";
 
 const UpdateAgent = () => {
+  const navigate = useNavigate();
   const [agentId, setAgentId] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
@@ -57,6 +59,15 @@ const UpdateAgent = () => {
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-2xl mx-auto">
+        <Button
+          variant="ghost"
+          onClick={() => navigate('/admin')}
+          className="mb-6"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Volver al admin
+        </Button>
+
         <Card>
           <CardHeader>
             <CardTitle>Actualizar Agente de ElevenLabs</CardTitle>

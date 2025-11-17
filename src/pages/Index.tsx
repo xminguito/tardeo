@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import ActivityCard from "@/components/ActivityCard";
 import CreateActivityDialog from "@/components/CreateActivityDialog";
 import LanguageSelector from "@/components/LanguageSelector";
-import { User, Bell, Plus, LogIn } from "lucide-react";
+import { User, Bell, Plus, LogIn, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Activity {
@@ -121,6 +121,10 @@ const Index = () => {
               <LanguageSelector />
               {user ? (
                 <>
+                  <Button variant="secondary" onClick={() => navigate("/admin")}>
+                    <Settings className="mr-2 h-5 w-5" />
+                    Admin
+                  </Button>
                   <Button variant="secondary" onClick={() => navigate("/profile")}>
                     <User className="mr-2 h-5 w-5" />
                     {t('home.profile')}

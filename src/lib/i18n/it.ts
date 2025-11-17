@@ -175,6 +175,7 @@ export default {
     },
   },
   favorites: {
+    title: 'I Miei Preferiti',
     add: 'Aggiungi ai preferiti',
     remove: 'Rimuovi dai preferiti',
     added: 'Aggiunto ai preferiti!',
@@ -184,5 +185,11 @@ export default {
     loginRequired: 'Accesso richiesto',
     loginRequiredDesc: 'Devi effettuare l\'accesso per salvare i preferiti',
     error: 'Impossibile aggiornare i preferiti',
+    noFavoritesYet: 'Nessun preferito ancora',
+    noFavoritesDesc: 'Esplora le attività e salva i tuoi preferiti per vederli qui',
+    exploreActivities: 'Esplora attività',
+    count: 'Hai {{count}} attività salvata',
+    count_plural: 'Hai {{count}} attività salvate',
+    errorLoadingFavorites: 'Impossibile caricare i tuoi preferiti',
   },
 };

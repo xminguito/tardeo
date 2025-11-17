@@ -146,6 +146,10 @@ const Index = () => {
                       Admin
                     </Button>
                   )}
+                  <Button variant="secondary" onClick={() => navigate("/mi-cuenta")}>
+                    <User className="mr-2 h-5 w-5" />
+                    {t('home.profile')}
+                  </Button>
                   <Button 
                     variant="secondary" 
                     onClick={() => navigate("/favoritos")}
@@ -157,10 +161,6 @@ const Index = () => {
                         {favorites.size}
                       </Badge>
                     )}
-                  </Button>
-                  <Button variant="secondary" onClick={() => navigate("/mi-cuenta")}>
-                    <User className="mr-2 h-5 w-5" />
-                    {t('home.profile')}
                   </Button>
                   <NotificationsDropdown userId={user.id} />
                 </>

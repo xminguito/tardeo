@@ -72,7 +72,7 @@ export default function ActivityCard({ activity, onReserve }: ActivityCardProps)
 
           <div className="flex items-center gap-2 text-sm">
             <Clock className="h-4 w-4 text-primary" aria-hidden="true" />
-            <span>{activity.time}</span>
+            <span>{activity.time.slice(0, 5)}</span>
           </div>
 
           <div className="flex items-center gap-2 text-sm">

@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
-const LanguageSelector = () => {
+const LanguageSelector = ({ inMobileMenu = false }: { inMobileMenu?: boolean }) => {
   const { i18n, t } = useTranslation();
   const { toast } = useToast();
 
@@ -25,10 +25,14 @@ const LanguageSelector = () => {
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <Languages className="h-4 w-4" />
+    <div className="flex items-center gap-1 md:gap-2 flex-shrink-0 w-full md:w-auto">
+      <Languages className={`h-3 w-3 md:h-4 md:w-4 ${inMobileMenu ? 'block' : 'hidden sm:block'}`} />
       <Select value={i18n.language} onValueChange={handleLanguageChange}>
-        <SelectTrigger className="w-[140px] bg-background/20 border-primary-foreground/20 text-primary-foreground">
+        <SelectTrigger className={`w-full md:w-[140px] text-sm md:text-base ${
+          inMobileMenu 
+            ? 'bg-background border-border text-foreground' 
+            : 'bg-background/20 border-primary-foreground/20 text-primary-foreground'
+        }`}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

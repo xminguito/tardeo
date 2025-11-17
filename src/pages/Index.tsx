@@ -129,24 +129,26 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-gradient-to-r from-primary via-primary/90 to-primary/80 text-primary-foreground py-8 px-4 shadow-xl">
-        <div className="container mx-auto">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-background overflow-x-hidden">
+      <header className="bg-gradient-to-r from-primary via-primary/90 to-primary/80 text-primary-foreground py-4 md:py-8 px-4 shadow-xl">
+        <div className="container mx-auto max-w-full">
+          <div className="flex items-center justify-between gap-2 md:gap-4 mb-4">
+            <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
               <MobileNav 
                 user={user} 
                 isUserAdmin={isUserAdmin} 
                 favoritesCount={favorites.size}
               />
-              <div>
-                <h1 className="text-3xl md:text-5xl font-bold mb-2">{t('home.title')}</h1>
-                <p className="text-base md:text-xl opacity-90">{t('home.subtitle')}</p>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-2xl md:text-5xl font-bold mb-1 md:mb-2 truncate">{t('home.title')}</h1>
+                <p className="text-sm md:text-xl opacity-90 truncate">{t('home.subtitle')}</p>
               </div>
             </div>
-            <div className="flex gap-3 items-center">
-              <LanguageSelector />
-              <div className="hidden md:flex gap-3 items-center">
+            <div className="flex gap-1 md:gap-3 items-center flex-shrink-0">
+              <div className="hidden md:block">
+                <LanguageSelector />
+              </div>
+              <div className="hidden md:flex gap-3 items-center flex-shrink-0">
                 {user ? (
                   <>
                     {isUserAdmin && (
@@ -216,10 +218,10 @@ const Index = () => {
         )}
 
         <section className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-semibold">{t('home.featuredActivities')}</h2>
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={() => navigate("/actividades")}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+            <h2 className="text-2xl md:text-3xl font-semibold">{t('home.featuredActivities')}</h2>
+            <div className="flex gap-2 md:gap-3 flex-shrink-0">
+              <Button variant="outline" size="sm" className="md:size-default" onClick={() => navigate("/actividades")}>
                 {t('home.viewAll')}
               </Button>
               {user && (
@@ -253,7 +255,7 @@ const Index = () => {
                 ))}
               </div>
               <div className="text-center mt-8">
-                <Button size="lg" variant="outline" onClick={() => navigate("/actividades")}>
+                <Button size="default" variant="outline" onClick={() => navigate("/actividades")}>
                   {t('home.viewFullCalendar')}
                 </Button>
               </div>

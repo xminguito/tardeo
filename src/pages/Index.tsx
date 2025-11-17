@@ -12,6 +12,7 @@ import { User, Bell, Plus, LogIn, Settings, Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFavorites } from "@/features/activities/hooks/useFavorites";
 import NotificationsDropdown from "@/components/NotificationsDropdown";
+import MobileNav from "@/components/MobileNav";
 
 interface Activity {
   id: string;
@@ -132,44 +133,53 @@ const Index = () => {
       <header className="bg-gradient-to-r from-primary via-primary/90 to-primary/80 text-primary-foreground py-8 px-4 shadow-xl">
         <div className="container mx-auto">
           <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-5xl font-bold mb-2">{t('home.title')}</h1>
-              <p className="text-xl opacity-90">{t('home.subtitle')}</p>
+            <div className="flex items-center gap-3">
+              <MobileNav 
+                user={user} 
+                isUserAdmin={isUserAdmin} 
+                favoritesCount={favorites.size}
+              />
+              <div>
+                <h1 className="text-3xl md:text-5xl font-bold mb-2">{t('home.title')}</h1>
+                <p className="text-base md:text-xl opacity-90">{t('home.subtitle')}</p>
+              </div>
             </div>
             <div className="flex gap-3 items-center">
               <LanguageSelector />
-              {user ? (
-                <>
-                  {isUserAdmin && (
-                    <Button variant="secondary" onClick={() => navigate("/admin")}>
-                      <Settings className="mr-2 h-5 w-5" />
-                      Admin
-                    </Button>
-                  )}
-                  <Button variant="secondary" onClick={() => navigate("/mi-cuenta")}>
-                    <User className="mr-2 h-5 w-5" />
-                    {t('home.profile')}
-                  </Button>
-                  <Button 
-                    variant="secondary" 
-                    onClick={() => navigate("/favoritos")}
-                    className="relative"
-                  >
-                    <Heart className="h-5 w-5 fill-current" />
-                    {favorites.size > 0 && (
-                      <Badge className="absolute -top-2 -right-2 bg-accent text-accent-foreground min-w-[20px] h-5 flex items-center justify-center">
-                        {favorites.size}
-                      </Badge>
+              <div className="hidden md:flex gap-3 items-center">
+                {user ? (
+                  <>
+                    {isUserAdmin && (
+                      <Button variant="secondary" onClick={() => navigate("/admin")}>
+                        <Settings className="mr-2 h-5 w-5" />
+                        Admin
+                      </Button>
                     )}
+                    <Button variant="secondary" onClick={() => navigate("/mi-cuenta")}>
+                      <User className="mr-2 h-5 w-5" />
+                      {t('home.profile')}
+                    </Button>
+                    <Button 
+                      variant="secondary" 
+                      onClick={() => navigate("/favoritos")}
+                      className="relative"
+                    >
+                      <Heart className="h-5 w-5 fill-current" />
+                      {favorites.size > 0 && (
+                        <Badge className="absolute -top-2 -right-2 bg-accent text-accent-foreground min-w-[20px] h-5 flex items-center justify-center">
+                          {favorites.size}
+                        </Badge>
+                      )}
+                    </Button>
+                  </>
+                ) : (
+                  <Button variant="secondary" onClick={() => navigate("/auth")}>
+                    <LogIn className="mr-2 h-5 w-5" />
+                    {t('home.login')}
                   </Button>
-                  <NotificationsDropdown userId={user.id} />
-                </>
-              ) : (
-                <Button variant="secondary" onClick={() => navigate("/auth")}>
-                  <LogIn className="mr-2 h-5 w-5" />
-                  {t('home.login')}
-                </Button>
-              )}
+                )}
+              </div>
+              {user && <NotificationsDropdown userId={user.id} />}
             </div>
           </div>
         </div>

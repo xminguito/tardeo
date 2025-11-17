@@ -23,12 +23,24 @@ export type Database = {
           current_participants: number | null
           date: string
           description: string | null
+          description_ca: string | null
+          description_de: string | null
+          description_en: string | null
+          description_es: string | null
+          description_fr: string | null
+          description_it: string | null
           id: string
           image_url: string | null
           location: string
           max_participants: number | null
           time: string
           title: string
+          title_ca: string | null
+          title_de: string | null
+          title_en: string | null
+          title_es: string | null
+          title_fr: string | null
+          title_it: string | null
           updated_at: string | null
         }
         Insert: {
@@ -39,12 +51,24 @@ export type Database = {
           current_participants?: number | null
           date: string
           description?: string | null
+          description_ca?: string | null
+          description_de?: string | null
+          description_en?: string | null
+          description_es?: string | null
+          description_fr?: string | null
+          description_it?: string | null
           id?: string
           image_url?: string | null
           location: string
           max_participants?: number | null
           time?: string
           title: string
+          title_ca?: string | null
+          title_de?: string | null
+          title_en?: string | null
+          title_es?: string | null
+          title_fr?: string | null
+          title_it?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -55,12 +79,24 @@ export type Database = {
           current_participants?: number | null
           date?: string
           description?: string | null
+          description_ca?: string | null
+          description_de?: string | null
+          description_en?: string | null
+          description_es?: string | null
+          description_fr?: string | null
+          description_it?: string | null
           id?: string
           image_url?: string | null
           location?: string
           max_participants?: number | null
           time?: string
           title?: string
+          title_ca?: string | null
+          title_de?: string | null
+          title_en?: string | null
+          title_es?: string | null
+          title_fr?: string | null
+          title_it?: string | null
           updated_at?: string | null
         }
         Relationships: []

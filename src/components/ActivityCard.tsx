@@ -28,6 +28,18 @@ export default function ActivityCard({ activity, onReserve }: ActivityCardProps)
     }
   };
 
+  const getTranslatedTitle = () => {
+    const lang = i18n.language;
+    const titleKey = `title_${lang}` as keyof typeof activity;
+    return (activity[titleKey] as string) || activity.title_es || activity.title;
+  };
+
+  const getTranslatedDescription = () => {
+    const lang = i18n.language;
+    const descKey = `description_${lang}` as keyof typeof activity;
+    return (activity[descKey] as string) || activity.description_es || activity.description;
+  };
+
   return (
     <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 border-2">
       {activity.image_url && (
@@ -42,13 +54,13 @@ export default function ActivityCard({ activity, onReserve }: ActivityCardProps)
       
       <CardHeader>
         <div className="flex items-start justify-between gap-4">
-          <h3 className="text-xl font-bold leading-tight">{activity.title}</h3>
+          <h3 className="text-xl font-bold leading-tight">{getTranslatedTitle()}</h3>
           <Badge>{activity.category}</Badge>
         </div>
       </CardHeader>
 
       <CardContent className="space-y-3">
-        <p className="text-muted-foreground line-clamp-2">{activity.description}</p>
+        <p className="text-muted-foreground line-clamp-2">{getTranslatedDescription()}</p>
 
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm">

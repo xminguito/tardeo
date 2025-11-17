@@ -14,6 +14,7 @@ import NotFound from "./pages/NotFound";
 import ActivitiesCalendar from "./pages/ActivitiesCalendar";
 import ActivityDetail from "./pages/ActivityDetail";
 import UpdateAgent from "./pages/UpdateAgent";
+import TranslateActivities from "./pages/TranslateActivities";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const AppContent = () => {
         <Route path="/actividades" element={<ActivitiesCalendar />} />
         <Route path="/actividades/:slug" element={<ActivityDetail />} />
         <Route path="/update-agent" element={<UpdateAgent />} />
+        <Route path="/traducir-actividades" element={<TranslateActivities />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>

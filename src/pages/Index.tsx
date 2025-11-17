@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import ActivityCard from "@/components/ActivityCard";
 import CreateActivityDialog from "@/components/CreateActivityDialog";
 import LanguageSelector from "@/components/LanguageSelector";
-import { User, Bell, Plus, LogIn, Settings } from "lucide-react";
+import { User, Bell, Plus, LogIn, Settings, Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFavorites } from "@/features/activities/hooks/useFavorites";
 
@@ -38,7 +38,7 @@ const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation();
-  const { isFavorite, toggleFavorite } = useFavorites(user?.id);
+  const { isFavorite, toggleFavorite, favorites } = useFavorites(user?.id);
 
   useEffect(() => {
     checkUser();
@@ -145,6 +145,18 @@ const Index = () => {
                       Admin
                     </Button>
                   )}
+                  <Button 
+                    variant="secondary" 
+                    onClick={() => navigate("/favoritos")}
+                    className="relative"
+                  >
+                    <Heart className="h-5 w-5 fill-current" />
+                    {favorites.size > 0 && (
+                      <Badge className="absolute -top-2 -right-2 bg-accent text-accent-foreground min-w-[20px] h-5 flex items-center justify-center">
+                        {favorites.size}
+                      </Badge>
+                    )}
+                  </Button>
                   <Button variant="secondary" onClick={() => navigate("/profile")}>
                     <User className="mr-2 h-5 w-5" />
                     {t('home.profile')}

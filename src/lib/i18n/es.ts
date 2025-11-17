@@ -175,6 +175,7 @@ export default {
     },
   },
   favorites: {
+    title: 'Mis Favoritos',
     add: 'Añadir a favoritos',
     remove: 'Quitar de favoritos',
     added: '¡Añadido a favoritos!',
@@ -184,5 +185,11 @@ export default {
     loginRequired: 'Inicia sesión',
     loginRequiredDesc: 'Debes iniciar sesión para guardar favoritos',
     error: 'No se pudo actualizar los favoritos',
+    noFavoritesYet: 'Aún no tienes favoritos',
+    noFavoritesDesc: 'Explora actividades y guarda tus favoritas para verlas aquí',
+    exploreActivities: 'Explorar actividades',
+    count: 'Tienes {{count}} actividad guardada',
+    count_plural: 'Tienes {{count}} actividades guardadas',
+    errorLoadingFavorites: 'No se pudieron cargar tus favoritos',
   },
 };

@@ -8,8 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { User, LogOut, ArrowLeft, Settings } from "lucide-react";
+import { User, LogOut, ArrowLeft, Settings, Heart } from "lucide-react";
 import { z } from "zod";
+import { useFavorites } from "@/features/activities/hooks/useFavorites";
 
 const Profile = () => {
   const [loading, setLoading] = useState(true);
@@ -18,8 +19,10 @@ const Profile = () => {
   const [interests, setInterests] = useState<any[]>([]);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { favorites } = useFavorites(userId);
 
   useEffect(() => {
     loadProfile();
@@ -33,6 +36,8 @@ const Profile = () => {
         navigate("/auth");
         return;
       }
+
+      setUserId(user.id);
 
       const { data: profileData } = await supabase
         .from("profiles")
@@ -181,14 +186,24 @@ const Profile = () => {
 
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <User className="w-8 h-8 text-primary" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                  <User className="w-8 h-8 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-2xl">Mi Perfil</CardTitle>
+                  <p className="text-sm text-muted-foreground">Personaliza tu información</p>
+                </div>
               </div>
-              <div>
-                <CardTitle className="text-2xl">Mi Perfil</CardTitle>
-                <p className="text-sm text-muted-foreground">Personaliza tu información</p>
-              </div>
+              <Button 
+                variant="outline" 
+                onClick={() => navigate("/favoritos")}
+                className="flex items-center gap-2"
+              >
+                <Heart className="h-5 w-5 text-primary fill-primary" />
+                <span className="font-semibold">{favorites.size}</span>
+              </Button>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">

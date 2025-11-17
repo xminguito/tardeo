@@ -175,6 +175,7 @@ export default {
     },
   },
   favorites: {
+    title: 'My Favorites',
     add: 'Add to favorites',
     remove: 'Remove from favorites',
     added: 'Added to favorites!',
@@ -184,5 +185,11 @@ export default {
     loginRequired: 'Sign in required',
     loginRequiredDesc: 'You must sign in to save favorites',
     error: 'Could not update favorites',
+    noFavoritesYet: 'No favorites yet',
+    noFavoritesDesc: 'Explore activities and save your favorites to see them here',
+    exploreActivities: 'Explore activities',
+    count: 'You have {{count}} saved activity',
+    count_plural: 'You have {{count}} saved activities',
+    errorLoadingFavorites: 'Could not load your favorites',
   },
 };

@@ -175,6 +175,7 @@ export default {
     },
   },
   favorites: {
+    title: 'Els Meus Favorits',
     add: 'Afegir a favorits',
     remove: 'Treure de favorits',
     added: 'Afegit a favorits!',
@@ -184,5 +185,11 @@ export default {
     loginRequired: 'Inicia sessió',
     loginRequiredDesc: 'Has d\'iniciar sessió per guardar favorits',
     error: 'No s\'han pogut actualitzar els favorits',
+    noFavoritesYet: 'Encara no tens favorits',
+    noFavoritesDesc: 'Explora activitats i guarda les teves favorites per veure-les aquí',
+    exploreActivities: 'Explorar activitats',
+    count: 'Tens {{count}} activitat guardada',
+    count_plural: 'Tens {{count}} activitats guardades',
+    errorLoadingFavorites: 'No s\'han pogut carregar els teus favorits',
   },
 };

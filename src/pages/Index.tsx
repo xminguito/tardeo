@@ -11,6 +11,7 @@ import LanguageSelector from "@/components/LanguageSelector";
 import { User, Bell, Plus, LogIn, Settings, Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFavorites } from "@/features/activities/hooks/useFavorites";
+import NotificationsDropdown from "@/components/NotificationsDropdown";
 
 interface Activity {
   id: string;
@@ -161,16 +162,7 @@ const Index = () => {
                     <User className="mr-2 h-5 w-5" />
                     {t('home.profile')}
                   </Button>
-                  {notifications.length > 0 && (
-                    <div className="relative">
-                      <Button variant="secondary">
-                        <Bell className="h-5 w-5" />
-                      </Button>
-                      <Badge className="absolute -top-2 -right-2 bg-accent text-accent-foreground">
-                        {notifications.length}
-                      </Badge>
-                    </div>
-                  )}
+                  <NotificationsDropdown userId={user.id} />
                 </>
               ) : (
                 <Button variant="secondary" onClick={() => navigate("/auth")}>

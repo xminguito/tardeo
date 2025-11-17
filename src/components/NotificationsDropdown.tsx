@@ -198,8 +198,8 @@ export default function NotificationsDropdown({ userId }: NotificationsDropdownP
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="secondary" className="relative">
-          <Bell className="h-5 w-5" />
+        <Button variant="secondary" size="icon" className="relative flex-shrink-0">
+          <Bell className="h-4 w-4 md:h-5 md:w-5" />
           {unreadCount > 0 && (
             <Badge className="absolute -top-2 -right-2 bg-accent text-accent-foreground min-w-[20px] h-5 flex items-center justify-center">
               {unreadCount}

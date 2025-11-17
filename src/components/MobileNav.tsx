@@ -12,6 +12,7 @@ import {
 import { Menu, User, Heart, Calendar, Settings, LogIn } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import LanguageSelector from "@/components/LanguageSelector";
 
 interface MobileNavProps {
   user: any;
@@ -32,15 +33,19 @@ export default function MobileNav({ user, isUserAdmin, favoritesCount }: MobileN
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="md:hidden">
-          <Menu className="h-6 w-6" />
+        <Button variant="ghost" size="icon" className="md:hidden flex-shrink-0">
+          <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-64">
         <SheetHeader>
           <SheetTitle>{t('home.title')}</SheetTitle>
         </SheetHeader>
-        <div className="flex flex-col gap-4 mt-6">
+        <div className="mt-4 px-2">
+          <LanguageSelector inMobileMenu={true} />
+        </div>
+        <Separator className="my-4" />
+        <div className="flex flex-col gap-4">
           {user ? (
             <>
               <Button

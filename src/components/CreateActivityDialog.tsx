@@ -148,9 +148,10 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-5 w-5" />
-          {t('home.createActivity')}
+        <Button size="sm" className="md:size-default">
+          <Plus className="mr-1 md:mr-2 h-4 w-4 md:h-5 md:w-5" />
+          <span className="hidden sm:inline">{t('home.createActivity')}</span>
+          <span className="sm:hidden">{t('common.create')}</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">

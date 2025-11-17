@@ -10,6 +10,7 @@ export default {
     success: 'Success',
     close: 'Close',
     confirm: 'Confirm',
+    create: 'Create',
   },
   home: {
     title: 'Tardeo',

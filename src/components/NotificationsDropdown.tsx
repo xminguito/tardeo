@@ -210,16 +210,30 @@ export default function NotificationsDropdown({ userId }: NotificationsDropdownP
       <DropdownMenuContent className="w-96" align="end">
         <div className="flex items-center justify-between px-4 py-3 border-b">
           <h3 className="font-semibold text-lg">{t('notifications.title')}</h3>
-          {unreadCount > 0 && (
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
-              onClick={markAllAsRead}
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate('/notificaciones');
+                setOpen(false);
+              }}
               className="text-xs"
             >
-              {t('notifications.markAllRead')}
+              {t('notifications.viewAll')}
             </Button>
-          )}
+            {unreadCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={markAllAsRead}
+                className="text-xs"
+              >
+                {t('notifications.markAllRead')}
+              </Button>
+            )}
+          </div>
         </div>
         
         <ScrollArea className="h-[400px]">

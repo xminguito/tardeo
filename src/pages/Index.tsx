@@ -158,7 +158,7 @@ const Index = () => {
                       </Badge>
                     )}
                   </Button>
-                  <Button variant="secondary" onClick={() => navigate("/profile")}>
+                  <Button variant="secondary" onClick={() => navigate("/mi-cuenta")}>
                     <User className="mr-2 h-5 w-5" />
                     {t('home.profile')}
                   </Button>

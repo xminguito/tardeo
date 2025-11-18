@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import VoiceAssistant from '@/components/VoiceAssistant';
 import { useVoiceActivityTools } from '@/features/activities/hooks/useVoiceActivityTools';
 import { ActivityRatings } from '@/features/activities/components/ActivityRatings';
+import ActivityImageGallery from '@/components/ActivityImageGallery';
 import type { ActivityFilters } from '@/features/activities/types/activity.types';
 import { extractIdFromSlug } from '@/lib/utils';
 
@@ -27,6 +28,7 @@ interface Activity {
   current_participants: number;
   max_participants: number;
   image_url?: string | null;
+  secondary_images?: string[] | null;
   created_at?: string;
   title_es?: string | null;
   title_en?: string | null;
@@ -239,13 +241,11 @@ export default function ActivityDetail() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
             {activity.image_url && (
-              <div className="w-full h-[400px] rounded-lg overflow-hidden">
-                <img
-                  src={activity.image_url}
-                  alt={activity.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
+              <ActivityImageGallery
+                mainImage={activity.image_url}
+                secondaryImages={activity.secondary_images || []}
+                title={getTranslatedTitle(activity)}
+              />
             )}
 
               <div className="space-y-4">

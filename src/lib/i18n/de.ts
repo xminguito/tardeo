@@ -107,6 +107,7 @@ export default {
       join: 'Ich mache mit!',
       full: 'Voll',
       joined: 'Bereits angemeldet',
+      leave: 'Abmelden',
     },
     create: {
       title: 'Neue Aktivität erstellen',

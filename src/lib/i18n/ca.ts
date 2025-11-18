@@ -107,6 +107,7 @@ export default {
       join: 'M\'apunto!',
       full: 'Complet',
       joined: 'Ja apuntat',
+      leave: 'Desapuntar-me',
     },
     create: {
       title: 'Crear nova activitat',

@@ -193,6 +193,7 @@ export default function MyActivities() {
                   key={activity.id}
                   activity={activity}
                   onReserve={handleLeaveActivity}
+                  showLeaveButton={true}
                 />
               ))}
             </div>

@@ -80,7 +80,6 @@ export default function ActivitiesCalendarPage() {
         <PageHeader
           title={t('activities.title')}
           icon={<Calendar className="h-8 w-8 text-primary" />}
-          backTo="/"
           breadcrumbs={[
             { label: t('activities.title') }
           ]}

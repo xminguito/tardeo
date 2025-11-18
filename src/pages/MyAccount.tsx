@@ -108,7 +108,6 @@ export default function MyAccount() {
         <PageHeader
           title={t('myAccount.title')}
           icon={<User className="h-8 w-8 text-primary" />}
-          backTo="/"
           breadcrumbs={[
             { label: t('myAccount.title') }
           ]}

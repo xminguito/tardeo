@@ -68,7 +68,6 @@ export default function Admin() {
         <PageHeader
           title={t('admin.title')}
           icon={<Settings className="h-8 w-8 text-primary" />}
-          backTo="/"
           breadcrumbs={[
             { label: t('admin.title') }
           ]}

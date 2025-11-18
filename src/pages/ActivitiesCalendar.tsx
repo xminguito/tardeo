@@ -7,12 +7,13 @@ import ActivityCard from '@/components/ActivityCard';
 import { ActivityCalendar } from '@/features/activities/components/ActivityCalendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft } from 'lucide-react';
 import type { ActivityFilters } from '@/features/activities/types/activity.types';
 import { generateActivitySlug } from '@/lib/utils';
 import { useFavorites } from '@/features/activities/hooks/useFavorites';
+import PageHeader from '@/components/PageHeader';
 
 export default function ActivitiesCalendarPage() {
   const { t } = useTranslation();
@@ -52,13 +53,14 @@ export default function ActivitiesCalendarPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center gap-4 mb-6">
-            <Button variant="ghost" onClick={() => navigate('/')}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              {t('activities.home')}
-            </Button>
-            <h1 className="text-4xl font-bold">{t('activities.title')}</h1>
-          </div>
+        <PageHeader
+          title={t('activities.title')}
+          icon={<Calendar className="h-8 w-8 text-primary" />}
+          backTo="/"
+          breadcrumbs={[
+            { label: t('activities.title') }
+          ]}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <aside className="lg:col-span-1">

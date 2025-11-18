@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Bell, Check, Trash2 } from 'lucide-react';
+import { Bell, Check, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
+import PageHeader from '@/components/PageHeader';
 
 interface Notification {
   id: string;
@@ -205,39 +206,37 @@ export default function Notifications() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" onClick={() => navigate('/mi-cuenta')}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {t('common.back')}
-          </Button>
-          <div className="flex items-center gap-3">
-            <Bell className="h-8 w-8 text-primary" />
-            <h1 className="text-4xl font-bold">{t('notifications.pageTitle')}</h1>
-          </div>
-        </div>
+        <PageHeader
+          title={t('notifications.pageTitle')}
+          icon={<Bell className="h-8 w-8 text-primary" />}
+          backTo="/mi-cuenta"
+          breadcrumbs={[
+            { label: t('myAccount.title'), href: '/mi-cuenta' },
+            { label: t('notifications.pageTitle') }
+          ]}
+          actions={
+            unreadCount > 0 && (
+              <Button onClick={markAllAsRead} variant="outline">
+                <Check className="mr-2 h-4 w-4" />
+                {t('notifications.markAllRead')}
+              </Button>
+            )
+          }
+        />
 
-        <div className="flex flex-col md:flex-row gap-4 mb-6 items-start md:items-center justify-between">
-          <Tabs value={filterType} onValueChange={(v) => setFilterType(v as any)} className="w-full md:w-auto">
-            <TabsList>
-              <TabsTrigger value="all">
-                {t('notifications.all')} ({notifications.length})
-              </TabsTrigger>
-              <TabsTrigger value="unread">
-                {t('notifications.unread')} ({unreadCount})
-              </TabsTrigger>
-              <TabsTrigger value="read">
-                {t('notifications.read')} ({notifications.length - unreadCount})
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-
-          {unreadCount > 0 && (
-            <Button onClick={markAllAsRead} variant="outline">
-              <Check className="mr-2 h-4 w-4" />
-              {t('notifications.markAllRead')}
-            </Button>
-          )}
-        </div>
+        <Tabs value={filterType} onValueChange={(v) => setFilterType(v as any)} className="mb-6">
+          <TabsList>
+            <TabsTrigger value="all">
+              {t('notifications.all')} ({notifications.length})
+            </TabsTrigger>
+            <TabsTrigger value="unread">
+              {t('notifications.unread')} ({unreadCount})
+            </TabsTrigger>
+            <TabsTrigger value="read">
+              {t('notifications.read')} ({notifications.length - unreadCount})
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
 
         {filteredNotifications.length === 0 ? (
           <Card>

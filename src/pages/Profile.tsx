@@ -8,9 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { User, LogOut, ArrowLeft, Settings, Heart } from "lucide-react";
+import { User, LogOut, Shield, Heart } from "lucide-react";
 import { z } from "zod";
 import { useFavorites } from "@/features/activities/hooks/useFavorites";
+import PageHeader from "@/components/PageHeader";
+import { useTranslation } from "react-i18next";
 
 const Profile = () => {
   const [loading, setLoading] = useState(true);
@@ -22,6 +24,7 @@ const Profile = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const { favorites } = useFavorites(userId);
 
   useEffect(() => {
@@ -61,8 +64,8 @@ const Profile = () => {
       setIsUserAdmin(!!adminRole);
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: "No se pudo cargar el perfil",
+        title: t('common.error'),
+        description: t('profile.errorLoading'),
         variant: "destructive",
       });
     } finally {
@@ -119,8 +122,8 @@ const Profile = () => {
       }
 
       toast({
-        title: "¡Perfil actualizado! ✨",
-        description: "Tus cambios han sido guardados",
+        title: t('profile.updated'),
+        description: t('profile.updatedDesc'),
       });
     } catch (error: any) {
       if (error instanceof z.ZodError) {
@@ -157,45 +160,43 @@ const Profile = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Cargando perfil...</p>
+        <p className="text-muted-foreground">{t('common.loading')}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="max-w-2xl mx-auto py-8 space-y-6">
-        <div className="flex items-center justify-between">
-          <Button variant="ghost" onClick={() => navigate("/mi-cuenta")}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver
-          </Button>
-          <div className="flex gap-2">
-            {isUserAdmin && (
-              <Button variant="outline" onClick={() => navigate("/admin")}>
-                <Settings className="mr-2 h-4 w-4" />
-                Admin
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8">
+        <PageHeader
+          title={t('profile.title')}
+          icon={<User className="h-8 w-8 text-primary" />}
+          backTo="/mi-cuenta"
+          breadcrumbs={[
+            { label: t('myAccount.title'), href: '/mi-cuenta' },
+            { label: t('profile.title') }
+          ]}
+          actions={
+            <>
+              {isUserAdmin && (
+                <Button variant="outline" onClick={() => navigate('/admin')}>
+                  <Shield className="mr-2 h-4 w-4" />
+                  {t('profile.admin')}
+                </Button>
+              )}
+              <Button variant="outline" onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                {t('profile.logout')}
               </Button>
-            )}
-            <Button variant="outline" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Cerrar sesión
-            </Button>
-          </div>
-        </div>
+            </>
+          }
+        />
 
+        <div className="max-w-2xl mx-auto">
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                  <User className="w-8 h-8 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-2xl">Mi Perfil</CardTitle>
-                  <p className="text-sm text-muted-foreground">Personaliza tu información</p>
-                </div>
-              </div>
+              <CardTitle className="text-2xl">{t('profile.personalInfo')}</CardTitle>
               <Button 
                 variant="outline" 
                 onClick={() => navigate("/favoritos")}
@@ -208,7 +209,7 @@ const Profile = () => {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="fullName">Nombre completo</Label>
+              <Label htmlFor="fullName">{t('profile.fullName')}</Label>
               <Input
                 id="fullName"
                 value={profile?.full_name || ""}
@@ -217,10 +218,10 @@ const Profile = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="bio">Sobre mí</Label>
+              <Label htmlFor="bio">{t('profile.bio')}</Label>
               <Textarea
                 id="bio"
-                placeholder="Cuéntanos algo sobre ti..."
+                placeholder={t('profile.bioPlaceholder')}
                 value={profile?.bio || ""}
                 onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
                 rows={4}
@@ -228,17 +229,17 @@ const Profile = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="city">Ciudad</Label>
+              <Label htmlFor="city">{t('profile.city')}</Label>
               <Input
                 id="city"
                 value={profile?.city || ""}
                 onChange={(e) => setProfile({ ...profile, city: e.target.value })}
-                placeholder="Madrid, Barcelona..."
+                placeholder={t('profile.cityPlaceholder')}
               />
             </div>
 
             <div className="space-y-3">
-              <Label>Mis intereses</Label>
+              <Label>{t('profile.interests')}</Label>
               <div className="flex flex-wrap gap-2">
                 {interests.map((interest) => (
                   <Badge
@@ -254,10 +255,11 @@ const Profile = () => {
             </div>
 
             <Button onClick={handleSave} disabled={saving} className="w-full">
-              {saving ? "Guardando..." : "Guardar cambios"}
+              {saving ? t('profile.saving') : t('profile.saveChanges')}
             </Button>
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );

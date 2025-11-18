@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Calendar, MapPin, Users, Clock, Euro, Share2 } from 'lucide-react';
+import { Calendar, MapPin, Users, Clock, Euro, MessageCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { es, enUS, ca, fr, it, de } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -250,7 +250,7 @@ export default function ActivityDetail() {
           ]}
           actions={
             <Button variant="outline" onClick={handleShare}>
-              <Share2 className="mr-2 h-4 w-4" />
+              <MessageCircle className="mr-2 h-4 w-4" />
               {t('activityDetail.share')}
             </Button>
           }
@@ -273,7 +273,7 @@ export default function ActivityDetail() {
                   <Badge className="text-lg px-4 py-1">{activity.category}</Badge>
                 </div>
                 <Button variant="outline" size="icon" onClick={handleShare}>
-                  <Share2 className="h-4 w-4" />
+                  <MessageCircle className="h-4 w-4" />
                 </Button>
               </div>
 

@@ -8,12 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -37,48 +37,75 @@ const Auth = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const authSchema = z.object({
-    email: z.string().email(t('auth.emailInvalid')).max(255, t('auth.emailTooLong')),
-    password: z.string().min(8, t('auth.passwordShort')).max(72, t('auth.passwordTooLong')),
-    fullName: z.string().trim().min(2, t('auth.nameTooShort')).max(100, t('auth.nameTooLong')).optional(),
+  const phoneSchema = z.object({
+    phone: z.string()
+      .regex(/^\+?[1-9]\d{1,14}$/, t('auth.phoneInvalid'))
+      .min(9, t('auth.phoneTooShort'))
+      .max(15, t('auth.phoneTooLong')),
   });
 
-  const handleAuth = async (e: React.FormEvent) => {
+  const otpSchema = z.object({
+    otp: z.string().length(6, t('auth.otpInvalid')),
+  });
+
+  const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Validate inputs
-      authSchema.parse({
-        email: email.trim(),
-        password,
-        fullName: isLogin ? undefined : fullName.trim(),
+      // Validate phone number
+      phoneSchema.parse({ phone: phone.trim() });
+
+      const { error } = await supabase.auth.signInWithOtp({
+        phone: phone.trim(),
       });
-      if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
+
+      if (error) throw error;
+
+      setOtpSent(true);
+      toast({
+        title: t('auth.otpSent'),
+        description: t('auth.otpSentDesc'),
+      });
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
         toast({
-          title: t('auth.welcomeBack'),
-          description: t('auth.welcomeBackDesc'),
+          title: t('auth.validationError'),
+          description: error.errors[0].message,
+          variant: "destructive",
         });
       } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { full_name: fullName },
-            emailRedirectTo: `${window.location.origin}/`,
-          },
-        });
-        if (error) throw error;
         toast({
-          title: t('auth.accountCreated'),
-          description: t('auth.accountCreatedDesc'),
+          title: t('common.error'),
+          description: error.message,
+          variant: "destructive",
         });
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      // Validate OTP
+      otpSchema.parse({ otp });
+
+      const { error } = await supabase.auth.verifyOtp({
+        phone: phone.trim(),
+        token: otp,
+        type: 'sms',
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: t('auth.welcomeBack'),
+        description: t('auth.loginSuccess'),
+      });
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         toast({
@@ -102,61 +129,72 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl">Bienvenido a Tardeo</CardTitle>
+          <CardTitle className="text-3xl">{t('auth.welcome')}</CardTitle>
           <CardDescription>
-            {isLogin ? "Inicia sesión para continuar" : "Crea tu cuenta y comienza a conectar"}
+            {otpSent ? t('auth.enterCode') : t('auth.enterPhone')}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleAuth} className="space-y-4">
-            {!isLogin && (
+          {!otpSent ? (
+            <form onSubmit={handleSendOTP} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="fullName">Nombre completo</Label>
+                <Label htmlFor="phone">{t('auth.phoneNumber')}</Label>
                 <Input
-                  id="fullName"
-                  type="text"
-                  placeholder="Tu nombre"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required={!isLogin}
+                  id="phone"
+                  type="tel"
+                  placeholder="+34 612 345 678"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
                 />
+                <p className="text-xs text-muted-foreground">
+                  {t('auth.phoneHint')}
+                </p>
               </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="tu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Cargando..." : isLogin ? "Iniciar sesión" : "Crear cuenta"}
-            </Button>
-          </form>
-          <div className="mt-4 text-center">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-sm text-muted-foreground hover:text-primary"
-            >
-              {isLogin ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
-            </button>
-          </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? t('common.loading') : t('auth.sendCode')}
+              </Button>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyOTP} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="otp">{t('auth.verificationCode')}</Label>
+                <div className="flex justify-center">
+                  <InputOTP
+                    maxLength={6}
+                    value={otp}
+                    onChange={(value) => setOtp(value)}
+                  >
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
+                </div>
+                <p className="text-xs text-muted-foreground text-center">
+                  {t('auth.otpHint')}
+                </p>
+              </div>
+              <Button type="submit" className="w-full" disabled={loading || otp.length !== 6}>
+                {loading ? t('common.loading') : t('auth.verify')}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full"
+                onClick={() => {
+                  setOtpSent(false);
+                  setOtp("");
+                }}
+              >
+                {t('auth.changePhone')}
+              </Button>
+            </form>
+          )}
         </CardContent>
       </Card>
     </div>

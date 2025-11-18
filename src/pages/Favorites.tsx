@@ -135,7 +135,7 @@ export default function Favorites() {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" onClick={() => navigate('/perfil')}>
+          <Button variant="ghost" onClick={() => navigate('/mi-cuenta')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             {t('common.back')}
           </Button>

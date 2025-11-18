@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useFavorites } from '@/features/activities/hooks/useFavorites';
 import PageHeader from '@/components/PageHeader';
 import Header from '@/components/Header';
+import PageTransition from '@/components/PageTransition';
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -64,7 +65,8 @@ export default function Admin() {
         isUserAdmin={isAdmin} 
         favoritesCount={favorites.size}
       />
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <PageTransition>
+        <div className="container mx-auto px-4 py-8 max-w-5xl">
         <PageHeader
           title={t('admin.title')}
           icon={<Settings className="h-8 w-8 text-primary" />}
@@ -106,7 +108,8 @@ export default function Admin() {
             );
           })}
         </div>
-      </div>
+        </div>
+      </PageTransition>
     </div>
   );
 }

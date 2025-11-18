@@ -16,6 +16,7 @@ import ActivityImageGallery from '@/components/ActivityImageGallery';
 import PageHeader from '@/components/PageHeader';
 import Header from '@/components/Header';
 import { useFavorites } from '@/features/activities/hooks/useFavorites';
+import PageTransition from '@/components/PageTransition';
 import type { ActivityFilters } from '@/features/activities/types/activity.types';
 import { extractIdFromSlug } from '@/lib/utils';
 
@@ -250,7 +251,8 @@ export default function ActivityDetail() {
         isUserAdmin={isUserAdmin} 
         favoritesCount={favorites.size}
       />
-      <div className="container mx-auto px-4 py-8">
+      <PageTransition>
+        <div className="container mx-auto px-4 py-8">
         <PageHeader
           title={getTranslatedTitle(activity)}
           breadcrumbs={[
@@ -374,8 +376,8 @@ export default function ActivityDetail() {
         <div className="mt-12">
           <ActivityRatings activityId={activity.id} />
         </div>
-      </div>
-
+        </div>
+      </PageTransition>
     </div>
   );
 }

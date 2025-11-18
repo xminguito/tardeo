@@ -107,6 +107,7 @@ export default {
       join: '¡Me apunto!',
       full: 'Completo',
       joined: 'Ya apuntado',
+      leave: 'Desapuntarme',
     },
     create: {
       title: 'Crear nueva actividad',

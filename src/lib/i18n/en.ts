@@ -107,6 +107,7 @@ export default {
       join: 'Join!',
       full: 'Full',
       joined: 'Already joined',
+      leave: 'Leave',
     },
     create: {
       title: 'Create new activity',

@@ -12,9 +12,10 @@ interface ActivityCardProps {
   onReserve: (id: string) => void;
   isFavorite?: boolean;
   onToggleFavorite?: (id: string) => void;
+  showLeaveButton?: boolean;
 }
 
-export default function ActivityCard({ activity, onReserve, isFavorite = false, onToggleFavorite }: ActivityCardProps) {
+export default function ActivityCard({ activity, onReserve, isFavorite = false, onToggleFavorite, showLeaveButton = false }: ActivityCardProps) {
   const { t, i18n } = useTranslation();
   const isFull = activity.availableSlots <= 0;
 
@@ -119,25 +120,36 @@ export default function ActivityCard({ activity, onReserve, isFavorite = false, 
       </CardContent>
 
       <CardFooter>
-        <Button
-          onClick={() => onReserve(activity.id)}
-          disabled={isFull || activity.isUserParticipating}
-          className="w-full"
-          variant={isFull ? 'secondary' : 'default'}
-          aria-label={
-            isFull
+        {showLeaveButton && activity.isUserParticipating ? (
+          <Button
+            onClick={() => onReserve(activity.id)}
+            className="w-full"
+            variant="destructive"
+            aria-label={t('activities.card.leave')}
+          >
+            {t('activities.card.leave')}
+          </Button>
+        ) : (
+          <Button
+            onClick={() => onReserve(activity.id)}
+            disabled={isFull || activity.isUserParticipating}
+            className="w-full"
+            variant={isFull ? 'secondary' : 'default'}
+            aria-label={
+              isFull
+                ? t('activities.card.full')
+                : activity.isUserParticipating
+                ? t('activities.card.joined')
+                : t('activities.card.join')
+            }
+          >
+            {isFull
               ? t('activities.card.full')
               : activity.isUserParticipating
               ? t('activities.card.joined')
-              : t('activities.card.join')
-          }
-        >
-          {isFull
-            ? t('activities.card.full')
-            : activity.isUserParticipating
-            ? t('activities.card.joined')
-            : t('activities.card.join')}
-        </Button>
+              : t('activities.card.join')}
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );

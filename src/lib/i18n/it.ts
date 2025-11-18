@@ -107,6 +107,7 @@ export default {
       join: 'Mi iscrivo!',
       full: 'Completo',
       joined: 'Già iscritto',
+      leave: 'Annullare',
     },
     create: {
       title: 'Crea nuova attività',

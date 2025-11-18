@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { useVoiceActivityTools } from "@/features/activities/hooks/useVoiceActivityTools";
 import VoiceAssistant from "@/components/VoiceAssistant";
+import MobileActionButtons from "@/components/MobileActionButtons";
 import type { ActivityFilters } from "@/features/activities/types/activity.types";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -46,6 +47,7 @@ const AppContent = () => {
         <Route path="*" element={<NotFound />} />
       </Routes>
       <VoiceAssistant clientTools={voiceTools} />
+      <MobileActionButtons />
     </>
   );
 };

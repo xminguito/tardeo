@@ -327,5 +327,8 @@ export default {
     loading: "Cargando actividad...",
     notFound: "Actividad no encontrada",
     share: "Compartir",
+    leftActivity: "Te has desapuntado",
+    leftActivityDesc: "Has cancelado tu participación en esta actividad",
+    errorLeaving: "No se pudo completar la cancelación",
   },
 };

@@ -327,5 +327,8 @@ export default {
     loading: "Aktivität wird geladen...",
     notFound: "Aktivität nicht gefunden",
     share: "Teilen",
+    leftActivity: "Sie haben abgemeldet",
+    leftActivityDesc: "Sie haben Ihre Teilnahme an dieser Aktivität storniert",
+    errorLeaving: "Stornierung konnte nicht abgeschlossen werden",
   },
 };

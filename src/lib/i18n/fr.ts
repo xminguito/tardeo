@@ -327,5 +327,8 @@ export default {
     loading: "Chargement de l'activité...",
     notFound: "Activité non trouvée",
     share: "Partager",
+    leftActivity: "Vous vous êtes désinscrit",
+    leftActivityDesc: "Vous avez annulé votre participation à cette activité",
+    errorLeaving: "Impossible de compléter l'annulation",
   },
 };

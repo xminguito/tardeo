@@ -33,6 +33,7 @@ export type Database = {
           image_url: string | null
           location: string
           max_participants: number | null
+          secondary_images: string[] | null
           time: string
           title: string
           title_ca: string | null
@@ -61,6 +62,7 @@ export type Database = {
           image_url?: string | null
           location: string
           max_participants?: number | null
+          secondary_images?: string[] | null
           time?: string
           title: string
           title_ca?: string | null
@@ -89,6 +91,7 @@ export type Database = {
           image_url?: string | null
           location?: string
           max_participants?: number | null
+          secondary_images?: string[] | null
           time?: string
           title?: string
           title_ca?: string | null

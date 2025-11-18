@@ -37,6 +37,8 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
   });
   const [mainImage, setMainImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [secondaryImages, setSecondaryImages] = useState<File[]>([]);
+  const [secondaryPreviews, setSecondaryPreviews] = useState<string[]>([]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -58,6 +60,46 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
     }
   };
 
+  const handleSecondaryImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    
+    if (files.length + secondaryImages.length > 4) {
+      toast({
+        title: t('common.error'),
+        description: t('activities.create.maxSecondaryImages'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const validFiles = files.filter(file => {
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: t('common.error'),
+          description: t('activities.create.imageTooLarge'),
+          variant: 'destructive',
+        });
+        return false;
+      }
+      return true;
+    });
+
+    setSecondaryImages(prev => [...prev, ...validFiles]);
+
+    validFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSecondaryPreviews(prev => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeSecondaryImage = (index: number) => {
+    setSecondaryImages(prev => prev.filter((_, i) => i !== index));
+    setSecondaryPreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -75,8 +117,9 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
       }
 
       let imageUrl: string | null = null;
+      const secondaryImageUrls: string[] = [];
 
-      // Upload image if provided
+      // Upload main image if provided
       if (mainImage) {
         const fileExt = mainImage.name.split('.').pop();
         const fileName = `${user.id}-${Date.now()}.${fileExt}`;
@@ -101,6 +144,31 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
           .getPublicUrl(filePath);
 
         imageUrl = publicUrl;
+      }
+
+      // Upload secondary images if provided
+      if (secondaryImages.length > 0) {
+        for (let i = 0; i < secondaryImages.length; i++) {
+          const file = secondaryImages[i];
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${user.id}-${Date.now()}-secondary-${i}.${fileExt}`;
+          const filePath = `${fileName}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from('activity-images')
+            .upload(filePath, file);
+
+          if (uploadError) {
+            console.error('Secondary image upload error:', uploadError);
+            continue; // Continue with other images
+          }
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('activity-images')
+            .getPublicUrl(filePath);
+
+          secondaryImageUrls.push(publicUrl);
+        }
       }
 
       // Translate title and description using Lovable AI
@@ -141,6 +209,7 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
         max_participants: formData.maxParticipants,
         created_by: user.id,
         image_url: imageUrl,
+        secondary_images: secondaryImageUrls,
         // Spanish (original)
         title_es: formData.title,
         description_es: formData.description,
@@ -185,6 +254,8 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
       });
       setMainImage(null);
       setImagePreview(null);
+      setSecondaryImages([]);
+      setSecondaryPreviews([]);
 
       onActivityCreated?.();
     } catch (error) {
@@ -259,6 +330,43 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
             )}
             <p className="text-xs text-muted-foreground mt-1">
               {t('activities.create.imageRequirements')}
+            </p>
+          </div>
+
+          <div>
+            <Label htmlFor="secondaryImages">{t('activities.create.secondaryImages')}</Label>
+            <Input
+              id="secondaryImages"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/jpg"
+              onChange={handleSecondaryImagesChange}
+              className="cursor-pointer"
+              multiple
+              disabled={secondaryImages.length >= 4}
+            />
+            {secondaryPreviews.length > 0 && (
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                {secondaryPreviews.map((preview, index) => (
+                  <div key={index} className="relative h-32 rounded-lg overflow-hidden border border-border group">
+                    <img 
+                      src={preview} 
+                      alt={`Secondary ${index + 1}`} 
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeSecondaryImage(index)}
+                      className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <span className="sr-only">Remove</span>
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">
+              {t('activities.create.secondaryImagesHelp')} ({secondaryImages.length}/4)
             </p>
           </div>
 

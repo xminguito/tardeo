@@ -78,7 +78,9 @@ export default {
     updatedDesc: 'Your changes have been saved',
     errorLoading: 'Could not load profile',
     bioTooLong: 'Bio too long',
-    cityTooLong: 'City too long',
+    cityTooLong: 'City name too long',
+    admin: 'Admin',
+    logout: 'Sign out',
   },
   activities: {
     title: 'Activities',

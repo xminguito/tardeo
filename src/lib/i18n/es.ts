@@ -79,6 +79,8 @@ export default {
     errorLoading: 'No se pudo cargar el perfil',
     bioTooLong: 'Biografía muy larga',
     cityTooLong: 'Ciudad muy larga',
+    admin: 'Admin',
+    logout: 'Cerrar sesión',
   },
   activities: {
     title: 'Actividades',

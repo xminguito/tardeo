@@ -79,6 +79,8 @@ export default {
     errorLoading: 'No s\'ha pogut carregar el perfil',
     bioTooLong: 'Biografia massa llarga',
     cityTooLong: 'Ciutat massa llarga',
+    admin: 'Admin',
+    logout: 'Tancar sessió',
   },
   activities: {
     title: 'Activitats',

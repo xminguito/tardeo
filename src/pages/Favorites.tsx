@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Heart } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import ActivityCard from '@/components/ActivityCard';
 import { useToast } from '@/hooks/use-toast';
 import { generateActivitySlug } from '@/lib/utils';
 import { useFavorites } from '@/features/activities/hooks/useFavorites';
 import type { ActivityWithParticipation } from '@/features/activities/types/activity.types';
+import PageHeader from '@/components/PageHeader';
+import { Button } from '@/components/ui/button';
 
 interface Activity {
   id: string;
@@ -134,16 +135,15 @@ export default function Favorites() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" onClick={() => navigate('/mi-cuenta')}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {t('common.back')}
-          </Button>
-          <div className="flex items-center gap-3">
-            <Heart className="h-8 w-8 text-primary fill-primary" />
-            <h1 className="text-4xl font-bold">{t('favorites.title')}</h1>
-          </div>
-        </div>
+        <PageHeader
+          title={t('favorites.title')}
+          icon={<Heart className="h-8 w-8 text-primary fill-primary" />}
+          backTo="/mi-cuenta"
+          breadcrumbs={[
+            { label: t('myAccount.title'), href: '/mi-cuenta' },
+            { label: t('favorites.title') }
+          ]}
+        />
 
         {activities.length === 0 ? (
           <div className="text-center py-16">

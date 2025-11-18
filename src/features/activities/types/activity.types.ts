@@ -10,6 +10,7 @@ export interface Activity {
   current_participants: number;
   max_participants: number;
   image_url?: string | null;
+  secondary_images?: string[] | null;
   created_by?: string | null;
   created_at?: string;
   updated_at?: string;

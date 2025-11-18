@@ -184,8 +184,13 @@ const Index = () => {
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {activities.map((activity) => (
-                  <div key={activity.id} onClick={() => navigate(`/actividades/${generateActivitySlug(activity.title, activity.id)}`)} className="cursor-pointer">
+                {activities.map((activity, index) => (
+                  <div 
+                    key={activity.id} 
+                    onClick={() => navigate(`/actividades/${generateActivitySlug(activity.title, activity.id)}`)} 
+                    className="cursor-pointer animate-fade-in"
+                    style={{ animationDelay: `${index * 0.1}s`, animationFillMode: 'backwards' }}
+                  >
                     <ActivityCard
                       activity={{
                         ...activity,

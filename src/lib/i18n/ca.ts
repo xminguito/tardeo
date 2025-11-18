@@ -253,4 +253,8 @@ export default {
     logoutDesc: 'Tancar sessió en el teu compte',
     errorLoading: 'No s\'ha pogut carregar la informació del compte',
   },
+  admin: {
+    title: "Panell d'Administració",
+    description: "Gestiona i configura les eines administratives de la plataforma",
+  },
 };

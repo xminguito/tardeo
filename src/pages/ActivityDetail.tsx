@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Calendar, MapPin, Users, Clock, Euro, ArrowLeft, Share2 } from 'lucide-react';
+import { Calendar, MapPin, Users, Clock, Euro, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es, enUS, ca, fr, it, de } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -13,6 +13,7 @@ import VoiceAssistant from '@/components/VoiceAssistant';
 import { useVoiceActivityTools } from '@/features/activities/hooks/useVoiceActivityTools';
 import { ActivityRatings } from '@/features/activities/components/ActivityRatings';
 import ActivityImageGallery from '@/components/ActivityImageGallery';
+import PageHeader from '@/components/PageHeader';
 import type { ActivityFilters } from '@/features/activities/types/activity.types';
 import { extractIdFromSlug } from '@/lib/utils';
 
@@ -229,14 +230,19 @@ export default function ActivityDetail() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-        <Button
-          variant="ghost"
-          onClick={() => navigate(-1)}
-          className="mb-6"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Volver
-        </Button>
+        <PageHeader
+          title={getTranslatedTitle(activity)}
+          backTo="/"
+          breadcrumbs={[
+            { label: getTranslatedTitle(activity) }
+          ]}
+          actions={
+            <Button variant="outline" onClick={handleShare}>
+              <Share2 className="mr-2 h-4 w-4" />
+              {t('activityDetail.share')}
+            </Button>
+          }
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">

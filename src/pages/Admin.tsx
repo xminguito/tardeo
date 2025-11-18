@@ -1,9 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Languages, Mic, ArrowLeft, Settings } from 'lucide-react';
+import { Languages, Mic, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
+import PageHeader from '@/components/PageHeader';
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -42,24 +43,18 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-5xl">
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/')}
-          className="mb-6"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Volver al inicio
-        </Button>
+        <PageHeader
+          title={t('admin.title')}
+          icon={<Settings className="h-8 w-8 text-primary" />}
+          backTo="/"
+          breadcrumbs={[
+            { label: t('admin.title') }
+          ]}
+        />
 
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <Settings className="h-8 w-8 text-primary" />
-            <h1 className="text-4xl font-bold">Panel de Administración</h1>
-          </div>
-          <p className="text-muted-foreground text-lg">
-            Gestiona y configura las herramientas administrativas de la plataforma
-          </p>
-        </div>
+        <p className="text-muted-foreground text-lg mb-8">
+          {t('admin.description')}
+        </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {adminTools.map((tool) => {

@@ -253,4 +253,8 @@ export default {
     logoutDesc: 'Déconnectez-vous de votre compte',
     errorLoading: 'Impossible de charger les informations du compte',
   },
+  admin: {
+    title: "Panneau d'Administration",
+    description: "Gérer et configurer les outils administratifs de la plateforme",
+  },
 };

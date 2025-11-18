@@ -327,5 +327,8 @@ export default {
     loading: "Carregant activitat...",
     notFound: "Activitat no trobada",
     share: "Compartir",
+    leftActivity: "T'has desapuntat",
+    leftActivityDesc: "Has cancel·lat la teva participació en aquesta activitat",
+    errorLeaving: "No s'ha pogut completar la cancel·lació",
   },
 };

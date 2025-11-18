@@ -327,5 +327,8 @@ export default {
     loading: "Loading activity...",
     notFound: "Activity not found",
     share: "Share",
+    leftActivity: "You have left",
+    leftActivityDesc: "You have cancelled your participation in this activity",
+    errorLeaving: "Could not complete the cancellation",
   },
 };

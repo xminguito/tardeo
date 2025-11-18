@@ -10,7 +10,8 @@ import {
   Settings, 
   Calendar,
   LogOut,
-  Star
+  Star,
+  CalendarCheck
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
@@ -181,6 +182,26 @@ export default function MyAccount() {
             <CardContent>
               <p className="text-sm text-muted-foreground">
                 {t('myAccount.notificationsDesc')}
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Mis Actividades Apuntadas */}
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/mis-actividades')}>
+            <CardHeader>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <CalendarCheck className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle>{t('myAccount.myActivities')}</CardTitle>
+                  <CardDescription>{t('myAccount.registeredActivities')}</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                {t('myAccount.myActivitiesDesc')}
               </p>
             </CardContent>
           </Card>

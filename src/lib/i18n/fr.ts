@@ -239,6 +239,9 @@ export default {
     favorites: 'Mes Favoris',
     savedActivities: 'activités enregistrées',
     favoritesDesc: 'Vos activités favorites enregistrées',
+    myActivities: 'Mes Activités',
+    registeredActivities: 'Activités inscrites',
+    myActivitiesDesc: 'Activités auxquelles vous participez',
     notifications: 'Notifications',
     unread: 'non lues',
     notificationsDesc: 'Gérez vos notifications et alertes',
@@ -252,6 +255,13 @@ export default {
     endSession: 'Terminer la session',
     logoutDesc: 'Déconnectez-vous de votre compte',
     errorLoading: 'Impossible de charger les informations du compte',
+  },
+  myActivities: {
+    title: 'Mes Activités',
+    noActivities: 'Vous n\'êtes inscrit à aucune activité',
+    noActivitiesDesc: 'Explorez nos activités et rejoignez celles qui vous intéressent',
+    exploreActivities: 'Explorer les Activités',
+    errorLoading: 'Erreur lors du chargement de vos activités',
   },
   admin: {
     title: "Panneau d'Administration",

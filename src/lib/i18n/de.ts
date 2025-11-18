@@ -239,6 +239,9 @@ export default {
     favorites: 'Meine Favoriten',
     savedActivities: 'gespeicherte Aktivitäten',
     favoritesDesc: 'Ihre gespeicherten Lieblingsaktivitäten',
+    myActivities: 'Meine Aktivitäten',
+    registeredActivities: 'Angemeldete Aktivitäten',
+    myActivitiesDesc: 'Aktivitäten, an denen Sie teilnehmen',
     notifications: 'Benachrichtigungen',
     unread: 'ungelesen',
     notificationsDesc: 'Verwalten Sie Ihre Benachrichtigungen und Warnungen',
@@ -252,6 +255,13 @@ export default {
     endSession: 'Sitzung beenden',
     logoutDesc: 'Melden Sie sich von Ihrem Konto ab',
     errorLoading: 'Kontoinformationen konnten nicht geladen werden',
+  },
+  myActivities: {
+    title: 'Meine Aktivitäten',
+    noActivities: 'Sie sind für keine Aktivitäten angemeldet',
+    noActivitiesDesc: 'Erkunden Sie unsere Aktivitäten und treten Sie denen bei, die Sie interessieren',
+    exploreActivities: 'Aktivitäten Erkunden',
+    errorLoading: 'Fehler beim Laden Ihrer Aktivitäten',
   },
   admin: {
     title: "Verwaltungspanel",

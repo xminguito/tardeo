@@ -14,6 +14,7 @@ import type { ActivityFilters } from '@/features/activities/types/activity.types
 import { generateActivitySlug } from '@/lib/utils';
 import { useFavorites } from '@/features/activities/hooks/useFavorites';
 import PageHeader from '@/components/PageHeader';
+import Header from '@/components/Header';
 
 export default function ActivitiesCalendarPage() {
   const { t } = useTranslation();
@@ -21,15 +22,33 @@ export default function ActivitiesCalendarPage() {
   const navigate = useNavigate();
   const [filters, setFilters] = useState<ActivityFilters>({});
   const [userId, setUserId] = useState<string | null>(null);
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
   const { data: activities, isLoading, error } = useActivities(filters);
-  const { isFavorite, toggleFavorite } = useFavorites(userId);
+  const { isFavorite, toggleFavorite, favorites } = useFavorites(userId);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUserId(user?.id || null);
-    });
+    checkUser();
   }, []);
+  
+  const checkUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setUserId(user?.id || null);
+    setUser(user || null);
+    
+    if (user) {
+      // Check if user is admin
+      const { data: adminRole } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+      
+      setIsUserAdmin(!!adminRole);
+    }
+  };
 
   const categories = [...new Set(activities?.map((a) => a.category) || [])];
 
@@ -52,6 +71,11 @@ export default function ActivitiesCalendarPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Header 
+        user={user} 
+        isUserAdmin={isUserAdmin} 
+        favoritesCount={favorites.size}
+      />
       <div className="container mx-auto px-4 py-8">
         <PageHeader
           title={t('activities.title')}

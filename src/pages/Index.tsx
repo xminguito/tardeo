@@ -4,15 +4,12 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { generateActivitySlug } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 import ActivityCard from "@/components/ActivityCard";
 import CreateActivityDialog from "@/components/CreateActivityDialog";
-import LanguageSelector from "@/components/LanguageSelector";
-import { User, Bell, Plus, LogIn, Settings, Heart } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFavorites } from "@/features/activities/hooks/useFavorites";
-import NotificationsDropdown from "@/components/NotificationsDropdown";
-import MobileNav from "@/components/MobileNav";
+import Header from "@/components/Header";
 
 interface Activity {
   id: string;
@@ -130,62 +127,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
-      <header className="bg-gradient-to-r from-primary via-primary/90 to-primary/80 text-primary-foreground py-4 md:py-8 px-4 shadow-xl">
-        <div className="container mx-auto max-w-full">
-          <div className="flex items-center justify-between gap-2 md:gap-4 mb-4">
-            <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
-              <MobileNav 
-                user={user} 
-                isUserAdmin={isUserAdmin} 
-                favoritesCount={favorites.size}
-              />
-              <div className="min-w-0 flex-1">
-                <h1 className="text-2xl md:text-5xl font-bold mb-1 md:mb-2 truncate">{t('home.title')}</h1>
-                <p className="text-sm md:text-xl opacity-90 truncate">{t('home.subtitle')}</p>
-              </div>
-            </div>
-            <div className="flex gap-1 md:gap-3 items-center flex-shrink-0">
-              <div className="hidden md:block">
-                <LanguageSelector />
-              </div>
-              <div className="hidden md:flex gap-3 items-center flex-shrink-0">
-                {user ? (
-                  <>
-                    {isUserAdmin && (
-                      <Button variant="secondary" onClick={() => navigate("/admin")}>
-                        <Settings className="mr-2 h-5 w-5" />
-                        Admin
-                      </Button>
-                    )}
-                    <Button variant="secondary" onClick={() => navigate("/mi-cuenta")}>
-                      <User className="mr-2 h-5 w-5" />
-                      {t('home.profile')}
-                    </Button>
-                    <Button 
-                      variant="secondary" 
-                      onClick={() => navigate("/favoritos")}
-                      className="relative"
-                    >
-                      <Heart className="h-5 w-5 fill-current" />
-                      {favorites.size > 0 && (
-                        <Badge className="absolute -top-2 -right-2 bg-accent text-accent-foreground min-w-[20px] h-5 flex items-center justify-center">
-                          {favorites.size}
-                        </Badge>
-                      )}
-                    </Button>
-                  </>
-                ) : (
-                  <Button variant="secondary" onClick={() => navigate("/auth")}>
-                    <LogIn className="mr-2 h-5 w-5" />
-                    {t('home.login')}
-                  </Button>
-                )}
-              </div>
-              {user && <NotificationsDropdown userId={user.id} />}
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header 
+        user={user} 
+        isUserAdmin={isUserAdmin} 
+        favoritesCount={favorites.size}
+      />
 
       <main className="container mx-auto px-4 py-12">
         {!user && (

@@ -4,12 +4,29 @@ import { Button } from '@/components/ui/button';
 import { Languages, Mic, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useFavorites } from '@/features/activities/hooks/useFavorites';
 import PageHeader from '@/components/PageHeader';
+import Header from '@/components/Header';
 
 export default function Admin() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { isAdmin, loading } = useAdminCheck(true);
+  const [user, setUser] = useState<any>(null);
+  const { favorites } = useFavorites(user?.id);
+
+  useEffect(() => {
+    checkUser();
+  }, []);
+
+  const checkUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      setUser(session.user);
+    }
+  };
 
   if (loading) {
     return (
@@ -42,6 +59,11 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Header 
+        user={user} 
+        isUserAdmin={isAdmin} 
+        favoritesCount={favorites.size}
+      />
       <div className="container mx-auto px-4 py-8 max-w-5xl">
         <PageHeader
           title={t('admin.title')}

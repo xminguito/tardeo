@@ -130,6 +130,10 @@ export default {
       createError: 'Errore nella creazione dell\'attività',
       unexpectedError: 'Errore imprevisto. Riprova.',
       mustBeLoggedIn: 'Devi effettuare il login per creare attività',
+      mainImage: 'Immagine principale',
+      imageRequirements: 'JPG, PNG o WEBP. Massimo 5MB',
+      imageTooLarge: 'L\'immagine è troppo grande. Massimo 5MB',
+      imageUploadError: 'Errore nel caricamento dell\'immagine',
     },
     reservation: {
       confirm: 'Conferma prenotazione',

@@ -130,6 +130,10 @@ export default {
       createError: 'Error al crear l\'activitat',
       unexpectedError: 'Error inesperat. Si us plau, torna a intentar-ho.',
       mustBeLoggedIn: 'Has d\'iniciar sessió per crear activitats',
+      mainImage: 'Imatge principal',
+      imageRequirements: 'JPG, PNG o WEBP. Màxim 5MB',
+      imageTooLarge: 'La imatge és massa gran. Màxim 5MB',
+      imageUploadError: 'Error al pujar la imatge',
     },
     reservation: {
       confirm: 'Confirmar reserva',

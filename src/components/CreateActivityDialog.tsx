@@ -35,6 +35,28 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
     cost: 0,
     maxParticipants: 20,
   });
+  const [mainImage, setMainImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: t('common.error'),
+          description: t('activities.create.imageTooLarge'),
+          variant: 'destructive',
+        });
+        return;
+      }
+      setMainImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,6 +72,35 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
           variant: 'destructive',
         });
         return;
+      }
+
+      let imageUrl: string | null = null;
+
+      // Upload image if provided
+      if (mainImage) {
+        const fileExt = mainImage.name.split('.').pop();
+        const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('activity-images')
+          .upload(filePath, mainImage);
+
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          toast({
+            title: t('common.error'),
+            description: t('activities.create.imageUploadError'),
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('activity-images')
+          .getPublicUrl(filePath);
+
+        imageUrl = publicUrl;
       }
 
       // Translate title and description using Lovable AI
@@ -89,6 +140,7 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
         cost: formData.cost,
         max_participants: formData.maxParticipants,
         created_by: user.id,
+        image_url: imageUrl,
         // Spanish (original)
         title_es: formData.title,
         description_es: formData.description,
@@ -131,6 +183,8 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
         cost: 0,
         maxParticipants: 20,
       });
+      setMainImage(null);
+      setImagePreview(null);
 
       onActivityCreated?.();
     } catch (error) {
@@ -183,6 +237,29 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
               placeholder={t('activities.create.descriptionPlaceholder')}
               rows={4}
             />
+          </div>
+
+          <div>
+            <Label htmlFor="image">{t('activities.create.mainImage')}</Label>
+            <Input
+              id="image"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/jpg"
+              onChange={handleImageChange}
+              className="cursor-pointer"
+            />
+            {imagePreview && (
+              <div className="mt-2 relative w-full h-48 rounded-lg overflow-hidden border border-border">
+                <img 
+                  src={imagePreview} 
+                  alt="Preview" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">
+              {t('activities.create.imageRequirements')}
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

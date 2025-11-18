@@ -35,7 +35,7 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
           return result;
         } catch (error) {
           console.error('[Voice Tool Wrapper] searchActivities error:', error);
-          return 'Error al buscar actividades';
+          return t('voice.errors.searchActivities');
         }
       },
       reserveActivity: async (params: any) => {
@@ -46,7 +46,7 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
           return result;
         } catch (error) {
           console.error('[Voice Tool Wrapper] reserveActivity error:', error);
-          return 'Error al reservar actividad';
+          return t('voice.errors.reserveActivity');
         }
       },
       getActivityDetails: async (params: any) => {
@@ -57,7 +57,7 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
           return result;
         } catch (error) {
           console.error('[Voice Tool Wrapper] getActivityDetails error:', error);
-          return 'Error al obtener detalles';
+          return t('voice.errors.getDetails');
         }
       },
       suggestActivities: async (params: any) => {
@@ -68,7 +68,7 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
           return result;
         } catch (error) {
           console.error('[Voice Tool Wrapper] suggestActivities error:', error);
-          return 'Error al sugerir actividades';
+          return t('voice.errors.suggestActivities');
         }
       },
       navigateToActivities: async (params: any) => {
@@ -79,7 +79,7 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
           return result;
         } catch (error) {
           console.error('[Voice Tool Wrapper] navigateToActivities error:', error);
-          return 'Error al navegar';
+          return t('voice.errors.navigate');
         }
       },
       setFilter: async (params: any) => {
@@ -90,7 +90,7 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
           return result;
         } catch (error) {
           console.error('[Voice Tool Wrapper] setFilter error:', error);
-          return 'Error al aplicar filtro';
+          return t('voice.errors.applyFilter');
         }
       },
       clearFilters: async () => {
@@ -101,7 +101,7 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
           return result;
         } catch (error) {
           console.error('[Voice Tool Wrapper] clearFilters error:', error);
-          return 'Error al limpiar filtros';
+          return t('voice.errors.clearFilters');
         }
       },
       getMyReservations: async () => {
@@ -112,7 +112,7 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
           return result;
         } catch (error) {
           console.error('[Voice Tool Wrapper] getMyReservations error:', error);
-          return 'Error al obtener reservas';
+          return t('voice.errors.getReservations');
         }
       },
       submitRating: async (params: any) => {
@@ -123,7 +123,7 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
           return result;
         } catch (error) {
           console.error('[Voice Tool Wrapper] submitRating error:', error);
-          return 'Error al enviar valoración';
+          return t('voice.errors.submitRating');
         }
       },
       getRatings: async (params: any) => {
@@ -134,7 +134,7 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
           return result;
         } catch (error) {
           console.error('[Voice Tool Wrapper] getRatings error:', error);
-          return 'Error al obtener valoraciones';
+          return t('voice.errors.getRatings');
         }
       },
     },
@@ -142,14 +142,14 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
       setIsConnecting(false);
       setMessages([]);
       toast({
-        title: "Asistente conectado",
-        description: "Puedes empezar a hablar 🎤",
+        title: t('voice.toast.connected'),
+        description: t('voice.toast.connectedDesc'),
       });
     },
     onDisconnect: () => {
       toast({
-        title: "Asistente desconectado",
-        description: "Hasta pronto 👋",
+        title: t('voice.toast.disconnected'),
+        description: t('voice.toast.disconnectedDesc'),
       });
     },
     onMessage: (message) => {
@@ -187,8 +187,8 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
       console.error("Error en conversación:", error);
       setIsConnecting(false);
       toast({
-        title: "Error",
-        description: "No pude conectar con el asistente",
+        title: t('voice.toast.error'),
+        description: t('voice.toast.errorDesc'),
         variant: "destructive",
       });
     },
@@ -198,8 +198,8 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
     // Solicitar permisos de micrófono al cargar
     navigator.mediaDevices.getUserMedia({ audio: true }).catch(() => {
       toast({
-        title: "Permisos necesarios",
-        description: "Necesito acceso al micrófono para funcionar",
+        title: t('voice.toast.micPermission'),
+        description: t('voice.toast.micPermissionDesc'),
         variant: "destructive",
       });
     });

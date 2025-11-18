@@ -228,7 +228,6 @@ export default function Notifications() {
         <PageHeader
           title={t('notifications.pageTitle')}
           icon={<Bell className="h-8 w-8 text-primary" />}
-          backTo="/mi-cuenta"
           breadcrumbs={[
             { label: t('myAccount.title'), href: '/mi-cuenta' },
             { label: t('notifications.pageTitle') }

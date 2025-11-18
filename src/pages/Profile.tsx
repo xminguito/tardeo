@@ -177,7 +177,6 @@ const Profile = () => {
         <PageHeader
           title={t('profile.title')}
           icon={<User className="h-8 w-8 text-primary" />}
-          backTo="/mi-cuenta"
           breadcrumbs={[
             { label: t('myAccount.title'), href: '/mi-cuenta' },
             { label: t('profile.title') }

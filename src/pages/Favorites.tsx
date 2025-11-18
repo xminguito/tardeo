@@ -155,7 +155,6 @@ export default function Favorites() {
         <PageHeader
           title={t('favorites.title')}
           icon={<Heart className="h-8 w-8 text-primary fill-primary" />}
-          backTo="/mi-cuenta"
           breadcrumbs={[
             { label: t('myAccount.title'), href: '/mi-cuenta' },
             { label: t('favorites.title') }

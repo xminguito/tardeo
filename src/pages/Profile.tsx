@@ -13,6 +13,7 @@ import { z } from "zod";
 import { useFavorites } from "@/features/activities/hooks/useFavorites";
 import PageHeader from "@/components/PageHeader";
 import { useTranslation } from "react-i18next";
+import Header from "@/components/Header";
 
 const Profile = () => {
   const [loading, setLoading] = useState(true);
@@ -167,6 +168,11 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Header 
+        user={{ id: userId }} 
+        isUserAdmin={isUserAdmin} 
+        favoritesCount={favorites.size}
+      />
       <div className="container mx-auto px-4 py-8">
         <PageHeader
           title={t('profile.title')}

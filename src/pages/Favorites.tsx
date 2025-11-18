@@ -10,6 +10,7 @@ import { useFavorites } from '@/features/activities/hooks/useFavorites';
 import type { ActivityWithParticipation } from '@/features/activities/types/activity.types';
 import PageHeader from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
+import Header from '@/components/Header';
 
 interface Activity {
   id: string;
@@ -42,9 +43,10 @@ export default function Favorites() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [user, setUser] = useState<any>(null);
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
-  const { isFavorite, toggleFavorite, loadFavorites } = useFavorites(user?.id);
+  const { isFavorite, toggleFavorite, loadFavorites, favorites } = useFavorites(user?.id);
 
   useEffect(() => {
     checkUser();
@@ -63,6 +65,16 @@ export default function Favorites() {
     }
     setUser(session.user);
     loadFavoriteActivities(session.user.id);
+    
+    // Check if user is admin
+    const { data: adminRole } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', session.user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+    
+    setIsUserAdmin(!!adminRole);
   };
 
   const loadFavoriteActivities = async (userId: string) => {
@@ -134,6 +146,11 @@ export default function Favorites() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Header 
+        user={user} 
+        isUserAdmin={isUserAdmin} 
+        favoritesCount={favorites.size}
+      />
       <div className="container mx-auto px-4 py-8">
         <PageHeader
           title={t('favorites.title')}

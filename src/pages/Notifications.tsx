@@ -8,7 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Bell, Check, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
+import { useFavorites } from '@/features/activities/hooks/useFavorites';
 import PageHeader from '@/components/PageHeader';
+import Header from '@/components/Header';
 
 interface Notification {
   id: string;
@@ -25,11 +27,13 @@ export default function Notifications() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [user, setUser] = useState<any>(null);
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filteredNotifications, setFilteredNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [filterType, setFilterType] = useState<'all' | 'unread' | 'read'>('all');
+  const { favorites } = useFavorites(user?.id);
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -53,6 +57,16 @@ export default function Notifications() {
       return;
     }
     setUser(session.user);
+    
+    // Check if user is admin
+    const { data: adminRole } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', session.user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+    
+    setIsUserAdmin(!!adminRole);
   };
 
   const loadNotifications = async () => {
@@ -205,6 +219,11 @@ export default function Notifications() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Header 
+        user={user} 
+        isUserAdmin={isUserAdmin} 
+        favoritesCount={favorites.size}
+      />
       <div className="container mx-auto px-4 py-8">
         <PageHeader
           title={t('notifications.pageTitle')}

@@ -14,6 +14,8 @@ import { useVoiceActivityTools } from '@/features/activities/hooks/useVoiceActiv
 import { ActivityRatings } from '@/features/activities/components/ActivityRatings';
 import ActivityImageGallery from '@/components/ActivityImageGallery';
 import PageHeader from '@/components/PageHeader';
+import Header from '@/components/Header';
+import { useFavorites } from '@/features/activities/hooks/useFavorites';
 import type { ActivityFilters } from '@/features/activities/types/activity.types';
 import { extractIdFromSlug } from '@/lib/utils';
 
@@ -54,6 +56,9 @@ export default function ActivityDetail() {
   const [loading, setLoading] = useState(true);
   const [isParticipating, setIsParticipating] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
+  const { favorites } = useFavorites(userId);
 
   const getDateLocale = () => {
     switch (i18n.language) {
@@ -87,6 +92,7 @@ export default function ActivityDetail() {
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     setUserId(user?.id || null);
+    setUser(user || null);
     
     if (user && slug) {
       const activityId = extractIdFromSlug(slug);
@@ -98,6 +104,16 @@ export default function ActivityDetail() {
         .maybeSingle();
       
       setIsParticipating(!!data);
+      
+      // Check if user is admin
+      const { data: adminRole } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+      
+      setIsUserAdmin(!!adminRole);
     }
   };
 
@@ -229,6 +245,11 @@ export default function ActivityDetail() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Header 
+        user={user} 
+        isUserAdmin={isUserAdmin} 
+        favoritesCount={favorites.size}
+      />
       <div className="container mx-auto px-4 py-8">
         <PageHeader
           title={getTranslatedTitle(activity)}

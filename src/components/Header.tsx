@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { User, Heart, Settings, LogIn } from 'lucide-react';
 import LanguageSelector from '@/components/LanguageSelector';
+import LocationSelector from '@/components/LocationSelector';
 import NotificationsDropdown from '@/components/NotificationsDropdown';
 import MobileNav from '@/components/MobileNav';
 
@@ -33,6 +34,9 @@ export default function Header({ user, isUserAdmin = false, favoritesCount = 0 }
             </div>
           </div>
           <div className="flex gap-1 md:gap-3 items-center flex-shrink-0">
+            <div className="hidden md:block">
+              <LocationSelector />
+            </div>
             <div className="hidden md:block">
               <LanguageSelector />
             </div>

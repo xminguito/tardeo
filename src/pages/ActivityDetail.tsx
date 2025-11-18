@@ -146,8 +146,8 @@ export default function ActivityDetail() {
   const handleJoin = async () => {
     if (!userId) {
       toast({
-        title: 'Inicia sesión',
-        description: 'Necesitas iniciar sesión para unirte',
+        title: t('activityDetail.loginRequired'),
+        description: t('activityDetail.loginRequiredDesc'),
         variant: 'destructive',
       });
       navigate('/auth');
@@ -167,8 +167,8 @@ export default function ActivityDetail() {
 
       if (existingParticipation) {
         toast({
-          title: 'Ya estás inscrito',
-          description: 'Ya tienes una reserva para esta actividad',
+          title: t('activityDetail.alreadyEnrolled'),
+          description: t('activityDetail.alreadyEnrolledDesc'),
         });
         return;
       }
@@ -187,14 +187,14 @@ export default function ActivityDetail() {
       await supabase.from('notifications').insert({
         user_id: userId,
         activity_id: activity.id,
-        title: 'Reserva confirmada',
-        message: `Te has unido a ${activity.title}`,
+        title: t('activityDetail.reservationConfirmed'),
+        message: t('activityDetail.joinedActivity', { title: getTranslatedTitle(activity) }),
         type: 'info',
       });
 
       toast({
-        title: '¡Inscrito!',
-        description: `Te has unido a ${activity.title}`,
+        title: t('activityDetail.enrolled'),
+        description: t('activityDetail.joinedActivity', { title: getTranslatedTitle(activity) }),
       });
 
       setIsParticipating(true);
@@ -202,33 +202,23 @@ export default function ActivityDetail() {
     } catch (error) {
       console.error('Error joining activity:', error);
       toast({
-        title: 'Error',
-        description: 'No se pudo completar la reserva',
+        title: t('common.error'),
+        description: t('activityDetail.reservationError'),
         variant: 'destructive',
       });
     }
   };
 
   const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: activity?.title,
-        text: activity?.description || '',
-        url: window.location.href,
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      toast({
-        title: 'Enlace copiado',
-        description: 'El enlace se ha copiado al portapapeles',
-      });
-    }
+    const text = `${getTranslatedTitle(activity)} - ${getTranslatedDescription(activity) || ''}`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text + '\n' + window.location.href)}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-lg text-muted-foreground">Cargando actividad...</p>
+        <p className="text-lg text-muted-foreground">{t('activityDetail.loading')}</p>
       </div>
     );
   }
@@ -236,7 +226,7 @@ export default function ActivityDetail() {
   if (!activity) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-lg text-muted-foreground">Actividad no encontrada</p>
+        <p className="text-lg text-muted-foreground">{t('activityDetail.notFound')}</p>
       </div>
     );
   }
@@ -300,7 +290,7 @@ export default function ActivityDetail() {
                   <div className="flex items-center gap-3 text-lg">
                     <Calendar className="h-6 w-6 text-primary flex-shrink-0" />
                     <div>
-                      <p className="font-semibold">Fecha</p>
+                      <p className="font-semibold">{t('activityDetail.date')}</p>
                       <time dateTime={activity.date}>
                         {format(new Date(activity.date), 'PPP', { locale: getDateLocale() })}
                       </time>
@@ -310,7 +300,7 @@ export default function ActivityDetail() {
                   <div className="flex items-center gap-3 text-lg">
                     <Clock className="h-6 w-6 text-primary flex-shrink-0" />
                     <div>
-                      <p className="font-semibold">Hora</p>
+                      <p className="font-semibold">{t('activityDetail.time')}</p>
                       <span>{activity.time.slice(0, 5)}</span>
                     </div>
                   </div>
@@ -318,7 +308,7 @@ export default function ActivityDetail() {
                   <div className="flex items-center gap-3 text-lg">
                     <MapPin className="h-6 w-6 text-primary flex-shrink-0" />
                     <div>
-                      <p className="font-semibold">Ubicación</p>
+                      <p className="font-semibold">{t('activityDetail.location')}</p>
                       <span>{activity.location}</span>
                     </div>
                   </div>
@@ -326,13 +316,13 @@ export default function ActivityDetail() {
                   <div className="flex items-center gap-3 text-lg">
                     <Users className="h-6 w-6 text-primary flex-shrink-0" />
                     <div>
-                      <p className="font-semibold">Participantes</p>
+                      <p className="font-semibold">{t('activityDetail.participants')}</p>
                       <span>
                         {activity.current_participants} / {activity.max_participants}
                       </span>
                       {availableSlots > 0 && (
                         <p className="text-sm text-muted-foreground">
-                          {availableSlots} {availableSlots === 1 ? 'plaza disponible' : 'plazas disponibles'}
+                          {t('activityDetail.availableSlots', { count: availableSlots })}
                         </p>
                       )}
                     </div>
@@ -341,9 +331,9 @@ export default function ActivityDetail() {
                   <div className="flex items-center gap-3 text-lg">
                     <Euro className="h-6 w-6 text-primary flex-shrink-0" />
                     <div>
-                      <p className="font-semibold">Precio</p>
+                      <p className="font-semibold">{t('activityDetail.price')}</p>
                       <span className="text-2xl font-bold">
-                        {activity.cost === 0 ? 'Gratis' : `${activity.cost.toFixed(2)}€`}
+                        {activity.cost === 0 ? t('activityDetail.free') : `${activity.cost.toFixed(2)}€`}
                       </span>
                     </div>
                   </div>
@@ -356,15 +346,15 @@ export default function ActivityDetail() {
                   size="lg"
                 >
                   {isFull
-                    ? 'Actividad completa'
+                    ? t('activityDetail.activityFull')
                     : isParticipating
-                    ? 'Ya estás apuntado'
-                    : '¡Me apunto!'}
+                    ? t('activityDetail.alreadyJoined')
+                    : t('activityDetail.joinButton')}
                 </Button>
 
                 {isParticipating && (
                   <p className="text-center text-sm text-muted-foreground">
-                    Recibirás un recordatorio antes de la actividad
+                    {t('activityDetail.reminderText')}
                   </p>
                 )}
               </CardContent>

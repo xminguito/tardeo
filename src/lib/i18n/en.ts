@@ -239,6 +239,9 @@ export default {
     favorites: 'My Favorites',
     savedActivities: 'saved activities',
     favoritesDesc: 'Your saved favorite activities',
+    myActivities: 'My Activities',
+    registeredActivities: 'Registered activities',
+    myActivitiesDesc: 'Activities you are participating in',
     notifications: 'Notifications',
     unread: 'unread',
     notificationsDesc: 'Manage your notifications and alerts',
@@ -252,6 +255,13 @@ export default {
     endSession: 'End session',
     logoutDesc: 'Sign out of your account',
     errorLoading: 'Could not load account information',
+  },
+  myActivities: {
+    title: 'My Activities',
+    noActivities: 'You are not registered for any activities',
+    noActivitiesDesc: 'Explore our activities and join the ones that interest you',
+    exploreActivities: 'Explore Activities',
+    errorLoading: 'Error loading your activities',
   },
   admin: {
     title: "Admin Panel",

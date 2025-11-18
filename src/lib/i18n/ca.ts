@@ -239,6 +239,9 @@ export default {
     favorites: 'Els Meus Favorits',
     savedActivities: 'activitats guardades',
     favoritesDesc: 'Les teves activitats favorites guardades',
+    myActivities: 'Les Meves Activitats',
+    registeredActivities: 'Activitats inscrites',
+    myActivitiesDesc: 'Activitats en què estàs participant',
     notifications: 'Notificacions',
     unread: 'sense llegir',
     notificationsDesc: 'Gestiona les teves notificacions i alertes',
@@ -252,6 +255,13 @@ export default {
     endSession: 'Finalitzar sessió',
     logoutDesc: 'Tancar sessió en el teu compte',
     errorLoading: 'No s\'ha pogut carregar la informació del compte',
+  },
+  myActivities: {
+    title: 'Les Meves Activitats',
+    noActivities: 'No estàs inscrit en cap activitat',
+    noActivitiesDesc: 'Explora les nostres activitats i uneix-te a les que t\'interessin',
+    exploreActivities: 'Explorar Activitats',
+    errorLoading: 'Error en carregar les teves activitats',
   },
   admin: {
     title: "Panell d'Administració",

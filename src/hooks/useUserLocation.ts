@@ -18,13 +18,6 @@ export function useUserLocation() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Auto-detect location on first visit
-  useEffect(() => {
-    if (!location) {
-      detectLocation();
-    }
-  }, []);
-
   const detectLocation = async () => {
     if (!navigator.geolocation) {
       setError('Geolocation not supported');

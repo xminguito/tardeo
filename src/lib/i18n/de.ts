@@ -130,6 +130,10 @@ export default {
       createError: 'Fehler beim Erstellen der Aktivität',
       unexpectedError: 'Unerwarteter Fehler. Bitte versuchen Sie es erneut.',
       mustBeLoggedIn: 'Sie müssen angemeldet sein, um Aktivitäten zu erstellen',
+      mainImage: 'Hauptbild',
+      imageRequirements: 'JPG, PNG oder WEBP. Maximal 5MB',
+      imageTooLarge: 'Das Bild ist zu groß. Maximal 5MB',
+      imageUploadError: 'Fehler beim Hochladen des Bildes',
     },
     reservation: {
       confirm: 'Reservierung bestätigen',

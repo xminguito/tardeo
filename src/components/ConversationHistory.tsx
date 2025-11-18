@@ -1,6 +1,7 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { User, Bot } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -14,12 +15,13 @@ interface ConversationHistoryProps {
 }
 
 const ConversationHistory = ({ messages, isVisible }: ConversationHistoryProps) => {
+  const { t } = useTranslation();
   if (!isVisible || messages.length === 0) return null;
 
   return (
     <Card className="fixed bottom-32 right-8 z-40 w-96 h-96 flex flex-col shadow-2xl">
       <div className="p-4 border-b bg-primary/5">
-        <h3 className="font-semibold text-sm">Historial de conversación</h3>
+        <h3 className="font-semibold text-sm">{t('voice.conversationHistory')}</h3>
       </div>
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">

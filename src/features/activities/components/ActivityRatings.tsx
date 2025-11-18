@@ -61,7 +61,7 @@ export function ActivityRatings({ activityId }: ActivityRatingsProps) {
   }
 
   if (!data) {
-    return <div className="text-center py-8">Error cargando valoraciones</div>;
+    return <div className="text-center py-8">{t('ratings.errorLoading')}</div>;
   }
 
   const { ratings, stats } = data;
@@ -83,7 +83,7 @@ export function ActivityRatings({ activityId }: ActivityRatingsProps) {
             <div className="text-4xl font-bold">
               {stats.averageRating > 0 ? stats.averageRating.toFixed(1) : '—'}
             </div>
-            <div className="flex gap-1" role="img" aria-label={`${stats.averageRating} de 5 estrellas`}>
+            <div className="flex gap-1" role="img" aria-label={t('ratings.ratingLabel', { rating: stats.averageRating })}>
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star
                   key={star}
@@ -118,7 +118,7 @@ export function ActivityRatings({ activityId }: ActivityRatingsProps) {
             </div>
           ) : !isEditing && userRating ? (
             <div className="space-y-4">
-              <div className="flex gap-1" role="img" aria-label={`Tu valoración: ${userRating.rating} de 5 estrellas`}>
+              <div className="flex gap-1" role="img" aria-label={t('ratings.yourRatingLabel', { rating: userRating.rating })}>
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star
                     key={star}
@@ -141,14 +141,14 @@ export function ActivityRatings({ activityId }: ActivityRatingsProps) {
                 <label className="text-sm font-medium mb-2 block">
                   {t('activities.ratings.yourRating')}
                 </label>
-                <div className="flex gap-1" role="radiogroup" aria-label="Selecciona tu valoración">
+                <div className="flex gap-1" role="radiogroup" aria-label={t('ratings.selectRating')}>
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
                       key={star}
                       type="button"
                       role="radio"
                       aria-checked={selectedRating === star}
-                      aria-label={`${star} ${star === 1 ? 'estrella' : 'estrellas'}`}
+                      aria-label={`${star} ${star === 1 ? t('ratings.star') : t('ratings.stars')}`}
                       onClick={() => setSelectedRating(star)}
                       onMouseEnter={() => setHoveredRating(star)}
                       onMouseLeave={() => setHoveredRating(0)}
@@ -176,7 +176,7 @@ export function ActivityRatings({ activityId }: ActivityRatingsProps) {
                   onChange={(e) => setComment(e.target.value)}
                   placeholder={t('activities.ratings.commentPlaceholder')}
                   rows={4}
-                  aria-label="Tu comentario sobre la actividad"
+                  aria-label={t('ratings.commentLabel')}
                 />
               </div>
 

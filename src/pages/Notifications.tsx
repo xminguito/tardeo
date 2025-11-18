@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { useFavorites } from '@/features/activities/hooks/useFavorites';
 import PageHeader from '@/components/PageHeader';
 import Header from '@/components/Header';
+import PageTransition from '@/components/PageTransition';
 
 interface Notification {
   id: string;
@@ -224,7 +225,8 @@ export default function Notifications() {
         isUserAdmin={isUserAdmin} 
         favoritesCount={favorites.size}
       />
-      <div className="container mx-auto px-4 py-8">
+      <PageTransition>
+        <div className="container mx-auto px-4 py-8">
         <PageHeader
           title={t('notifications.pageTitle')}
           icon={<Bell className="h-8 w-8 text-primary" />}
@@ -354,7 +356,8 @@ export default function Notifications() {
             )}
           </>
         )}
-      </div>
+        </div>
+      </PageTransition>
     </div>
   );
 }

@@ -14,6 +14,7 @@ import { useFavorites } from "@/features/activities/hooks/useFavorites";
 import PageHeader from "@/components/PageHeader";
 import { useTranslation } from "react-i18next";
 import Header from "@/components/Header";
+import PageTransition from "@/components/PageTransition";
 
 const Profile = () => {
   const [loading, setLoading] = useState(true);
@@ -173,7 +174,8 @@ const Profile = () => {
         isUserAdmin={isUserAdmin} 
         favoritesCount={favorites.size}
       />
-      <div className="container mx-auto px-4 py-8">
+      <PageTransition>
+        <div className="container mx-auto px-4 py-8">
         <PageHeader
           title={t('profile.title')}
           icon={<User className="h-8 w-8 text-primary" />}
@@ -265,7 +267,8 @@ const Profile = () => {
           </CardContent>
         </Card>
         </div>
-      </div>
+        </div>
+      </PageTransition>
     </div>
   );
 };

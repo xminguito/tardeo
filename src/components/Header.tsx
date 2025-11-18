@@ -27,7 +27,7 @@ export default function Header({ user, isUserAdmin = false, favoritesCount = 0 }
               isUserAdmin={isUserAdmin} 
               favoritesCount={favoritesCount}
             />
-            <div className="min-w-0 flex-1 cursor-pointer" onClick={() => navigate('/')}>
+            <div className="min-w-0 flex-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/')}>
               <h1 className="text-2xl md:text-5xl font-bold mb-1 md:mb-2 truncate">{t('home.title')}</h1>
               <p className="text-sm md:text-xl opacity-90 truncate">{t('home.subtitle')}</p>
             </div>

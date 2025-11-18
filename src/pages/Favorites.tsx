@@ -11,6 +11,7 @@ import type { ActivityWithParticipation } from '@/features/activities/types/acti
 import PageHeader from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/Header';
+import PageTransition from '@/components/PageTransition';
 
 interface Activity {
   id: string;
@@ -151,7 +152,8 @@ export default function Favorites() {
         isUserAdmin={isUserAdmin} 
         favoritesCount={favorites.size}
       />
-      <div className="container mx-auto px-4 py-8">
+      <PageTransition>
+        <div className="container mx-auto px-4 py-8">
         <PageHeader
           title={t('favorites.title')}
           icon={<Heart className="h-8 w-8 text-primary fill-primary" />}
@@ -201,7 +203,8 @@ export default function Favorites() {
             </div>
           </>
         )}
-      </div>
+        </div>
+      </PageTransition>
     </div>
   );
 }

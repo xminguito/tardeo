@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { useFavorites } from '@/features/activities/hooks/useFavorites';
 import PageHeader from '@/components/PageHeader';
 import Header from '@/components/Header';
+import PageTransition from '@/components/PageTransition';
 
 export default function MyAccount() {
   const { t } = useTranslation();
@@ -104,7 +105,8 @@ export default function MyAccount() {
         isUserAdmin={isAdmin} 
         favoritesCount={favorites.size}
       />
-      <div className="container mx-auto px-4 py-8">
+      <PageTransition>
+        <div className="container mx-auto px-4 py-8">
         <PageHeader
           title={t('myAccount.title')}
           icon={<User className="h-8 w-8 text-primary" />}
@@ -245,7 +247,8 @@ export default function MyAccount() {
             </CardContent>
           </Card>
         </div>
-      </div>
+        </div>
+      </PageTransition>
     </div>
   );
 }

@@ -10,6 +10,7 @@ import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFavorites } from "@/features/activities/hooks/useFavorites";
 import Header from "@/components/Header";
+import PageTransition from "@/components/PageTransition";
 
 interface Activity {
   id: string;
@@ -133,7 +134,8 @@ const Index = () => {
         favoritesCount={favorites.size}
       />
 
-      <main className="container mx-auto px-4 py-12">
+      <PageTransition>
+        <main className="container mx-auto px-4 py-12">
         {!user && (
           <div className="bg-secondary/20 border-2 border-secondary rounded-2xl p-8 mb-12 text-center">
             <h2 className="text-3xl font-semibold mb-4">{t('home.joinCommunity')}</h2>
@@ -209,7 +211,7 @@ const Index = () => {
           )}
         </section>
       </main>
-
+      </PageTransition>
     </div>
   );
 };

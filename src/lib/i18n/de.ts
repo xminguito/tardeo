@@ -253,4 +253,8 @@ export default {
     logoutDesc: 'Melden Sie sich von Ihrem Konto ab',
     errorLoading: 'Kontoinformationen konnten nicht geladen werden',
   },
+  admin: {
+    title: "Verwaltungspanel",
+    description: "Verwalten und konfigurieren Sie administrative Tools der Plattform",
+  },
 };

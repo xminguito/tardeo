@@ -253,4 +253,8 @@ export default {
     logoutDesc: 'Cerrar sesión en tu cuenta',
     errorLoading: 'No se pudo cargar la información de la cuenta',
   },
+  admin: {
+    title: "Panel de Administración",
+    description: "Gestiona y configura las herramientas administrativas de la plataforma",
+  },
 };

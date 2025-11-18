@@ -10,12 +10,12 @@ import {
   Settings, 
   Calendar,
   LogOut,
-  ArrowLeft,
   Star
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { useFavorites } from '@/features/activities/hooks/useFavorites';
+import PageHeader from '@/components/PageHeader';
 
 export default function MyAccount() {
   const { t } = useTranslation();
@@ -99,13 +99,14 @@ export default function MyAccount() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" onClick={() => navigate('/')}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {t('common.back')}
-          </Button>
-          <h1 className="text-4xl font-bold">{t('myAccount.title')}</h1>
-        </div>
+        <PageHeader
+          title={t('myAccount.title')}
+          icon={<User className="h-8 w-8 text-primary" />}
+          backTo="/"
+          breadcrumbs={[
+            { label: t('myAccount.title') }
+          ]}
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Perfil */}

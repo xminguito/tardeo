@@ -253,4 +253,8 @@ export default {
     logoutDesc: 'Disconnettiti dal tuo account',
     errorLoading: 'Impossibile caricare le informazioni dell\'account',
   },
+  admin: {
+    title: "Pannello di Amministrazione",
+    description: "Gestisci e configura gli strumenti amministrativi della piattaforma",
+  },
 };

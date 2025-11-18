@@ -253,4 +253,8 @@ export default {
     logoutDesc: 'Sign out of your account',
     errorLoading: 'Could not load account information',
   },
+  admin: {
+    title: "Admin Panel",
+    description: "Manage and configure platform administrative tools",
+  },
 };

@@ -254,7 +254,7 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
     <>
       <ConversationHistory messages={messages} isVisible={isConnected && showHistory} />
       
-      <div className="fixed bottom-8 right-4 md:right-8 z-50 flex flex-col gap-2 items-end">
+      <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-2 items-end">
         {isConnected && messages.length > 0 && (
           <Button
             onClick={() => setShowHistory(!showHistory)}
@@ -271,29 +271,29 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
           <Button
             onClick={startConversation}
             size="lg"
-            className="rounded-full w-16 h-16 md:w-20 md:h-20 shadow-2xl bg-primary hover:bg-primary/90"
+            className="rounded-full w-20 h-20 shadow-2xl bg-primary hover:bg-primary/90"
           >
-            <Mic className="h-8 w-8 md:h-10 md:w-10" />
+            <Mic className="h-10 w-10" />
           </Button>
         ) : isConnecting ? (
           <Button
             disabled
             size="lg"
-            className="rounded-full w-16 h-16 md:w-20 md:h-20 shadow-2xl"
+            className="rounded-full w-20 h-20 shadow-2xl"
           >
-            <Loader2 className="h-8 w-8 md:h-10 md:w-10 animate-spin" />
+            <Loader2 className="h-10 w-10 animate-spin" />
           </Button>
         ) : (
           <Button
             onClick={endConversation}
             size="lg"
-            className={`rounded-full w-16 h-16 md:w-20 md:h-20 shadow-2xl transition-all duration-300 ${
+            className={`rounded-full w-20 h-20 shadow-2xl transition-all duration-300 ${
               isSpeaking
                 ? "bg-accent hover:bg-accent/90 animate-pulse"
                 : "bg-primary hover:bg-primary/90"
             }`}
           >
-            <MicOff className="h-8 w-8 md:h-10 md:w-10" />
+            <MicOff className="h-10 w-10" />
           </Button>
         )}
       </div>

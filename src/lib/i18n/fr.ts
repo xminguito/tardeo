@@ -12,11 +12,6 @@ export default {
     confirm: 'Confirmer',
     create: 'Créer',
   },
-  mobileActions: {
-    calendar: 'Voir le calendrier des activités',
-    favorites: 'Voir les favoris',
-    notifications: 'Voir les notifications',
-  },
   home: {
     title: 'Tardeo',
     subtitle: 'Trouvez des activités et des amis avec vos mêmes intérêts',

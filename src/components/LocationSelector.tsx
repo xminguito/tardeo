@@ -24,7 +24,7 @@ export default function LocationSelector() {
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: "AIzaSyDCcuYHd8LgLHzkAQz6JrWqRvYHRaKgWkU",
+    googleMapsApiKey: "AIzaSyB-prz6GAngBEhMnPBdkLBHruNrImmKKjM",
     libraries,
   });
 

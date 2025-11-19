@@ -216,18 +216,21 @@ export type Database = {
       }
       notification_settings: {
         Row: {
+          cron_interval_minutes: number
           enabled: boolean
           hours_before: number[]
           id: string
           updated_at: string | null
         }
         Insert: {
+          cron_interval_minutes?: number
           enabled?: boolean
           hours_before?: number[]
           id?: string
           updated_at?: string | null
         }
         Update: {
+          cron_interval_minutes?: number
           enabled?: boolean
           hours_before?: number[]
           id?: string

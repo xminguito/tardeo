@@ -1,12 +1,15 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Activity, ActivityFilters } from '../types/activity.types';
-
+import { calculateDistance, geocodeLocation } from '@/lib/distance';
+import { useUserLocation } from '@/hooks/useUserLocation';
 export const ACTIVITIES_QUERY_KEY = ['activities'] as const;
 
 export function useActivities(filters?: ActivityFilters) {
+  const { location: userLocation } = useUserLocation();
+
   return useQuery({
-    queryKey: [...ACTIVITIES_QUERY_KEY, filters],
+    queryKey: [...ACTIVITIES_QUERY_KEY, filters, userLocation?.city, userLocation?.searchRadius],
     queryFn: async () => {
       let query = supabase
         .from('activities')
@@ -39,9 +42,43 @@ export function useActivities(filters?: ActivityFilters) {
       
       let activities = data as Activity[];
 
-      // Filter by city if location filter is provided
-      if (filters?.location) {
-        activities = activities.filter(activity => 
+      // Filter by distance if we have user coordinates and a search radius
+      if (userLocation?.coordinates && userLocation.searchRadius) {
+        const { lat: userLat, lng: userLng } = userLocation.coordinates;
+        const radiusKm = userLocation.searchRadius;
+
+        const activitiesWithCoords = await Promise.all(
+          activities.map(async (activity) => {
+            let lat = activity.latitude ?? null;
+            let lng = activity.longitude ?? null;
+
+            if (lat == null || lng == null) {
+              const geo = await geocodeLocation(activity.city || activity.location);
+              if (geo) {
+                lat = geo.lat;
+                lng = geo.lng;
+              }
+            }
+
+            return { activity, lat, lng };
+          })
+        );
+
+        activities = activitiesWithCoords
+          .filter(({ lat, lng }) => lat != null && lng != null)
+          .filter(({ lat, lng }) => {
+            const distance = calculateDistance(
+              userLat,
+              userLng,
+              lat as number,
+              lng as number
+            );
+            return distance <= radiusKm;
+          })
+          .map(({ activity }) => activity);
+      } else if (filters?.location) {
+        // Fallback: simple city text filter
+        activities = activities.filter((activity) =>
           activity.city?.toLowerCase().includes(filters.location!.toLowerCase())
         );
       }

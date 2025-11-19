@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { generateActivitySlug } from "@/lib/utils";
+import { calculateDistance, geocodeLocation } from "@/lib/distance";
 import ActivityCard from "@/components/ActivityCard";
 import CreateActivityDialog from "@/components/CreateActivityDialog";
 import { Plus } from "lucide-react";
@@ -92,8 +93,41 @@ const Index = () => {
 
       let activitiesData = (data || []) as Activity[];
       
-      // Filtrar por ciudad si el usuario tiene una ubicación seleccionada
-      if (location?.city) {
+      // Filtrar por distancia usando la ubicación del usuario si está disponible
+      if (location?.coordinates && location.searchRadius) {
+        const { lat: userLat, lng: userLng } = location.coordinates;
+        const radiusKm = location.searchRadius;
+
+        const activitiesWithCoords = await Promise.all(
+          activitiesData.map(async (activity) => {
+            let lat = (activity as any).latitude ?? null;
+            let lng = (activity as any).longitude ?? null;
+
+            if (lat == null || lng == null) {
+              const geo = await geocodeLocation(activity.city || activity.location);
+              if (geo) {
+                lat = geo.lat;
+                lng = geo.lng;
+              }
+            }
+
+            return { activity, lat, lng };
+          })
+        );
+
+        activitiesData = activitiesWithCoords
+          .filter(({ lat, lng }) => lat != null && lng != null)
+          .filter(({ lat, lng }) => {
+            const distance = calculateDistance(
+              userLat,
+              userLng,
+              lat as number,
+              lng as number
+            );
+            return distance <= radiusKm;
+          })
+          .map(({ activity }) => activity);
+      } else if (location?.city) {
         const cityLower = location.city.toLowerCase();
         activitiesData = activitiesData.filter((activity) =>
           activity.city?.toLowerCase().includes(cityLower)

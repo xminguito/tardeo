@@ -100,7 +100,16 @@ export default function ActivityCard({ activity, onReserve, isFavorite = false, 
 
           <div className="flex items-center gap-2 text-sm">
             <MapPin className="h-4 w-4 text-primary" aria-hidden="true" />
-            <span>{activity.location}</span>
+            <span>
+              {activity.location}
+              {activity.city && (
+                <>
+                  {" · "}
+                  {activity.city}
+                  {activity.province && ` (${activity.province})`}
+                </>
+              )}
+            </span>
           </div>
 
           <div className="flex items-center gap-2 text-sm">

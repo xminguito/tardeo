@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Save, Trash2, Plus } from 'lucide-react';
+import { Bell, Save, Trash2, Plus, Copy, Code } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,7 @@ export default function NotificationSettings() {
   const [newHour, setNewHour] = useState<string>('');
   const [user, setUser] = useState<any>(null);
   const { isAdmin, loading: adminLoading } = useAdminCheck();
+  const [showSql, setShowSql] = useState(false);
 
   useEffect(() => {
     if (!adminLoading && !isAdmin) {
@@ -145,6 +146,39 @@ export default function NotificationSettings() {
         hours_before: settings.hours_before.filter((h) => h !== hour),
       });
     }
+  };
+
+  const generateCronSql = () => {
+    if (!settings) return '';
+    
+    const interval = settings.cron_interval_minutes;
+    const cronExpression = `*/${interval} * * * *`;
+    
+    return `-- Primero, desactivar el cron job existente si existe
+SELECT cron.unschedule('invoke-send-activity-reminders');
+
+-- Crear el nuevo cron job con el intervalo configurado (cada ${interval} minutos)
+SELECT cron.schedule(
+  'invoke-send-activity-reminders',
+  '${cronExpression}',
+  $$
+  SELECT
+    net.http_post(
+        url:='https://kzcowengsnnuglyrjuto.supabase.co/functions/v1/send-activity-reminders',
+        headers:='{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6Y293ZW5nc25udWdseXJqdXRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjExNjkyNTAsImV4cCI6MjA3Njc0NTI1MH0.ZwhhjRJgTKl3NQuTXy0unk2DFIDDjxi7T4zLN8EVyi0"}'::jsonb,
+        body:='{}'::jsonb
+    ) as request_id;
+  $$
+);`;
+  };
+
+  const handleCopySql = () => {
+    const sql = generateCronSql();
+    navigator.clipboard.writeText(sql);
+    toast({
+      title: t('common.success'),
+      description: 'SQL copiado al portapapeles',
+    });
   };
 
   if (adminLoading || loading) {
@@ -263,15 +297,53 @@ export default function NotificationSettings() {
                 </div>
               </div>
 
-              <Button
-                onClick={handleSave}
-                disabled={saving}
-                className="w-full"
-                size="lg"
-              >
-                <Save className="mr-2 h-4 w-4" />
-                {saving ? 'Guardando...' : 'Guardar Configuración'}
-              </Button>
+              <div className="space-y-4">
+                <Button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="w-full"
+                  size="lg"
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  {saving ? 'Guardando...' : 'Guardar Configuración'}
+                </Button>
+
+                <div className="border-t pt-4">
+                  <Button
+                    onClick={() => setShowSql(!showSql)}
+                    variant="outline"
+                    className="w-full"
+                    size="lg"
+                  >
+                    <Code className="mr-2 h-4 w-4" />
+                    {showSql ? 'Ocultar' : 'Generar'} SQL para Cron Job
+                  </Button>
+
+                  {showSql && (
+                    <div className="mt-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm">
+                          Ejecuta este SQL en Supabase para actualizar el cron job
+                        </Label>
+                        <Button
+                          onClick={handleCopySql}
+                          variant="ghost"
+                          size="sm"
+                        >
+                          <Copy className="h-4 w-4 mr-2" />
+                          Copiar
+                        </Button>
+                      </div>
+                      <pre className="bg-muted p-4 rounded-lg text-xs overflow-x-auto">
+                        {generateCronSql()}
+                      </pre>
+                      <p className="text-xs text-muted-foreground">
+                        💡 Necesitas ejecutar este SQL en el SQL Editor de Supabase cada vez que cambies el intervalo del cron
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

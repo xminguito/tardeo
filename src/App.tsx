@@ -21,39 +21,42 @@ import Favorites from "./pages/Favorites";
 import MyAccount from "./pages/MyAccount";
 import MyActivities from "./pages/MyActivities";
 import Notifications from "./pages/Notifications";
-
+import { UserLocationProvider } from "@/hooks/useUserLocation";
+ 
 const queryClient = new QueryClient();
-
+ 
 const AppContent = () => {
   const navigate = useNavigate();
   const [filters, setFilters] = useState<ActivityFilters>({});
   const voiceTools = useVoiceActivityTools(setFilters, filters, navigate);
-
+ 
   return (
-    <>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/mi-cuenta" element={<MyAccount />} />
-        <Route path="/mis-actividades" element={<MyActivities />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/perfil" element={<Profile />} />
-        <Route path="/favoritos" element={<Favorites />} />
-        <Route path="/notificaciones" element={<Notifications />} />
-        <Route path="/actividades" element={<ActivitiesCalendar />} />
-        <Route path="/actividades/:slug" element={<ActivityDetail />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/update-agent" element={<UpdateAgent />} />
-        <Route path="/actualizar-ubicaciones" element={<UpdateActivitiesLocation />} />
-        <Route path="/traducir-actividades" element={<TranslateActivities />} />
-        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-      <VoiceAssistant clientTools={voiceTools} />
-    </>
+    <UserLocationProvider>
+      <>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/mi-cuenta" element={<MyAccount />} />
+          <Route path="/mis-actividades" element={<MyActivities />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/perfil" element={<Profile />} />
+          <Route path="/favoritos" element={<Favorites />} />
+          <Route path="/notificaciones" element={<Notifications />} />
+          <Route path="/actividades" element={<ActivitiesCalendar />} />
+          <Route path="/actividades/:slug" element={<ActivityDetail />} />
+          <Route path="/admin" element={<Admin />} />
+          <Route path="/update-agent" element={<UpdateAgent />} />
+          <Route path="/actualizar-ubicaciones" element={<UpdateActivitiesLocation />} />
+          <Route path="/traducir-actividades" element={<TranslateActivities />} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <VoiceAssistant clientTools={voiceTools} />
+      </>
+    </UserLocationProvider>
   );
 };
-
+ 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -65,5 +68,5 @@ const App = () => (
     </TooltipProvider>
   </QueryClientProvider>
 );
-
+ 
 export default App;

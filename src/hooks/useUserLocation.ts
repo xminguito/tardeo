@@ -18,6 +18,43 @@ export function useUserLocation() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Detect location by IP on first visit (no browser popup)
+  useEffect(() => {
+    if (!location) {
+      detectLocationByIP();
+    }
+  }, []);
+
+  const detectLocationByIP = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('https://ipapi.co/json/');
+      const data = await response.json();
+
+      if (!data || !data.city) {
+        throw new Error('No city from IP');
+      }
+
+      const cityName = data.city;
+
+      const locationData: LocationData = {
+        city: cityName,
+        coordinates: data.latitude && data.longitude
+          ? { lat: data.latitude, lng: data.longitude }
+          : undefined,
+      };
+
+      updateLocation(locationData);
+    } catch (err) {
+      console.error('Error detecting location by IP:', err);
+      // We keep this silent for the user; they can still choose manually
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const detectLocation = async () => {
     if (!navigator.geolocation) {
       setError('Geolocation not supported');

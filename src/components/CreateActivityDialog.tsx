@@ -30,6 +30,8 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
     description: '',
     category: '',
     location: '',
+    city: '',
+    province: '',
     date: '',
     time: '18:00',
     cost: 0,
@@ -197,12 +199,35 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
         return;
       }
 
+      // Geocode location to get coordinates
+      let latitude: number | null = null;
+      let longitude: number | null = null;
+      
+      if (formData.city) {
+        try {
+          const { geocodeLocation } = await import('@/lib/distance');
+          const searchQuery = `${formData.location}, ${formData.city}, ${formData.province || ''}, España`;
+          const coords = await geocodeLocation(searchQuery);
+          if (coords) {
+            latitude = coords.lat;
+            longitude = coords.lng;
+          }
+        } catch (error) {
+          console.error('Geocoding error:', error);
+        }
+      }
+
       // Insert activity with all translations
       const { error: insertError } = await supabase.from('activities').insert({
         title: formData.title,
         description: formData.description,
         category: formData.category,
         location: formData.location,
+        city: formData.city,
+        province: formData.province,
+        country: 'España',
+        latitude,
+        longitude,
         date: formData.date,
         time: formData.time,
         cost: formData.cost,
@@ -247,6 +272,8 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
         description: '',
         category: '',
         location: '',
+        city: '',
+        province: '',
         date: '',
         time: '18:00',
         cost: 0,
@@ -390,6 +417,29 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                 required
                 placeholder={t('activities.create.locationPlaceholder')}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="city">{t('activities.create.city')} *</Label>
+              <Input
+                id="city"
+                value={formData.city}
+                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                required
+                placeholder={t('activities.create.cityPlaceholder')}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="province">{t('activities.create.province')}</Label>
+              <Input
+                id="province"
+                value={formData.province}
+                onChange={(e) => setFormData({ ...formData, province: e.target.value })}
+                placeholder={t('activities.create.provincePlaceholder')}
               />
             </div>
           </div>

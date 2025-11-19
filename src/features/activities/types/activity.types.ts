@@ -4,6 +4,11 @@ export interface Activity {
   description: string | null;
   category: string;
   location: string;
+  city?: string | null;
+  province?: string | null;
+  country?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   date: string;
   time: string;
   cost: number;

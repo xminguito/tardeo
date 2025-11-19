@@ -94,32 +94,32 @@ const Index = () => {
       // Filter by location with radius if coordinates available
       if (location?.coordinates && location?.searchRadius) {
         const { calculateDistance } = await import('@/lib/distance');
-        const { geocodeLocation } = await import('@/lib/distance');
         
-        const activitiesWithDistance = await Promise.all(
-          filteredData.map(async (activity) => {
-            const activityCoords = await geocodeLocation(activity.location);
-            if (activityCoords && location.coordinates) {
+        const activitiesWithDistance = filteredData
+          .map((activity) => {
+            if (activity.latitude && activity.longitude && location.coordinates) {
               const distance = calculateDistance(
                 location.coordinates.lat,
                 location.coordinates.lng,
-                activityCoords.lat,
-                activityCoords.lng
+                activity.latitude,
+                activity.longitude
               );
               return { ...activity, distance };
             }
             return { ...activity, distance: Infinity };
           })
-        );
-
-        filteredData = activitiesWithDistance
           .filter(activity => activity.distance <= (location.searchRadius || 10))
           .sort((a, b) => a.distance - b.distance)
           .slice(0, 6);
+
+        filteredData = activitiesWithDistance;
       } else if (location?.city) {
         // Fallback to simple city filter
         filteredData = filteredData
-          .filter(activity => activity.location.toLowerCase().includes(location.city.toLowerCase()))
+          .filter(activity => 
+            activity.city?.toLowerCase().includes(location.city.toLowerCase()) ||
+            activity.location?.toLowerCase().includes(location.city.toLowerCase())
+          )
           .slice(0, 6);
       } else {
         filteredData = filteredData.slice(0, 6);

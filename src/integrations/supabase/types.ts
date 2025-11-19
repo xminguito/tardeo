@@ -17,7 +17,9 @@ export type Database = {
       activities: {
         Row: {
           category: string
+          city: string | null
           cost: number
+          country: string | null
           created_at: string | null
           created_by: string | null
           current_participants: number | null
@@ -31,8 +33,11 @@ export type Database = {
           description_it: string | null
           id: string
           image_url: string | null
+          latitude: number | null
           location: string
+          longitude: number | null
           max_participants: number | null
+          province: string | null
           secondary_images: string[] | null
           time: string
           title: string
@@ -46,7 +51,9 @@ export type Database = {
         }
         Insert: {
           category: string
+          city?: string | null
           cost?: number
+          country?: string | null
           created_at?: string | null
           created_by?: string | null
           current_participants?: number | null
@@ -60,8 +67,11 @@ export type Database = {
           description_it?: string | null
           id?: string
           image_url?: string | null
+          latitude?: number | null
           location: string
+          longitude?: number | null
           max_participants?: number | null
+          province?: string | null
           secondary_images?: string[] | null
           time?: string
           title: string
@@ -75,7 +85,9 @@ export type Database = {
         }
         Update: {
           category?: string
+          city?: string | null
           cost?: number
+          country?: string | null
           created_at?: string | null
           created_by?: string | null
           current_participants?: number | null
@@ -89,8 +101,11 @@ export type Database = {
           description_it?: string | null
           id?: string
           image_url?: string | null
+          latitude?: number | null
           location?: string
+          longitude?: number | null
           max_participants?: number | null
+          province?: string | null
           secondary_images?: string[] | null
           time?: string
           title?: string

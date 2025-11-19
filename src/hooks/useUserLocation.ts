@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
-interface LocationData {
+export interface LocationData {
   city: string;
   coordinates?: {
     lat: number;
@@ -11,9 +11,21 @@ interface LocationData {
 
 const LOCATION_STORAGE_KEY = 'user_location';
 
-export function useUserLocation() {
+interface UserLocationContextValue {
+  location: LocationData | null;
+  loading: boolean;
+  error: string | null;
+  detectLocation: () => Promise<void>;
+  updateLocation: (newLocation: LocationData) => void;
+  updateSearchRadius: (radius: number) => void;
+  clearLocation: () => void;
+}
+
+const UserLocationContext = createContext<UserLocationContextValue | undefined>(undefined);
+
+export function UserLocationProvider({ children }: { children: ReactNode }) {
   const [location, setLocation] = useState<LocationData | null>(() => {
-    const stored = localStorage.getItem(LOCATION_STORAGE_KEY);
+    const stored = typeof window !== 'undefined' ? localStorage.getItem(LOCATION_STORAGE_KEY) : null;
     return stored ? JSON.parse(stored) : null;
   });
   const [loading, setLoading] = useState(false);
@@ -24,7 +36,17 @@ export function useUserLocation() {
     if (!location) {
       detectLocationByIP();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const persistLocation = (loc: LocationData | null) => {
+    setLocation(loc);
+    if (loc) {
+      localStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify(loc));
+    } else {
+      localStorage.removeItem(LOCATION_STORAGE_KEY);
+    }
+  };
 
   const detectLocationByIP = async () => {
     setLoading(true);
@@ -48,10 +70,10 @@ export function useUserLocation() {
         searchRadius: location?.searchRadius || 10, // Keep existing or default 10km
       };
 
-      updateLocation(locationData);
+      persistLocation(locationData);
     } catch (err) {
       console.error('Error detecting location by IP:', err);
-      // We keep this silent for the user; they can still choose manually
+      // Silent for user
     } finally {
       setLoading(false);
     }
@@ -94,7 +116,7 @@ export function useUserLocation() {
         searchRadius: location?.searchRadius || 10, // Keep existing or default 10km
       };
 
-      updateLocation(locationData);
+      persistLocation(locationData);
     } catch (err) {
       console.error('Error detecting location:', err);
       setError('No se pudo detectar la ubicación');
@@ -104,23 +126,21 @@ export function useUserLocation() {
   };
 
   const updateLocation = (newLocation: LocationData) => {
-    setLocation(newLocation);
-    localStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify(newLocation));
+    persistLocation(newLocation);
   };
 
   const updateSearchRadius = (radius: number) => {
     if (location) {
       const updatedLocation = { ...location, searchRadius: radius };
-      updateLocation(updatedLocation);
+      persistLocation(updatedLocation);
     }
   };
 
   const clearLocation = () => {
-    setLocation(null);
-    localStorage.removeItem(LOCATION_STORAGE_KEY);
+    persistLocation(null);
   };
 
-  return {
+  const value: UserLocationContextValue = {
     location,
     loading,
     error,
@@ -129,4 +149,18 @@ export function useUserLocation() {
     updateSearchRadius,
     clearLocation,
   };
+
+  return React.createElement(
+    UserLocationContext.Provider,
+    { value },
+    children
+  );
+}
+
+export function useUserLocation(): UserLocationContextValue {
+  const context = useContext(UserLocationContext);
+  if (!context) {
+    throw new Error('useUserLocation must be used within a UserLocationProvider');
+  }
+  return context;
 }

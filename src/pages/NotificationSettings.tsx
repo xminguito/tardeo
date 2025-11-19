@@ -32,6 +32,7 @@ export default function NotificationSettings() {
   const [user, setUser] = useState<any>(null);
   const { isAdmin, loading: adminLoading } = useAdminCheck();
   const [showSql, setShowSql] = useState(false);
+  const [updatingCron, setUpdatingCron] = useState(false);
 
   useEffect(() => {
     if (!adminLoading && !isAdmin) {
@@ -181,6 +182,39 @@ SELECT cron.schedule(
     });
   };
 
+  const handleUpdateCron = async () => {
+    setUpdatingCron(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('No hay sesión activa');
+      }
+
+      const { data, error } = await supabase.functions.invoke('update-cron-schedule', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: t('common.success'),
+        description: data.message || 'Cron job actualizado correctamente',
+      });
+    } catch (error) {
+      console.error('Error updating cron:', error);
+      toast({
+        title: t('common.error'),
+        description: error instanceof Error ? error.message : 'Error al actualizar el cron job',
+        variant: 'destructive',
+      });
+    } finally {
+      setUpdatingCron(false);
+    }
+  };
+
   if (adminLoading || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -308,7 +342,18 @@ SELECT cron.schedule(
                   {saving ? 'Guardando...' : 'Guardar Configuración'}
                 </Button>
 
-                <div className="border-t pt-4">
+                <div className="border-t pt-4 space-y-3">
+                  <Button
+                    onClick={handleUpdateCron}
+                    disabled={updatingCron || !settings}
+                    variant="secondary"
+                    className="w-full"
+                    size="lg"
+                  >
+                    <Bell className="mr-2 h-4 w-4" />
+                    {updatingCron ? 'Actualizando cron...' : 'Actualizar Cron Job Automáticamente'}
+                  </Button>
+
                   <Button
                     onClick={() => setShowSql(!showSql)}
                     variant="outline"
@@ -316,14 +361,14 @@ SELECT cron.schedule(
                     size="lg"
                   >
                     <Code className="mr-2 h-4 w-4" />
-                    {showSql ? 'Ocultar' : 'Generar'} SQL para Cron Job
+                    {showSql ? 'Ocultar' : 'Ver'} SQL Manual
                   </Button>
 
                   {showSql && (
                     <div className="mt-4 space-y-2">
                       <div className="flex items-center justify-between">
                         <Label className="text-sm">
-                          Ejecuta este SQL en Supabase para actualizar el cron job
+                          SQL para ejecutar manualmente en Supabase (si prefieres)
                         </Label>
                         <Button
                           onClick={handleCopySql}
@@ -338,7 +383,7 @@ SELECT cron.schedule(
                         {generateCronSql()}
                       </pre>
                       <p className="text-xs text-muted-foreground">
-                        💡 Necesitas ejecutar este SQL en el SQL Editor de Supabase cada vez que cambies el intervalo del cron
+                        💡 Opción alternativa: ejecuta este SQL en el SQL Editor de Supabase
                       </p>
                     </div>
                   )}

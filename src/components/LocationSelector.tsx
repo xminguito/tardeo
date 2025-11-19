@@ -137,7 +137,7 @@ export default function LocationSelector() {
                     updateSearchRadius(value[0]);
                   }}
                   min={5}
-                  max={100}
+                  max={500}
                   step={5}
                   className="w-full"
                 />

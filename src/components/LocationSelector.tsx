@@ -21,6 +21,10 @@ export default function LocationSelector() {
   const { location, loading, detectLocation, updateLocation, updateSearchRadius } = useUserLocation();
   const [open, setOpen] = useState(false);
   const [radius, setRadius] = useState(location?.searchRadius ?? 100);
+  const [pendingLocation, setPendingLocation] = useState<{
+    city: string;
+    coordinates: { lat: number; lng: number };
+  } | null>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
   const { isLoaded, loadError } = useLoadScript({
@@ -34,6 +38,7 @@ export default function LocationSelector() {
       title: t('location.detected'),
       description: t('location.detectedDesc'),
     });
+    setOpen(false);
   };
 
   const onPlaceChanged = () => {
@@ -45,19 +50,36 @@ export default function LocationSelector() {
         const lng = place.geometry.location.lng();
         const cityName = place.name || place.formatted_address || place.vicinity || '';
         
-        updateLocation({
+        setPendingLocation({
           city: cityName,
           coordinates: { lat, lng },
-          searchRadius: radius || location?.searchRadius || 100,
-        });
-        
-        setOpen(false);
-        toast({
-          title: t('location.updated'),
-          description: `${t('location.updatedDesc')} ${cityName}`,
         });
       }
     }
+  };
+
+  const handleSaveLocation = () => {
+    if (pendingLocation) {
+      updateLocation({
+        city: pendingLocation.city,
+        coordinates: pendingLocation.coordinates,
+        searchRadius: radius,
+      });
+      
+      toast({
+        title: t('location.updated'),
+        description: `${t('location.updatedDesc')} ${pendingLocation.city}`,
+      });
+      
+      setPendingLocation(null);
+      setOpen(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setPendingLocation(null);
+    setRadius(location?.searchRadius ?? 100);
+    setOpen(false);
   };
 
   if (loadError) {
@@ -118,10 +140,13 @@ export default function LocationSelector() {
             </Button>
           </div>
 
-          {location && (
+          {(location || pendingLocation) && (
             <div className="pt-4 border-t space-y-4">
               <p className="text-sm text-muted-foreground">
-                {t('location.current')}: <span className="font-medium text-foreground">{location.city}</span>
+                {pendingLocation ? t('location.selected') : t('location.current')}: 
+                <span className="font-medium text-foreground ml-1">
+                  {pendingLocation?.city || location?.city}
+                </span>
               </p>
               
               <div className="space-y-2">
@@ -131,10 +156,7 @@ export default function LocationSelector() {
                 </div>
                 <Slider
                   value={[radius]}
-                  onValueChange={(value) => {
-                    setRadius(value[0]);
-                    updateSearchRadius(value[0]);
-                  }}
+                  onValueChange={(value) => setRadius(value[0])}
                   min={5}
                   max={500}
                   step={5}
@@ -143,6 +165,23 @@ export default function LocationSelector() {
                 <p className="text-xs text-muted-foreground">
                   {t('location.radiusDescription')}
                 </p>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={handleCancel}
+                >
+                  {t('common.cancel')}
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={handleSaveLocation}
+                  disabled={!pendingLocation}
+                >
+                  {t('common.save')}
+                </Button>
               </div>
             </div>
           )}

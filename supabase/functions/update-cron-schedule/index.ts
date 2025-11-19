@@ -77,9 +77,13 @@ serve(async (req) => {
     await client.connect();
 
     try {
-      // Primero desactivar el cron job existente si existe
-      await client.queryArray`SELECT cron.unschedule('invoke-send-activity-reminders')`;
-      console.log('Unscheduled existing cron job');
+      // Intentar desactivar el cron job existente si existe (ignorar error si no existe)
+      try {
+        await client.queryArray`SELECT cron.unschedule('invoke-send-activity-reminders')`;
+        console.log('Unscheduled existing cron job');
+      } catch (unscheduleError) {
+        console.log('No existing cron job to unschedule (this is ok):', unscheduleError);
+      }
 
       // Crear el nuevo cron job con el intervalo configurado
       const url = 'https://kzcowengsnnuglyrjuto.supabase.co/functions/v1/send-activity-reminders';

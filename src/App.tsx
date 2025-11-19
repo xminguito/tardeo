@@ -21,6 +21,7 @@ import Favorites from "./pages/Favorites";
 import MyAccount from "./pages/MyAccount";
 import MyActivities from "./pages/MyActivities";
 import Notifications from "./pages/Notifications";
+import NotificationSettings from "./pages/NotificationSettings";
 import { UserLocationProvider } from "@/hooks/useUserLocation";
  
 const queryClient = new QueryClient();
@@ -45,6 +46,7 @@ const AppContent = () => {
           <Route path="/actividades" element={<ActivitiesCalendar />} />
           <Route path="/actividades/:slug" element={<ActivityDetail />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/admin/notificaciones" element={<NotificationSettings />} />
           <Route path="/update-agent" element={<UpdateAgent />} />
           <Route path="/actualizar-ubicaciones" element={<UpdateActivitiesLocation />} />
           <Route path="/traducir-actividades" element={<TranslateActivities />} />

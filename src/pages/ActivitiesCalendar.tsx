@@ -13,7 +13,6 @@ import { supabase } from '@/integrations/supabase/client';
 import type { ActivityFilters } from '@/features/activities/types/activity.types';
 import { generateActivitySlug } from '@/lib/utils';
 import { useFavorites } from '@/features/activities/hooks/useFavorites';
-import { useUserLocation } from '@/hooks/useUserLocation';
 import PageHeader from '@/components/PageHeader';
 import Header from '@/components/Header';
 import PageTransition from '@/components/PageTransition';
@@ -22,11 +21,7 @@ export default function ActivitiesCalendarPage() {
   const { t } = useTranslation();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { location } = useUserLocation();
-  const [filters, setFilters] = useState<ActivityFilters>(() => ({
-    // Initialize with detected location
-    location: location?.city || undefined,
-  }));
+  const [filters, setFilters] = useState<ActivityFilters>({});
   const [userId, setUserId] = useState<string | null>(null);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -38,12 +33,8 @@ export default function ActivitiesCalendarPage() {
     checkUser();
   }, []);
 
-  // Update filters when location is detected
-  useEffect(() => {
-    if (location?.city) {
-      setFilters(prev => ({ ...prev, location: location.city }));
-    }
-  }, [location]);
+  // Location selector in header no longer auto-filters here; user can use side filters.
+  
   
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();

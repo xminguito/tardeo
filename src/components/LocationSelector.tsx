@@ -87,11 +87,7 @@ export default function LocationSelector() {
   }
 
   return (
-    <Popover open={open} onOpenChange={(newOpen) => {
-      if (!newOpen || !pendingLocation) {
-        setOpen(newOpen);
-      }
-    }}>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button 
           variant="secondary" 
@@ -103,7 +99,16 @@ export default function LocationSelector() {
           </span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80" align="end">
+      <PopoverContent
+        className="w-80"
+        align="end"
+        onInteractOutside={(event) => {
+          const target = event.target as HTMLElement | null;
+          if (target && target.closest('.pac-container')) {
+            event.preventDefault();
+          }
+        }}
+      >
         <div className="space-y-4">
           <div>
             <h4 className="font-semibold mb-2">{t('location.title')}</h4>

@@ -214,6 +214,27 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_settings: {
+        Row: {
+          enabled: boolean
+          hours_before: number[]
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          enabled?: boolean
+          hours_before?: number[]
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          hours_before?: number[]
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           activity_id: string | null

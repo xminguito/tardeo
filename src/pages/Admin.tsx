@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Languages, Mic, Settings } from 'lucide-react';
+import { Languages, Mic, Settings, Bell } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { useEffect, useState } from 'react';
@@ -55,6 +55,13 @@ export default function Admin() {
       icon: Languages,
       path: '/traducir-actividades',
       color: 'text-green-500',
+    },
+    {
+      title: 'Configuración de Notificaciones',
+      description: 'Configura cuándo se envían recordatorios a los usuarios',
+      icon: Bell,
+      path: '/admin/notificaciones',
+      color: 'text-purple-500',
     },
   ];
 

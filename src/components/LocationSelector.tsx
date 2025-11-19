@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MapPin, Navigation, Search } from 'lucide-react';
+import { MapPin, Navigation } from 'lucide-react';
+import { useLoadScript, Autocomplete } from '@react-google-maps/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
@@ -12,13 +13,20 @@ import {
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { useToast } from '@/hooks/use-toast';
 
+const libraries: ("places")[] = ["places"];
+
 export default function LocationSelector() {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { location, loading, detectLocation, updateLocation, updateSearchRadius } = useUserLocation();
   const [open, setOpen] = useState(false);
-  const [searchInput, setSearchInput] = useState('');
   const [radius, setRadius] = useState(location?.searchRadius ?? 100);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+
+  const { isLoaded, loadError } = useLoadScript({
+    googleMapsApiKey: "AIzaSyDCcuYHd8LgLHzkAQz6JrWqRvYHRaKgWkU",
+    libraries,
+  });
 
   const handleDetectLocation = async () => {
     await detectLocation();
@@ -28,47 +36,33 @@ export default function LocationSelector() {
     });
   };
 
-  const handleSearchLocation = async () => {
-    if (!searchInput.trim()) return;
-
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchInput)}&limit=1&accept-language=es`
-      );
-      const data = await response.json();
-
-      if (data && data.length > 0) {
-        const result = data[0];
+  const onPlaceChanged = () => {
+    if (autocompleteRef.current) {
+      const place = autocompleteRef.current.getPlace();
+      
+      if (place.geometry?.location) {
+        const lat = place.geometry.location.lat();
+        const lng = place.geometry.location.lng();
+        const cityName = place.name || place.formatted_address || place.vicinity || '';
+        
         updateLocation({
-          city: result.name || searchInput,
-          coordinates: {
-            lat: parseFloat(result.lat),
-            lng: parseFloat(result.lon),
-          },
+          city: cityName,
+          coordinates: { lat, lng },
           searchRadius: radius || location?.searchRadius || 100,
         });
+        
         setOpen(false);
-        setSearchInput('');
         toast({
           title: t('location.updated'),
-          description: `${t('location.updatedDesc')} ${result.name || searchInput}`,
-        });
-      } else {
-        toast({
-          title: t('common.error'),
-          description: t('location.notFound'),
-          variant: 'destructive',
+          description: `${t('location.updatedDesc')} ${cityName}`,
         });
       }
-    } catch (error) {
-      console.error('Error searching location:', error);
-      toast({
-        title: t('common.error'),
-        description: t('location.searchError'),
-        variant: 'destructive',
-      });
     }
   };
+
+  if (loadError) {
+    console.error('Error loading Google Maps:', loadError);
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -93,21 +87,25 @@ export default function LocationSelector() {
           </div>
 
           <div className="space-y-2">
-            <div className="flex gap-2">
+            {isLoaded ? (
+              <Autocomplete
+                onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
+                onPlaceChanged={onPlaceChanged}
+                options={{
+                  types: ['(cities)'],
+                }}
+              >
+                <Input
+                  placeholder={t('location.searchPlaceholder')}
+                  className="w-full"
+                />
+              </Autocomplete>
+            ) : (
               <Input
                 placeholder={t('location.searchPlaceholder')}
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearchLocation()}
+                disabled
               />
-              <Button 
-                size="icon" 
-                onClick={handleSearchLocation}
-                disabled={!searchInput.trim()}
-              >
-                <Search className="h-4 w-4" />
-              </Button>
-            </div>
+            )}
 
             <Button
               variant="outline"

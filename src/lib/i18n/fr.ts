@@ -26,6 +26,8 @@ export default {
     updatedDesc: 'Activités mises à jour pour',
     notFound: 'Emplacement introuvable',
     searchError: "Erreur lors de la recherche de l'emplacement",
+    searchRadius: 'Rayon de recherche',
+    radiusDescription: 'Activités dans ce rayon depuis votre emplacement',
   },
   home: {
     title: 'Tardeo',

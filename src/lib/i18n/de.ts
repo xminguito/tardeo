@@ -26,6 +26,8 @@ export default {
     updatedDesc: 'Aktivitäten aktualisiert für',
     notFound: 'Standort nicht gefunden',
     searchError: 'Fehler bei der Standortsuche',
+    searchRadius: 'Suchradius',
+    radiusDescription: 'Aktivitäten innerhalb dieses Radius von Ihrem Standort',
   },
   home: {
     title: 'Tardeo',

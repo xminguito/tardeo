@@ -6,6 +6,7 @@ interface LocationData {
     lat: number;
     lng: number;
   };
+  searchRadius?: number; // in kilometers
 }
 
 const LOCATION_STORAGE_KEY = 'user_location';
@@ -44,6 +45,7 @@ export function useUserLocation() {
         coordinates: data.latitude && data.longitude
           ? { lat: data.latitude, lng: data.longitude }
           : undefined,
+        searchRadius: location?.searchRadius || 10, // Keep existing or default 10km
       };
 
       updateLocation(locationData);
@@ -89,6 +91,7 @@ export function useUserLocation() {
       const locationData: LocationData = {
         city,
         coordinates: { lat: latitude, lng: longitude },
+        searchRadius: location?.searchRadius || 10, // Keep existing or default 10km
       };
 
       updateLocation(locationData);
@@ -105,6 +108,13 @@ export function useUserLocation() {
     localStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify(newLocation));
   };
 
+  const updateSearchRadius = (radius: number) => {
+    if (location) {
+      const updatedLocation = { ...location, searchRadius: radius };
+      updateLocation(updatedLocation);
+    }
+  };
+
   const clearLocation = () => {
     setLocation(null);
     localStorage.removeItem(LOCATION_STORAGE_KEY);
@@ -116,6 +126,7 @@ export function useUserLocation() {
     error,
     detectLocation,
     updateLocation,
+    updateSearchRadius,
     clearLocation,
   };
 }

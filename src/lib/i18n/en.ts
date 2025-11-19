@@ -26,6 +26,8 @@ export default {
     updatedDesc: 'Activities updated for',
     notFound: 'Location not found',
     searchError: 'Error searching location',
+    searchRadius: 'Search radius',
+    radiusDescription: 'Activities within this radius from your location',
   },
   home: {
     title: 'Tardeo',

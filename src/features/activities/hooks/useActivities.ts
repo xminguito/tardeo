@@ -47,18 +47,35 @@ export function useActivities(filters?: ActivityFilters) {
         const { lat: userLat, lng: userLng } = userLocation.coordinates;
         const radiusKm = userLocation.searchRadius ?? 100;
 
-        // Only filter activities that have coordinates (don't geocode in real-time)
-        activities = activities
-          .filter((activity) => activity.latitude != null && activity.longitude != null)
-          .filter((activity) => {
+        const activitiesWithCoords = await Promise.all(
+          activities.map(async (activity) => {
+            let lat = activity.latitude ?? null;
+            let lng = activity.longitude ?? null;
+
+            if (lat == null || lng == null) {
+              const geo = await geocodeLocation(activity.city || activity.location);
+              if (geo) {
+                lat = geo.lat;
+                lng = geo.lng;
+              }
+            }
+
+            return { activity, lat, lng };
+          })
+        );
+
+        activities = activitiesWithCoords
+          .filter(({ lat, lng }) => lat != null && lng != null)
+          .filter(({ lat, lng }) => {
             const distance = calculateDistance(
               userLat,
               userLng,
-              activity.latitude as number,
-              activity.longitude as number
+              lat as number,
+              lng as number
             );
             return distance <= radiusKm;
-          });
+          })
+          .map(({ activity }) => activity);
       } else if (filters?.location) {
         // Fallback: simple city text filter
         activities = activities.filter((activity) =>

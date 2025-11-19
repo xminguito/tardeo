@@ -45,7 +45,7 @@ const Index = () => {
   useEffect(() => {
     checkUser();
     loadActivities();
-  }, [location]); // Reload when location changes
+  }, []);
 
   const checkUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -81,51 +81,14 @@ const Index = () => {
 
   const loadActivities = async () => {
     try {
-      let query = supabase
+      const { data, error } = await supabase
         .from("activities")
         .select("*")
-        .order("date", { ascending: true });
+        .order("date", { ascending: true })
+        .limit(6);
 
-      const { data, error } = await query;
       if (error) throw error;
-
-      let filteredData = data || [];
-
-      // Filter by location with radius if coordinates available
-      if (location?.coordinates && location?.searchRadius) {
-        const { calculateDistance } = await import('@/lib/distance');
-        
-        const activitiesWithDistance = filteredData
-          .map((activity) => {
-            if (activity.latitude && activity.longitude && location.coordinates) {
-              const distance = calculateDistance(
-                location.coordinates.lat,
-                location.coordinates.lng,
-                activity.latitude,
-                activity.longitude
-              );
-              return { ...activity, distance };
-            }
-            return { ...activity, distance: Infinity };
-          })
-          .filter(activity => activity.distance <= (location.searchRadius || 10))
-          .sort((a, b) => a.distance - b.distance)
-          .slice(0, 6);
-
-        filteredData = activitiesWithDistance;
-      } else if (location?.city) {
-        // Fallback to simple city filter
-        filteredData = filteredData
-          .filter(activity => 
-            activity.city?.toLowerCase().includes(location.city.toLowerCase()) ||
-            activity.location?.toLowerCase().includes(location.city.toLowerCase())
-          )
-          .slice(0, 6);
-      } else {
-        filteredData = filteredData.slice(0, 6);
-      }
-
-      setActivities(filteredData);
+      setActivities(data || []);
     } catch (error) {
       toast({
         title: t('common.error'),

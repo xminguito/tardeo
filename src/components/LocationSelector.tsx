@@ -87,7 +87,11 @@ export default function LocationSelector() {
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={(newOpen) => {
+      if (!newOpen || !pendingLocation) {
+        setOpen(newOpen);
+      }
+    }}>
       <PopoverTrigger asChild>
         <Button 
           variant="secondary" 

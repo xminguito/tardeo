@@ -18,6 +18,7 @@ interface NotificationSettings {
   id: string;
   hours_before: number[];
   enabled: boolean;
+  cron_interval_minutes: number;
 }
 
 export default function NotificationSettings() {
@@ -66,7 +67,7 @@ export default function NotificationSettings() {
         // Crear configuración por defecto si no existe
         const { data: newData, error: insertError } = await supabase
           .from('notification_settings')
-          .insert({ hours_before: [48, 24, 12, 6, 2], enabled: true })
+          .insert({ hours_before: [48, 24, 12, 6, 2], enabled: true, cron_interval_minutes: 60 })
           .select()
           .single();
 
@@ -95,6 +96,7 @@ export default function NotificationSettings() {
         .update({
           hours_before: settings.hours_before.sort((a, b) => b - a),
           enabled: settings.enabled,
+          cron_interval_minutes: settings.cron_interval_minutes,
         })
         .eq('id', settings.id);
 
@@ -193,6 +195,21 @@ export default function NotificationSettings() {
                   checked={settings?.enabled || false}
                   onCheckedChange={(checked) =>
                     settings && setSettings({ ...settings, enabled: checked })
+                  }
+                />
+              </div>
+
+              <div className="space-y-4">
+                <Label className="text-base">Intervalo de ejecución del cron</Label>
+                <p className="text-sm text-muted-foreground">
+                  Cada cuántos minutos se verifican las actividades (mínimo 5 minutos)
+                </p>
+                <Input
+                  type="number"
+                  min="5"
+                  value={settings?.cron_interval_minutes || 60}
+                  onChange={(e) =>
+                    settings && setSettings({ ...settings, cron_interval_minutes: parseInt(e.target.value) || 60 })
                   }
                 />
               </div>

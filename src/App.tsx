@@ -14,6 +14,7 @@ import NotFound from "./pages/NotFound";
 import ActivitiesCalendar from "./pages/ActivitiesCalendar";
 import ActivityDetail from "./pages/ActivityDetail";
 import UpdateAgent from "./pages/UpdateAgent";
+import UpdateActivitiesLocation from "./pages/UpdateActivitiesLocation";
 import TranslateActivities from "./pages/TranslateActivities";
 import Admin from "./pages/Admin";
 import Favorites from "./pages/Favorites";
@@ -43,6 +44,7 @@ const AppContent = () => {
         <Route path="/actividades/:slug" element={<ActivityDetail />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/update-agent" element={<UpdateAgent />} />
+        <Route path="/actualizar-ubicaciones" element={<UpdateActivitiesLocation />} />
         <Route path="/traducir-actividades" element={<TranslateActivities />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />

@@ -18,7 +18,7 @@ export default function LocationSelector() {
   const { location, loading, detectLocation, updateLocation, updateSearchRadius } = useUserLocation();
   const [open, setOpen] = useState(false);
   const [searchInput, setSearchInput] = useState('');
-  const [radius, setRadius] = useState(location?.searchRadius || 10);
+  const [radius, setRadius] = useState(location?.searchRadius ?? 100);
 
   const handleDetectLocation = async () => {
     await detectLocation();
@@ -45,6 +45,7 @@ export default function LocationSelector() {
             lat: parseFloat(result.lat),
             lng: parseFloat(result.lon),
           },
+          searchRadius: radius || location?.searchRadius || 100,
         });
         setOpen(false);
         setSearchInput('');

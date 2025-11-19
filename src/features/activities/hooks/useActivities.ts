@@ -42,10 +42,10 @@ export function useActivities(filters?: ActivityFilters) {
       
       let activities = data as Activity[];
 
-      // Filter by distance if we have user coordinates and a search radius
-      if (userLocation?.coordinates && userLocation.searchRadius) {
+      // Filter by distance if we have user coordinates
+      if (userLocation?.coordinates) {
         const { lat: userLat, lng: userLng } = userLocation.coordinates;
-        const radiusKm = userLocation.searchRadius;
+        const radiusKm = userLocation.searchRadius ?? 100;
 
         const activitiesWithCoords = await Promise.all(
           activities.map(async (activity) => {

@@ -22,6 +22,7 @@ export default {
     detectAuto: 'Rileva automaticamente',
     searchPlaceholder: 'Cerca città...',
     current: 'Posizione attuale',
+    selected: 'Posizione selezionata',
     updated: 'Posizione aggiornata',
     updatedDesc: 'Attività aggiornate per',
     notFound: 'Posizione non trovata',

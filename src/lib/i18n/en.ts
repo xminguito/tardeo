@@ -22,6 +22,7 @@ export default {
     detectAuto: 'Detect automatically',
     searchPlaceholder: 'Search city...',
     current: 'Current location',
+    selected: 'Selected location',
     updated: 'Location updated',
     updatedDesc: 'Activities updated for',
     notFound: 'Location not found',

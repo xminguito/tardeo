@@ -9,6 +9,7 @@ import CreateActivityDialog from "@/components/CreateActivityDialog";
 import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFavorites } from "@/features/activities/hooks/useFavorites";
+import { useUserLocation } from "@/hooks/useUserLocation";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
 
@@ -39,11 +40,12 @@ const Index = () => {
   const { toast } = useToast();
   const { t } = useTranslation();
   const { isFavorite, toggleFavorite, favorites } = useFavorites(user?.id);
+  const { location } = useUserLocation();
 
   useEffect(() => {
     checkUser();
     loadActivities();
-  }, []);
+  }, [location]); // Reload when location changes
 
   const checkUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -79,11 +81,18 @@ const Index = () => {
 
   const loadActivities = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("activities")
         .select("*")
         .order("date", { ascending: true })
         .limit(6);
+
+      // Filter by detected location (city)
+      if (location?.city) {
+        query = query.ilike('location', `%${location.city}%`);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setActivities(data || []);

@@ -26,6 +26,8 @@ export default {
     updatedDesc: "S'han actualitzat les activitats per a",
     notFound: "No s'ha trobat la ubicació",
     searchError: "Error en buscar la ubicació",
+    searchRadius: 'Radi de cerca',
+    radiusDescription: 'Activitats dins aquest radi des de la teva ubicació',
   },
   home: {
     title: 'Tardeo',

@@ -26,6 +26,8 @@ export default {
     updatedDesc: 'Se han actualizado las actividades para',
     notFound: 'No se encontró la ubicación',
     searchError: 'Error al buscar la ubicación',
+    searchRadius: 'Radio de búsqueda',
+    radiusDescription: 'Actividades dentro de este radio desde tu ubicación',
   },
   home: {
     title: 'Tardeo',

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { MapPin, Navigation, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Slider } from '@/components/ui/slider';
 import {
   Popover,
   PopoverContent,
@@ -14,9 +15,10 @@ import { useToast } from '@/hooks/use-toast';
 export default function LocationSelector() {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const { location, loading, detectLocation, updateLocation } = useUserLocation();
+  const { location, loading, detectLocation, updateLocation, updateSearchRadius } = useUserLocation();
   const [open, setOpen] = useState(false);
   const [searchInput, setSearchInput] = useState('');
+  const [radius, setRadius] = useState(location?.searchRadius || 10);
 
   const handleDetectLocation = async () => {
     await detectLocation();
@@ -118,10 +120,31 @@ export default function LocationSelector() {
           </div>
 
           {location && (
-            <div className="pt-2 border-t">
+            <div className="pt-4 border-t space-y-4">
               <p className="text-sm text-muted-foreground">
                 {t('location.current')}: <span className="font-medium text-foreground">{location.city}</span>
               </p>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">{t('location.searchRadius')}</label>
+                  <span className="text-sm text-muted-foreground">{radius} km</span>
+                </div>
+                <Slider
+                  value={[radius]}
+                  onValueChange={(value) => {
+                    setRadius(value[0]);
+                    updateSearchRadius(value[0]);
+                  }}
+                  min={5}
+                  max={100}
+                  step={5}
+                  className="w-full"
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t('location.radiusDescription')}
+                </p>
+              </div>
             </div>
           )}
         </div>

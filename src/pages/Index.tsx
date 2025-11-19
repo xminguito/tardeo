@@ -16,9 +16,10 @@ import PageTransition from "@/components/PageTransition";
 interface Activity {
   id: string;
   title: string;
-  description: string;
+  description: string | null;
   category: string;
   location: string;
+  city?: string | null;
   date: string;
   time: string;
   cost: number;
@@ -88,7 +89,18 @@ const Index = () => {
         .limit(6);
 
       if (error) throw error;
-      setActivities(data || []);
+
+      let activitiesData = (data || []) as Activity[];
+      
+      // Filtrar por ciudad si el usuario tiene una ubicación seleccionada
+      if (location?.city) {
+        const cityLower = location.city.toLowerCase();
+        activitiesData = activitiesData.filter((activity) =>
+          activity.city?.toLowerCase().includes(cityLower)
+        );
+      }
+
+      setActivities(activitiesData);
     } catch (error) {
       toast({
         title: t('common.error'),

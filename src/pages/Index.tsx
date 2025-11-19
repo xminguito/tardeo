@@ -98,35 +98,18 @@ const Index = () => {
         const { lat: userLat, lng: userLng } = location.coordinates;
         const radiusKm = location.searchRadius ?? 100;
 
-        const activitiesWithCoords = await Promise.all(
-          activitiesData.map(async (activity) => {
-            let lat = (activity as any).latitude ?? null;
-            let lng = (activity as any).longitude ?? null;
-
-            if (lat == null || lng == null) {
-              const geo = await geocodeLocation(activity.city || activity.location);
-              if (geo) {
-                lat = geo.lat;
-                lng = geo.lng;
-              }
-            }
-
-            return { activity, lat, lng };
-          })
-        );
-
-        activitiesData = activitiesWithCoords
-          .filter(({ lat, lng }) => lat != null && lng != null)
-          .filter(({ lat, lng }) => {
+        // Only filter activities that have coordinates (don't geocode in real-time)
+        activitiesData = activitiesData
+          .filter((activity: any) => activity.latitude != null && activity.longitude != null)
+          .filter((activity: any) => {
             const distance = calculateDistance(
               userLat,
               userLng,
-              lat as number,
-              lng as number
+              activity.latitude,
+              activity.longitude
             );
             return distance <= radiusKm;
-          })
-          .map(({ activity }) => activity);
+          });
       } else if (location?.city) {
         const cityLower = location.city.toLowerCase();
         activitiesData = activitiesData.filter((activity) =>

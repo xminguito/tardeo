@@ -118,7 +118,7 @@ export default function LocationSelector() {
           </div>
 
           <div className="space-y-2">
-            {isLoaded ? (
+            {isLoaded && !loadError ? (
               <Autocomplete
                 onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
                 onPlaceChanged={onPlaceChanged}
@@ -132,10 +132,18 @@ export default function LocationSelector() {
                 />
               </Autocomplete>
             ) : (
-              <Input
-                placeholder={t('location.searchPlaceholder')}
-                disabled
-              />
+              <div className="space-y-2">
+                <Input
+                  placeholder={t('location.searchPlaceholder')}
+                  disabled
+                  className="w-full"
+                />
+                {loadError && (
+                  <p className="text-xs text-destructive">
+                    Error: Verifica la configuración de la API key de Google Maps
+                  </p>
+                )}
+              </div>
             )}
 
             <Button

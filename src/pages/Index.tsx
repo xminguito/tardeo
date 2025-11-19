@@ -94,9 +94,9 @@ const Index = () => {
       let activitiesData = (data || []) as Activity[];
       
       // Filtrar por distancia usando la ubicación del usuario si está disponible
-      if (location?.coordinates && location.searchRadius) {
+      if (location?.coordinates) {
         const { lat: userLat, lng: userLng } = location.coordinates;
-        const radiusKm = location.searchRadius;
+        const radiusKm = location.searchRadius ?? 100;
 
         const activitiesWithCoords = await Promise.all(
           activitiesData.map(async (activity) => {

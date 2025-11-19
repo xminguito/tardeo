@@ -26,7 +26,16 @@ const UserLocationContext = createContext<UserLocationContextValue | undefined>(
 export function UserLocationProvider({ children }: { children: ReactNode }) {
   const [location, setLocation] = useState<LocationData | null>(() => {
     const stored = typeof window !== 'undefined' ? localStorage.getItem(LOCATION_STORAGE_KEY) : null;
-    return stored ? JSON.parse(stored) : null;
+    if (!stored) return null;
+    try {
+      const parsed = JSON.parse(stored) as LocationData;
+      return {
+        ...parsed,
+        searchRadius: parsed.searchRadius ?? 100,
+      };
+    } catch {
+      return null;
+    }
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,7 +76,7 @@ export function UserLocationProvider({ children }: { children: ReactNode }) {
         coordinates: data.latitude && data.longitude
           ? { lat: data.latitude, lng: data.longitude }
           : undefined,
-        searchRadius: location?.searchRadius || 10, // Keep existing or default 10km
+        searchRadius: location?.searchRadius ?? 100,
       };
 
       persistLocation(locationData);
@@ -113,7 +122,7 @@ export function UserLocationProvider({ children }: { children: ReactNode }) {
       const locationData: LocationData = {
         city,
         coordinates: { lat: latitude, lng: longitude },
-        searchRadius: location?.searchRadius || 10, // Keep existing or default 10km
+        searchRadius: location?.searchRadius ?? 100,
       };
 
       persistLocation(locationData);
@@ -126,7 +135,11 @@ export function UserLocationProvider({ children }: { children: ReactNode }) {
   };
 
   const updateLocation = (newLocation: LocationData) => {
-    persistLocation(newLocation);
+    const effectiveRadius = newLocation.searchRadius ?? location?.searchRadius ?? 100;
+    persistLocation({
+      ...newLocation,
+      searchRadius: effectiveRadius,
+    });
   };
 
   const updateSearchRadius = (radius: number) => {

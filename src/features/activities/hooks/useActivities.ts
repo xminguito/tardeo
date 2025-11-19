@@ -9,7 +9,14 @@ export function useActivities(filters?: ActivityFilters) {
   const { location: userLocation } = useUserLocation();
 
   return useQuery({
-    queryKey: [...ACTIVITIES_QUERY_KEY, filters, userLocation?.city, userLocation?.searchRadius],
+    queryKey: [
+      ...ACTIVITIES_QUERY_KEY, 
+      filters, 
+      userLocation?.city, 
+      userLocation?.searchRadius,
+      userLocation?.coordinates?.lat,
+      userLocation?.coordinates?.lng
+    ],
     queryFn: async () => {
       let query = supabase
         .from('activities')

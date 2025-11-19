@@ -49,6 +49,13 @@ const Index = () => {
     loadActivities();
   }, []);
 
+  // Recargar actividades cuando cambie la ubicación
+  useEffect(() => {
+    if (location) {
+      loadActivities();
+    }
+  }, [location]);
+
   const checkUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {

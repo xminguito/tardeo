@@ -26,9 +26,43 @@ function toRad(degrees: number): number {
   return degrees * (Math.PI / 180);
 }
 
+// Simple geocoding with client-side cache to avoid repeated requests
+const GEO_CACHE_KEY = 'geo_cache_v1';
+let geoCache: Record<string, { lat: number; lng: number }> | null = null;
+
+function loadGeoCache() {
+  if (geoCache) return geoCache;
+  if (typeof window === 'undefined') {
+    geoCache = {};
+    return geoCache;
+  }
+  try {
+    const stored = window.localStorage.getItem(GEO_CACHE_KEY);
+    geoCache = stored ? JSON.parse(stored) : {};
+  } catch {
+    geoCache = {};
+  }
+  return geoCache!;
+}
+
+function saveGeoCache() {
+  if (typeof window === 'undefined' || !geoCache) return;
+  try {
+    window.localStorage.setItem(GEO_CACHE_KEY, JSON.stringify(geoCache));
+  } catch {
+    // ignore quota or serialization errors
+  }
+}
+
 // Extract coordinates from location string if possible
 // This is a simple geocoding fallback - returns null if can't extract
 export async function geocodeLocation(locationString: string): Promise<{ lat: number; lng: number } | null> {
+  const cache = loadGeoCache();
+  const key = locationString.toLowerCase().trim();
+  if (cache[key]) {
+    return cache[key];
+  }
+
   try {
     const response = await fetch(
       `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationString)}&limit=1&accept-language=es`
@@ -36,10 +70,13 @@ export async function geocodeLocation(locationString: string): Promise<{ lat: nu
     const data = await response.json();
     
     if (data && data.length > 0) {
-      return {
+      const coords = {
         lat: parseFloat(data[0].lat),
         lng: parseFloat(data[0].lon),
       };
+      cache[key] = coords;
+      saveGeoCache();
+      return coords;
     }
     return null;
   } catch (error) {

@@ -36,6 +36,40 @@ npm i
 npm run dev
 ```
 
+## Environment Variables
+
+This project requires the following environment variables to be configured in your `.env` file:
+
+### Required Variables
+
+```env
+# Supabase Configuration
+VITE_SUPABASE_PROJECT_ID="your-project-id"
+VITE_SUPABASE_PUBLISHABLE_KEY="your-publishable-key"
+VITE_SUPABASE_URL="https://your-project-id.supabase.co"
+
+# Google Maps API (for location search)
+VITE_GOOGLE_MAPS_API_KEY="your-google-maps-api-key"
+```
+
+### How to Configure
+
+1. **Supabase**: 
+   - Already configured if you're using Lovable Cloud
+   - For external Supabase projects, get these values from your Supabase project settings
+
+2. **Google Maps API Key**:
+   - Create a project in [Google Cloud Console](https://console.cloud.google.com/)
+   - Enable the following APIs:
+     - Maps JavaScript API
+     - Places API
+   - Create an API key with HTTP referrer restrictions:
+     - Add `*.lovable.app/*` (for Lovable hosting)
+     - Add your custom domain if applicable
+   - Copy the API key to `VITE_GOOGLE_MAPS_API_KEY`
+
+**Note**: The Google Maps API key is designed to be used in the client-side code. Its security comes from the HTTP referrer restrictions you configure in Google Cloud Console, not from keeping it secret.
+
 **Edit a file directly in GitHub**
 
 - Navigate to the desired file(s).

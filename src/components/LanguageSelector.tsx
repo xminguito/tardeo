@@ -1,38 +1,31 @@
-import { Languages } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-
-const LanguageSelector = ({ inMobileMenu = false }: { inMobileMenu?: boolean }) => {
-  const { i18n, t } = useTranslation();
-  const { toast } = useToast();
-
+const LanguageSelector = ({
+  inMobileMenu = false
+}: {
+  inMobileMenu?: boolean;
+}) => {
+  const {
+    i18n,
+    t
+  } = useTranslation();
+  const {
+    toast
+  } = useToast();
   const handleLanguageChange = (language: string) => {
     i18n.changeLanguage(language);
     localStorage.setItem('appLanguage', language);
     localStorage.setItem('voiceAssistantLanguage', language);
-    
     toast({
       title: t('activities.voice.selectLanguage'),
-      description: `${t(`activities.voice.languages.${language}`)}`,
+      description: `${t(`activities.voice.languages.${language}`)}`
     });
   };
-
-  return (
-    <div className="flex items-center gap-1 md:gap-2 flex-shrink-0 w-full md:w-auto">
-      <Languages className={`h-3 w-3 md:h-4 md:w-4 ${inMobileMenu ? 'block' : 'hidden sm:block'}`} />
+  return <div className="flex items-center gap-1 md:gap-2 flex-shrink-0 w-full md:w-auto">
+      
       <Select value={i18n.language} onValueChange={handleLanguageChange}>
-        <SelectTrigger className={`w-full md:w-[140px] text-sm md:text-base ${
-          inMobileMenu 
-            ? 'bg-background border-border text-foreground' 
-            : 'bg-background/20 border-primary-foreground/20 text-primary-foreground'
-        }`}>
+        <SelectTrigger className={`w-full md:w-[140px] text-sm md:text-base ${inMobileMenu ? 'bg-background border-border text-foreground' : 'bg-background/20 border-primary-foreground/20 text-primary-foreground'}`}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -44,8 +37,6 @@ const LanguageSelector = ({ inMobileMenu = false }: { inMobileMenu?: boolean }) 
           <SelectItem value="de">{t('activities.voice.languages.de')}</SelectItem>
         </SelectContent>
       </Select>
-    </div>
-  );
+    </div>;
 };
-
 export default LanguageSelector;

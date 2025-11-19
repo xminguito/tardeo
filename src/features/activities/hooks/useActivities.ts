@@ -16,9 +16,8 @@ export function useActivities(filters?: ActivityFilters) {
       if (filters?.category) {
         query = query.eq('category', filters.category);
       }
-      if (filters?.location) {
-        query = query.ilike('location', `%${filters.location}%`);
-      }
+      
+      // Don't filter by location here - we'll do it with coordinates below
       if (filters?.dateFrom) {
         query = query.gte('date', filters.dateFrom.toISOString());
       }
@@ -37,7 +36,17 @@ export function useActivities(filters?: ActivityFilters) {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as Activity[];
+      
+      let activities = data as Activity[];
+
+      // Filter by city if location filter is provided
+      if (filters?.location) {
+        activities = activities.filter(activity => 
+          activity.city?.toLowerCase().includes(filters.location!.toLowerCase())
+        );
+      }
+
+      return activities;
     },
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,

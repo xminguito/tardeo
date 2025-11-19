@@ -16,6 +16,7 @@ import { useFavorites } from '@/features/activities/hooks/useFavorites';
 import PageHeader from '@/components/PageHeader';
 import Header from '@/components/Header';
 import PageTransition from '@/components/PageTransition';
+import { useUserLocation } from '@/hooks/useUserLocation';
 
 export default function ActivitiesCalendarPage() {
   const { t } = useTranslation();
@@ -25,6 +26,7 @@ export default function ActivitiesCalendarPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const { location: userLocation } = useUserLocation();
 
   const { data: activities, isLoading, error } = useActivities(filters);
   const { isFavorite, toggleFavorite, favorites } = useFavorites(userId);
@@ -33,7 +35,12 @@ export default function ActivitiesCalendarPage() {
     checkUser();
   }, []);
 
-  // Location selector in header no longer auto-filters here; user can use side filters.
+  // Filtrar automáticamente por ciudad del usuario
+  useEffect(() => {
+    if (userLocation?.city) {
+      setFilters((prev) => ({ ...prev, location: userLocation.city }));
+    }
+  }, [userLocation?.city]);
   
   
   const checkUser = async () => {

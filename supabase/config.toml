@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.send-tts-alert-email]
 verify_jwt = false
+
+[functions.check-tts-budget]
+verify_jwt = false

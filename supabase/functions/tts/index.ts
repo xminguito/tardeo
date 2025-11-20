@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.1'
+import { selectTTSProvider, checkUserTTSThrottle } from '../_shared/ttsProviderSelector.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -244,6 +245,23 @@ serve(async (req) => {
       }
     }
 
+    // Check per-user throttling
+    const throttleCheck = await checkUserTTSThrottle(supabase, userId);
+    if (!throttleCheck.allowed) {
+      console.warn(`[TTS] User ${userId} throttled:`, throttleCheck.reason);
+      return new Response(
+        JSON.stringify({
+          error: 'Rate limit exceeded',
+          message: throttleCheck.reason,
+          retry_after: 60,
+          current_minute: throttleCheck.current_minute,
+          current_day: throttleCheck.current_day,
+          suggestion: 'Try using text-only mode or brief mode to reduce TTS usage',
+        }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Check cache
     const { data: cached, error: cacheError } = await supabase
       .from('tts_cache')
@@ -293,8 +311,32 @@ serve(async (req) => {
 
     console.log('Cache miss, generating audio')
 
-    // Determine provider
-    let provider = provider_preference || 'elevenlabs'
+    // Check circuit breakers and select provider
+    const providerConfig = await selectTTSProvider(supabase, provider_preference || 'elevenlabs');
+    
+    if (providerConfig.provider === 'disabled') {
+      console.error('[TTS] Service disabled:', providerConfig.reason);
+      return new Response(
+        JSON.stringify({
+          error: 'TTS service temporarily disabled',
+          reason: providerConfig.reason,
+          message: 'Audio generation is currently unavailable. Please try text-only mode.',
+          text_response: sanitizedText,
+        }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Use selected provider from circuit breaker
+    let provider = providerConfig.provider;
+    const selectedVoice = voice || providerConfig.voice;
+    const selectedBitrate = bitrate || providerConfig.bitrate;
+    
+    if (providerConfig.reason) {
+      console.log('[TTS] Provider selection reason:', providerConfig.reason);
+    }
+
+    // Determine provider availability
     const hasElevenLabs = !!Deno.env.get('ELEVENLABS_API_KEY')
     const hasOpenAI = !!Deno.env.get('OPENAI_API_KEY')
 

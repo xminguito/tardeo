@@ -91,6 +91,13 @@ export default function Admin() {
       path: '/admin/tts-alerts',
       color: 'text-pink-500',
     },
+    {
+      title: 'TTS Analytics Dashboard',
+      description: 'Dashboard visual con gráficos de costos, rendimiento y alertas en tiempo real',
+      icon: BarChart3,
+      path: '/admin/tts-analytics',
+      color: 'text-indigo-500',
+    },
   ];
 
   return (

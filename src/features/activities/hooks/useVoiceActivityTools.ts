@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { generateActivitySlug } from '@/lib/utils';
+import { truncateList, summarizeActivity } from '@/lib/tts/voiceResponseHelper';
 import type {
   VoiceToolsMap,
   SearchActivitiesParams,
@@ -17,6 +18,14 @@ import type {
 } from '../types/voiceTools.types';
 import type { ActivityFilters } from '../types/activity.types';
 
+/**
+ * TTS-optimized Voice Activity Tools
+ * - Uses i18n translations for all responses
+ * - Truncates lists to max 3 items
+ * - Removes verbose explanations
+ * - Maintains consistent brevity
+ */
+
 export function useVoiceActivityTools(
   onFiltersChange: (filters: ActivityFilters) => void,
   currentFilters: ActivityFilters,
@@ -24,18 +33,16 @@ export function useVoiceActivityTools(
 ): VoiceToolsMap {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language as 'en' | 'es' | 'ca' | 'fr' | 'it' | 'de';
 
   const searchActivities = useCallback(
     async (params: SearchActivitiesParams = {} as any): Promise<string> => {
       try {
-        console.log('[Voice Tool] searchActivities called with:', params);
-
         const queryText = params.category?.trim();
         const isSimpleTitleQuery = !!queryText && !params.dateFrom && !params.dateTo && !params.location && !params.maxCost;
 
         if (isSimpleTitleQuery) {
-          // 1) Buscar por título y navegar directamente al detalle si hay coincidencia clara
           const { data: matches, error: titleError } = await supabase
             .from('activities')
             .select('*')
@@ -46,7 +53,7 @@ export function useVoiceActivityTools(
 
           if (!matches || matches.length === 0) {
             if (navigate) navigate('/actividades');
-            return `No encontré "${queryText}". Te he llevado a la lista de actividades.`;
+            return t('voice.search.notFound', { query: queryText });
           }
 
           const normalize = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
@@ -58,21 +65,16 @@ export function useVoiceActivityTools(
             navigate(`/actividades/${slug}`);
           }
 
-          const availableSlots = (chosen.max_participants ?? 0) - (chosen.current_participants ?? 0);
-          const isAvailable = availableSlots > 0;
-          const dateText = chosen.date ? new Date(chosen.date).toLocaleDateString('es-ES') : '';
-          const timeText = chosen.time ?? '';
-          const locText = chosen.location ?? '';
-
           if (matches.length > 1 && !exact) {
-            const titles = matches.slice(0, 3).map(a => `"${a.title}"`).join(', ');
-            return `Encontré ${matches.length} actividades relacionadas: ${titles}. Te muestro "${chosen.title}" y te he llevado a su página.`;
+            return t('voice.search.multiple', { count: matches.length, title: chosen.title });
           }
 
-          return `Encontré la actividad "${chosen.title}". Es el ${dateText} a las ${timeText} en ${locText}. ${isAvailable ? `Quedan ${availableSlots} plazas` : 'Está completa'}. Te he llevado a su página.`;
+          // Brief activity summary
+          const summary = summarizeActivity(chosen, lang);
+          return `${t('voice.search.foundOne', { title: chosen.title })}. ${summary}`;
         }
 
-        // 2) Búsqueda con filtros -> navegar a /actividades
+        // Search with filters
         const filters: ActivityFilters = {
           category: params.category || null,
           location: params.location || null,
@@ -94,7 +96,6 @@ export function useVoiceActivityTools(
         if (filters.dateFrom) query = query.gte('date', filters.dateFrom.toISOString());
         if (filters.dateTo) query = query.lte('date', filters.dateTo.toISOString());
         if (filters.maxCost !== null) query = query.lte('cost', filters.maxCost);
-        // Importante: no comparar columnas en el servidor (causa 400). Filtramos disponibilidad en cliente.
 
         const { data: activities, error } = await query;
         if (error) throw error;
@@ -105,27 +106,26 @@ export function useVoiceActivityTools(
 
         const count = filtered?.length || 0;
         if (navigate) navigate('/actividades');
-        return `He encontrado ${count} actividades que coinciden con tu búsqueda. Te he llevado a la página de actividades.`;
+        
+        return t('voice.search.found', { count });
       } catch (error) {
         console.error('[Voice Tool] Error in searchActivities:', error);
         if (navigate) navigate('/actividades');
-        return 'No pude buscar actividades en este momento. Te he llevado a la lista de actividades para que puedas explorar.';
+        return t('voice.search.error');
       }
     },
-    [onFiltersChange, navigate]
+    [onFiltersChange, navigate, t, lang]
   );
 
   const reserveActivity = useCallback(
     async (params: ReserveActivityParams): Promise<string> => {
       try {
-        console.log('[Voice Tool] reserveActivity called with:', params);
-
         const {
           data: { user },
         } = await supabase.auth.getUser();
 
         if (!user) {
-          return 'Necesitas iniciar sesión para reservar una actividad.';
+          return t('voice.reservation.loginRequired');
         }
 
         const { data: activity, error: activityError } = await supabase
@@ -135,11 +135,11 @@ export function useVoiceActivityTools(
           .single();
 
         if (activityError || !activity) {
-          return 'No encontré esa actividad.';
+          return t('voice.details.notFound');
         }
 
         if (activity.current_participants >= activity.max_participants) {
-          return `Lo siento, la actividad "${activity.title}" ya está completa.`;
+          return t('voice.reservation.full', { title: activity.title });
         }
 
         const { data: existingReservation } = await supabase
@@ -150,7 +150,7 @@ export function useVoiceActivityTools(
           .maybeSingle();
 
         if (existingReservation) {
-          return `Ya estás apuntado a "${activity.title}".`;
+          return t('voice.reservation.alreadyBooked');
         }
 
         const { error: reservationError } = await supabase
@@ -169,20 +169,20 @@ export function useVoiceActivityTools(
           activity_id: params.activityId,
           type: 'reservation_confirmed',
           title: t('activities.reservation.success'),
-          message: `Te has apuntado a "${activity.title}"`,
+          message: t('voice.reservation.success', { title: activity.title }),
         });
 
         queryClient.invalidateQueries({ queryKey: ['activities'] });
 
         toast({
-          title: '¡Reserva confirmada!',
-          description: `Te has apuntado a "${activity.title}"`,
+          title: t('activities.reservation.success'),
+          description: t('voice.reservation.success', { title: activity.title }),
         });
 
-        return `¡Perfecto! Te he apuntado a "${activity.title}". Recibirás un recordatorio antes de la actividad.`;
+        return t('voice.reservation.success', { title: activity.title });
       } catch (error) {
         console.error('[Voice Tool] Error in reserveActivity:', error);
-        return 'Hubo un problema al hacer la reserva. Inténtalo de nuevo.';
+        return t('voice.reservation.error');
       }
     },
     [queryClient, toast, t]
@@ -191,9 +191,6 @@ export function useVoiceActivityTools(
   const getActivityDetails = useCallback(
     async (params: GetActivityDetailsParams = {} as any): Promise<string> => {
       try {
-        console.log('[Voice Tool] getActivityDetails called with:', params);
-
-        // Buscar por ID o por nombre
         let query = supabase.from('activities').select('*');
         
         if (params.activityId) {
@@ -206,42 +203,52 @@ export function useVoiceActivityTools(
 
         if (error) {
           console.error('[Voice Tool] Error querying activity:', error);
-          return 'Hubo un error al buscar la actividad.';
+          return t('voice.details.error');
         }
 
         if (!data) {
-          // No se encontró, navegar a lista de actividades
           if (navigate) {
             navigate('/actividades');
           }
-          return `No encontré ninguna actividad llamada "${params.activityTitle || params.activityId}". Te he llevado a la lista de actividades para que puedas explorar.`;
+          return t('voice.details.notFound');
         }
 
         const activity = data;
         const availableSlots = activity.max_participants - activity.current_participants;
-        const costText = activity.cost === 0 ? 'gratuita' : `${activity.cost} euros`;
-        const isAvailable = availableSlots > 0;
+        const costText = activity.cost === 0 
+          ? t('voice.common.free') 
+          : `${activity.cost}€`;
+        const availabilityText = availableSlots > 0
+          ? t('voice.common.available', { count: availableSlots })
+          : t('voice.common.full');
 
-        // Navegar al detalle de la actividad con slug amigable
         if (navigate) {
           const slug = generateActivitySlug(activity.title, activity.id);
           navigate(`/actividades/${slug}`);
         }
 
-        return `La actividad "${activity.title}" es el ${new Date(activity.date).toLocaleDateString('es-ES')} a las ${activity.time}. Se realiza en ${activity.location}. Es ${costText} y ${isAvailable ? `quedan ${availableSlots} plazas disponibles` : 'está completa'}. Te he llevado a su página de detalles.`;
+        const date = new Date(activity.date).toLocaleDateString(
+          lang === 'es' ? 'es-ES' : lang === 'en' ? 'en-US' : `${lang}-${lang.toUpperCase()}`
+        );
+
+        return t('voice.details.summary', {
+          title: activity.title,
+          date,
+          time: activity.time,
+          cost: costText,
+          availability: availabilityText,
+        });
       } catch (error) {
         console.error('[Voice Tool] Error in getActivityDetails:', error);
-        return 'No pude obtener los detalles de esa actividad.';
+        return t('voice.details.error');
       }
     },
-    [navigate]
+    [navigate, t, lang]
   );
 
   const suggestActivities = useCallback(
     async (params: SuggestActivitiesParams): Promise<string> => {
       try {
-        console.log('[Voice Tool] suggestActivities called with:', params);
-
         let query = supabase
           .from('activities')
           .select('*')
@@ -264,33 +271,30 @@ export function useVoiceActivityTools(
         if (error) throw error;
 
         const available = (activities || []).filter((a: any) => (a.current_participants ?? 0) < (a.max_participants ?? 0));
-        const top = available.slice(0, 5);
 
-        if (top.length === 0) {
-          return 'No encontré actividades que se ajusten a tus preferencias en este momento.';
+        if (available.length === 0) {
+          return t('voice.suggestions.none');
         }
 
-        const suggestions = top
-          .map(
-            (act: any, idx: number) =>
-              `${idx + 1}. "${act.title}" - ${new Date(act.date).toLocaleDateString('es-ES')} en ${act.location}${act.cost > 0 ? ` (${act.cost}€)` : ' (Gratis)'}`
-          )
-          .join('. ');
+        // Truncate to max 3 activities for voice
+        const { text, count } = truncateList(
+          available,
+          (act, idx) => summarizeActivity(act, lang),
+          3
+        );
 
-        return `Te recomiendo estas actividades: ${suggestions}`;
+        return `${t('voice.suggestions.found', { count })}. ${text}`;
       } catch (error) {
         console.error('[Voice Tool] Error in suggestActivities:', error);
-        return 'No pude generar sugerencias en este momento.';
+        return t('voice.suggestions.error');
       }
     },
-    []
+    [t, lang]
   );
 
   const setFilter = useCallback(
     async (params: SetFilterParams): Promise<string> => {
       try {
-        console.log('[Voice Tool] setFilter called with:', params);
-
         const updatedFilters = { ...currentFilters };
 
         switch (params.filterType) {
@@ -312,37 +316,33 @@ export function useVoiceActivityTools(
         }
 
         onFiltersChange(updatedFilters);
-
-        return `He aplicado el filtro de ${params.filterType}.`;
+        return t('voice.filters.applied');
       } catch (error) {
         console.error('[Voice Tool] Error in setFilter:', error);
-        return 'No pude aplicar ese filtro.';
+        return t('voice.filters.error');
       }
     },
-    [currentFilters, onFiltersChange]
+    [currentFilters, onFiltersChange, t]
   );
 
   const clearFilters = useCallback(async (): Promise<string> => {
     try {
-      console.log('[Voice Tool] clearFilters called');
       onFiltersChange({});
-      return 'He limpiado todos los filtros.';
+      return t('voice.filters.cleared');
     } catch (error) {
       console.error('[Voice Tool] Error in clearFilters:', error);
-      return 'No pude limpiar los filtros.';
+      return t('voice.filters.error');
     }
-  }, [onFiltersChange]);
+  }, [onFiltersChange, t]);
 
   const getMyReservations = useCallback(async (): Promise<string> => {
     try {
-      console.log('[Voice Tool] getMyReservations called');
-
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
       if (!user) {
-        return 'Necesitas iniciar sesión para ver tus reservas.';
+        return t('voice.reservation.loginRequired');
       }
 
       const { data: reservations, error } = await supabase
@@ -353,32 +353,35 @@ export function useVoiceActivityTools(
       if (error) throw error;
 
       if (!reservations || reservations.length === 0) {
-        return 'No tienes ninguna reserva activa.';
+        return t('voice.myReservations.none');
       }
 
-      const reservationsList = reservations
-        .map(
-          (res: any, idx: number) =>
-            `${idx + 1}. "${res.activities.title}" - ${new Date(res.activities.date).toLocaleDateString('es-ES')}`
-        )
-        .join('. ');
+      // Truncate to max 3 reservations for voice
+      const { text, count } = truncateList(
+        reservations,
+        (res, idx) => {
+          const date = new Date(res.activities.date).toLocaleDateString(
+            lang === 'es' ? 'es-ES' : lang === 'en' ? 'en-US' : `${lang}-${lang.toUpperCase()}`
+          );
+          return `"${res.activities.title}": ${date}`;
+        },
+        3
+      );
 
-      return `Tienes ${reservations.length} reservas: ${reservationsList}`;
+      return `${t('voice.myReservations.found', { count })}. ${text}`;
     } catch (error) {
       console.error('[Voice Tool] Error in getMyReservations:', error);
-      return 'No pude obtener tus reservas.';
+      return t('voice.myReservations.error');
     }
-  }, []);
+  }, [t, lang]);
 
   const submitRating = useCallback(
     async (params: SubmitRatingParams): Promise<string> => {
       try {
-        console.log('[Voice Tool] submitRating called with:', params);
-
         const { data: { user } } = await supabase.auth.getUser();
         
         if (!user) {
-          return 'Necesitas iniciar sesión para dejar una valoración.';
+          return t('voice.reservation.loginRequired');
         }
 
         const { error } = await supabase
@@ -392,20 +395,18 @@ export function useVoiceActivityTools(
 
         if (error) throw error;
 
-        return `He registrado tu valoración de ${params.rating} estrellas para "${params.activityTitle}". ${params.comment ? 'Tu comentario ha sido guardado.' : ''}`;
+        return t('voice.ratings.submitted', { rating: params.rating });
       } catch (error) {
         console.error('[Voice Tool] Error in submitRating:', error);
-        return 'No pude guardar tu valoración. Inténtalo de nuevo.';
+        return t('voice.ratings.error');
       }
     },
-    []
+    [t]
   );
 
   const getRatings = useCallback(
     async (params: GetRatingsParams): Promise<string> => {
       try {
-        console.log('[Voice Tool] getRatings called with:', params);
-
         const { data: ratings, error } = await supabase
           .from('activity_ratings')
           .select(`
@@ -420,66 +421,51 @@ export function useVoiceActivityTools(
         if (error) throw error;
 
         if (!ratings || ratings.length === 0) {
-          return `La actividad "${params.activityTitle}" aún no tiene valoraciones.`;
+          return t('voice.ratings.none');
         }
 
         const avgRating = (ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length).toFixed(1);
         
-        const recentComments = ratings
-          .filter((r: any) => r.comment)
-          .slice(0, 3)
-          .map((r: any) => {
-            const name = r.profiles?.full_name || 'Usuario anónimo';
-            return `${name} (${r.rating} estrellas): "${r.comment}"`;
-          });
-
-        let response = `La actividad "${params.activityTitle}" tiene una valoración promedio de ${avgRating} estrellas con ${ratings.length} opiniones.`;
-        
-        if (recentComments.length > 0) {
-          response += ` Los comentarios más recientes son: ${recentComments.join('. ')}`;
-        }
-
-        return response;
+        return t('voice.ratings.summary', {
+          title: params.activityTitle,
+          average: avgRating,
+          count: ratings.length,
+        });
       } catch (error) {
         console.error('[Voice Tool] Error in getRatings:', error);
-        return 'No pude obtener las valoraciones en este momento.';
+        return t('voice.ratings.error');
       }
     },
-    []
+    [t]
   );
 
   const navigateToActivities = useCallback(
     async (params: NavigateToActivitiesParams = {} as any): Promise<string> => {
       try {
-        console.log('[Voice Tool] navigateToActivities called with:', params);
-        
         if (!navigate) {
-          return 'La función de navegación no está disponible en este momento.';
+          return t('voice.navigation.error');
         }
 
-        // Apply category filter if provided
         if (params.category) {
           const filters: ActivityFilters = {
             category: params.category,
           };
           onFiltersChange(filters);
         } else {
-          // Clear filters to show all activities
           onFiltersChange({});
         }
 
-        // Navigate to activities calendar page
         navigate('/actividades');
 
         return params.category 
-          ? `Te he llevado a la sección de actividades, mostrando solo actividades de ${params.category}.`
-          : 'Te he llevado a la sección de actividades donde puedes ver todas las opciones disponibles.';
+          ? t('voice.navigation.withCategory', { category: params.category })
+          : t('voice.navigation.success');
       } catch (error) {
         console.error('[Voice Tool] Error in navigateToActivities:', error);
-        return 'No pude navegar a la sección de actividades.';
+        return t('voice.navigation.error');
       }
     },
-    [navigate, onFiltersChange]
+    [navigate, onFiltersChange, t]
   );
 
   return {

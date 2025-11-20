@@ -1,4 +1,7 @@
+import { voiceTranslations } from './voice';
+
 export default {
+  ...voiceTranslations.en,
   common: {
     back: 'Back',
     save: 'Save',

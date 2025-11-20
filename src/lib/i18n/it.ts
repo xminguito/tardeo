@@ -1,4 +1,7 @@
+import { voiceTranslations } from './voice';
+
 export default {
+  ...voiceTranslations.it,
   common: {
     back: 'Indietro',
     save: 'Salva',

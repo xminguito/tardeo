@@ -329,6 +329,7 @@ export default {
     activityFull: "Attività completa",
     alreadyJoined: "Già iscritto",
     joinButton: "Mi iscrivo!",
+    processing: "Elaborazione della prenotazione...",
     reminderText: "Riceverai un promemoria prima dell'attività",
     reservationConfirmed: "Prenotazione confermata",
     joinedActivity: "Ti sei iscritto a {{title}}",

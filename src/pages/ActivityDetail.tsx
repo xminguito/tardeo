@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Calendar, MapPin, Users, Clock, Euro, MessageCircle } from 'lucide-react';
+import { Calendar, MapPin, Users, Clock, Euro, MessageCircle, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es, enUS, ca, fr, it, de } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -55,6 +55,7 @@ export default function ActivityDetail() {
   const { t, i18n } = useTranslation();
   const [activity, setActivity] = useState<Activity | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isJoining, setIsJoining] = useState(false);
   const [isParticipating, setIsParticipating] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
@@ -156,6 +157,7 @@ export default function ActivityDetail() {
 
     if (!activity) return;
 
+    setIsJoining(true);
     try {
       // Check if already participating
       const { data: existingParticipation } = await supabase
@@ -238,6 +240,8 @@ export default function ActivityDetail() {
         description: t('activityDetail.reservationError'),
         variant: 'destructive',
       });
+    } finally {
+      setIsJoining(false);
     }
   };
 
@@ -373,15 +377,22 @@ export default function ActivityDetail() {
 
                 <Button
                   onClick={handleJoin}
-                  disabled={isFull || isParticipating}
+                  disabled={isFull || isParticipating || isJoining}
                   className="w-full text-lg py-6"
                   size="lg"
                 >
-                  {isFull
-                    ? t('activityDetail.activityFull')
-                    : isParticipating
-                    ? t('activityDetail.alreadyJoined')
-                    : t('activityDetail.joinButton')}
+                  {isJoining ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      {t('activityDetail.processing')}
+                    </>
+                  ) : isFull ? (
+                    t('activityDetail.activityFull')
+                  ) : isParticipating ? (
+                    t('activityDetail.alreadyJoined')
+                  ) : (
+                    t('activityDetail.joinButton')
+                  )}
                 </Button>
 
                 {isParticipating && (

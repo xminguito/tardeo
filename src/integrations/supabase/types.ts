@@ -319,42 +319,6 @@ export type Database = {
         }
         Relationships: []
       }
-      tts_cache: {
-        Row: {
-          audio_url: string
-          bitrate: number | null
-          content_type: string
-          created_at: string
-          expires_at: string
-          id: string
-          text: string
-          text_hash: string
-          voice_name: string
-        }
-        Insert: {
-          audio_url: string
-          bitrate?: number | null
-          content_type?: string
-          created_at?: string
-          expires_at?: string
-          id?: string
-          text: string
-          text_hash: string
-          voice_name: string
-        }
-        Update: {
-          audio_url?: string
-          bitrate?: number | null
-          content_type?: string
-          created_at?: string
-          expires_at?: string
-          id?: string
-          text?: string
-          text_hash?: string
-          voice_name?: string
-        }
-        Relationships: []
-      }
       user_favorites: {
         Row: {
           activity_id: string
@@ -438,7 +402,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      cleanup_expired_tts_cache: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,12 +8,28 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import PageHeader from "@/components/PageHeader";
+import Header from "@/components/Header";
+import PageTransition from "@/components/PageTransition";
 import { Mail, Send } from "lucide-react";
+import { useFavorites } from "@/features/activities/hooks/useFavorites";
 
 export default function EmailTester() {
   const { toast } = useToast();
+  const [user, setUser] = useState<any>(null);
+  const { favorites } = useFavorites(user?.id);
   const [emailType, setEmailType] = useState<"confirmation" | "reminder" | "cancellation" | "new_activity">("confirmation");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    checkUser();
+  }, []);
+
+  const checkUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      setUser(session.user);
+    }
+  };
   const [formData, setFormData] = useState({
     recipientEmail: "",
     recipientName: "",
@@ -85,163 +101,168 @@ export default function EmailTester() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <PageHeader
-        title="Probar Emails de Actividades"
-        icon={<Mail className="h-8 w-8 text-primary" />}
-        breadcrumbs={[
-          { label: "Admin", href: "/admin" },
-          { label: "Email Tester" },
-        ]}
-      />
+    <>
+      <Header user={user} favoritesCount={favorites.size} />
+      <PageTransition>
+        <div className="container mx-auto px-4 py-8">
+          <PageHeader
+            title="Probar Emails de Actividades"
+            icon={<Mail className="h-8 w-8 text-primary" />}
+            breadcrumbs={[
+              { label: "Admin", href: "/admin" },
+              { label: "Email Tester" },
+            ]}
+          />
 
-      <p className="text-muted-foreground text-lg mb-8">
-        Envía emails de prueba para las notificaciones de actividades
-      </p>
+          <p className="text-muted-foreground text-lg mb-8">
+            Envía emails de prueba para las notificaciones de actividades
+          </p>
 
-      <div className="container py-8 max-w-4xl">
-        <Card className="p-6">
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="emailType">Tipo de Email</Label>
-              <Select value={emailType} onValueChange={(value: any) => setEmailType(value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="confirmation">Confirmación de Registro</SelectItem>
-                  <SelectItem value="reminder">Recordatorio</SelectItem>
-                  <SelectItem value="cancellation">Cancelación</SelectItem>
-                  <SelectItem value="new_activity">Nueva Actividad</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="recipientEmail">Email del Destinatario *</Label>
-                <Input
-                  id="recipientEmail"
-                  type="email"
-                  value={formData.recipientEmail}
-                  onChange={(e) => setFormData({ ...formData, recipientEmail: e.target.value })}
-                  placeholder="usuario@ejemplo.com"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="recipientName">Nombre del Destinatario *</Label>
-                <Input
-                  id="recipientName"
-                  value={formData.recipientName}
-                  onChange={(e) => setFormData({ ...formData, recipientName: e.target.value })}
-                  placeholder="Juan Pérez"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="activityTitle">Título de la Actividad</Label>
-              <Input
-                id="activityTitle"
-                value={formData.activityTitle}
-                onChange={(e) => setFormData({ ...formData, activityTitle: e.target.value })}
-              />
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="activityDate">Fecha</Label>
-                <Input
-                  id="activityDate"
-                  value={formData.activityDate}
-                  onChange={(e) => setFormData({ ...formData, activityDate: e.target.value })}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="activityTime">Hora</Label>
-                <Input
-                  id="activityTime"
-                  value={formData.activityTime}
-                  onChange={(e) => setFormData({ ...formData, activityTime: e.target.value })}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="activityLocation">Ubicación</Label>
-                <Input
-                  id="activityLocation"
-                  value={formData.activityLocation}
-                  onChange={(e) => setFormData({ ...formData, activityLocation: e.target.value })}
-                />
-              </div>
-            </div>
-
-            {emailType === "reminder" && (
-              <div className="space-y-2">
-                <Label htmlFor="hoursUntil">Horas hasta la actividad</Label>
-                <Input
-                  id="hoursUntil"
-                  type="number"
-                  value={formData.hoursUntil}
-                  onChange={(e) => setFormData({ ...formData, hoursUntil: parseInt(e.target.value) })}
-                />
-              </div>
-            )}
-
-            {emailType === "cancellation" && (
-              <div className="space-y-2">
-                <Label htmlFor="cancellationReason">Motivo de Cancelación (opcional)</Label>
-                <Textarea
-                  id="cancellationReason"
-                  value={formData.cancellationReason}
-                  onChange={(e) => setFormData({ ...formData, cancellationReason: e.target.value })}
-                  placeholder="Ej: Condiciones meteorológicas adversas"
-                />
-              </div>
-            )}
-
-            {emailType === "new_activity" && (
-              <>
+          <div className="max-w-4xl">
+            <Card className="p-6">
+              <div className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="activityDescription">Descripción</Label>
-                  <Textarea
-                    id="activityDescription"
-                    value={formData.activityDescription}
-                    onChange={(e) => setFormData({ ...formData, activityDescription: e.target.value })}
-                  />
+                  <Label htmlFor="emailType">Tipo de Email</Label>
+                  <Select value={emailType} onValueChange={(value: any) => setEmailType(value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="confirmation">Confirmación de Registro</SelectItem>
+                      <SelectItem value="reminder">Recordatorio</SelectItem>
+                      <SelectItem value="cancellation">Cancelación</SelectItem>
+                      <SelectItem value="new_activity">Nueva Actividad</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="activityCategory">Categoría</Label>
+                    <Label htmlFor="recipientEmail">Email del Destinatario *</Label>
                     <Input
-                      id="activityCategory"
-                      value={formData.activityCategory}
-                      onChange={(e) => setFormData({ ...formData, activityCategory: e.target.value })}
+                      id="recipientEmail"
+                      type="email"
+                      value={formData.recipientEmail}
+                      onChange={(e) => setFormData({ ...formData, recipientEmail: e.target.value })}
+                      placeholder="usuario@ejemplo.com"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="activityCost">Precio</Label>
+                    <Label htmlFor="recipientName">Nombre del Destinatario *</Label>
                     <Input
-                      id="activityCost"
-                      value={formData.activityCost}
-                      onChange={(e) => setFormData({ ...formData, activityCost: e.target.value })}
+                      id="recipientName"
+                      value={formData.recipientName}
+                      onChange={(e) => setFormData({ ...formData, recipientName: e.target.value })}
+                      placeholder="Juan Pérez"
                     />
                   </div>
                 </div>
-              </>
-            )}
 
-            <Button onClick={handleSendEmail} disabled={loading} className="w-full">
-              <Send className="mr-2 h-4 w-4" />
-              {loading ? "Enviando..." : "Enviar Email de Prueba"}
-            </Button>
+                <div className="space-y-2">
+                  <Label htmlFor="activityTitle">Título de la Actividad</Label>
+                  <Input
+                    id="activityTitle"
+                    value={formData.activityTitle}
+                    onChange={(e) => setFormData({ ...formData, activityTitle: e.target.value })}
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="activityDate">Fecha</Label>
+                    <Input
+                      id="activityDate"
+                      value={formData.activityDate}
+                      onChange={(e) => setFormData({ ...formData, activityDate: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="activityTime">Hora</Label>
+                    <Input
+                      id="activityTime"
+                      value={formData.activityTime}
+                      onChange={(e) => setFormData({ ...formData, activityTime: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="activityLocation">Ubicación</Label>
+                    <Input
+                      id="activityLocation"
+                      value={formData.activityLocation}
+                      onChange={(e) => setFormData({ ...formData, activityLocation: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                {emailType === "reminder" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="hoursUntil">Horas hasta la actividad</Label>
+                    <Input
+                      id="hoursUntil"
+                      type="number"
+                      value={formData.hoursUntil}
+                      onChange={(e) => setFormData({ ...formData, hoursUntil: parseInt(e.target.value) })}
+                    />
+                  </div>
+                )}
+
+                {emailType === "cancellation" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="cancellationReason">Motivo de Cancelación (opcional)</Label>
+                    <Textarea
+                      id="cancellationReason"
+                      value={formData.cancellationReason}
+                      onChange={(e) => setFormData({ ...formData, cancellationReason: e.target.value })}
+                      placeholder="Ej: Condiciones meteorológicas adversas"
+                    />
+                  </div>
+                )}
+
+                {emailType === "new_activity" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="activityDescription">Descripción</Label>
+                      <Textarea
+                        id="activityDescription"
+                        value={formData.activityDescription}
+                        onChange={(e) => setFormData({ ...formData, activityDescription: e.target.value })}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="activityCategory">Categoría</Label>
+                        <Input
+                          id="activityCategory"
+                          value={formData.activityCategory}
+                          onChange={(e) => setFormData({ ...formData, activityCategory: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="activityCost">Precio</Label>
+                        <Input
+                          id="activityCost"
+                          value={formData.activityCost}
+                          onChange={(e) => setFormData({ ...formData, activityCost: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                <Button onClick={handleSendEmail} disabled={loading} className="w-full">
+                  <Send className="mr-2 h-4 w-4" />
+                  {loading ? "Enviando..." : "Enviar Email de Prueba"}
+                </Button>
+              </div>
+            </Card>
           </div>
-        </Card>
-      </div>
-    </div>
+        </div>
+      </PageTransition>
+    </>
   );
 }

@@ -183,6 +183,38 @@ export default function ActivityDetail() {
 
       if (participationError) throw participationError;
 
+      // Get user profile for email
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', userId)
+        .single();
+
+      // Get user email
+      const { data: { user: userDetails } } = await supabase.auth.getUser();
+
+      // Send confirmation email
+      if (userDetails?.email) {
+        try {
+          await supabase.functions.invoke('send-activity-notification', {
+            body: {
+              type: 'confirmation',
+              recipientEmail: userDetails.email,
+              recipientName: profile?.full_name || 'Usuario',
+              activityTitle: getTranslatedTitle(activity),
+              activityDate: format(new Date(activity.date), 'PPP', { locale: getDateLocale() }),
+              activityTime: activity.time.slice(0, 5),
+              activityLocation: activity.location,
+              activityCost: activity.cost === 0 ? t('activityDetail.free') : `${activity.cost.toFixed(2)}€`,
+              activityUrl: window.location.href,
+            },
+          });
+        } catch (emailError) {
+          console.error('Error sending confirmation email:', emailError);
+          // No mostrar error al usuario, el email es secundario
+        }
+      }
+
       // Create notification
       await supabase.from('notifications').insert({
         user_id: userId,

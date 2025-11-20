@@ -105,6 +105,13 @@ export default function Admin() {
       path: '/admin/email-tester',
       color: 'text-teal-500',
     },
+    {
+      title: 'Plantillas de Email',
+      description: 'Edita las plantillas de email que se envían a los usuarios',
+      icon: Mail,
+      path: '/admin/plantillas-email',
+      color: 'text-emerald-500',
+    },
   ];
 
   return (

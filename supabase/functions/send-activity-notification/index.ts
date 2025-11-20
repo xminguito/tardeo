@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@4.0.0";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -22,6 +23,7 @@ interface ConfirmationEmailData extends BaseEmailRequest {
   activityDate: string;
   activityTime: string;
   activityLocation: string;
+  activityCost: string;
   activityUrl: string;
 }
 
@@ -32,7 +34,7 @@ interface ReminderEmailData extends BaseEmailRequest {
   activityTime: string;
   activityLocation: string;
   activityUrl: string;
-  hoursUntil: number;
+  hoursUntil?: number;
 }
 
 interface CancellationEmailData extends BaseEmailRequest {
@@ -50,12 +52,22 @@ interface NewActivityEmailData extends BaseEmailRequest {
   activityDate: string;
   activityTime: string;
   activityLocation: string;
-  activityCategory: string;
+  activityCategory?: string;
   activityCost: string;
   activityUrl: string;
 }
 
 type EmailRequest = ConfirmationEmailData | ReminderEmailData | CancellationEmailData | NewActivityEmailData;
+
+// Function to replace template variables
+function replaceVariables(template: string, data: Record<string, string>): string {
+  let result = template;
+  for (const [key, value] of Object.entries(data)) {
+    const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+    result = result.replace(regex, value || '');
+  }
+  return result;
+}
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
@@ -64,31 +76,83 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const emailData: EmailRequest = await req.json();
-    const { type, recipientEmail } = emailData;
+    const { type, recipientEmail, recipientName } = emailData;
 
     console.log(`Processing ${type} email for ${recipientEmail}`);
 
-    let html: string;
-    let subject: string;
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Fetch the template from database
+    const { data: template, error: templateError } = await supabase
+      .from('email_templates')
+      .select('*')
+      .eq('template_type', type)
+      .single();
+
+    if (templateError || !template) {
+      console.error('Template fetch error:', templateError);
+      throw new Error(`Template not found for type: ${type}`);
+    }
+
+    console.log(`Using template: ${template.name}`);
+
+    // Prepare variables for replacement
+    let variables: Record<string, string> = {
+      user_name: recipientName,
+    };
 
     if (type === "confirmation") {
       const data = emailData as ConfirmationEmailData;
-      subject = `Confirmación: ${data.activityTitle}`;
-      html = `<!DOCTYPE html><html><body style="font-family: sans-serif; background: #f6f9fc; padding: 20px;"><div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; padding: 40px;"><h1 style="text-align: center;">¡Estás dentro! 🎉</h1><p>Hola ${data.recipientName},</p><p>Te confirmamos tu registro en:</p><div style="background: #f8f9fa; padding: 24px; border-radius: 8px; margin: 20px 0;"><h2>${data.activityTitle}</h2><p>📅 ${data.activityDate}</p><p>🕐 ${data.activityTime}</p><p>📍 ${data.activityLocation}</p></div><a href="${data.activityUrl}" style="display: block; background: #5469d4; color: white; text-align: center; padding: 14px; border-radius: 6px; text-decoration: none; margin: 20px 0;">Ver detalles</a><p style="text-align: center; color: #8898aa; margin-top: 40px;"><a href="https://tardeo.app" style="color: #5469d4;">Tardeo</a> - Conectando personas</p></div></body></html>`;
+      variables = {
+        ...variables,
+        activity_title: data.activityTitle,
+        activity_date: data.activityDate,
+        activity_time: data.activityTime,
+        activity_location: data.activityLocation,
+        activity_cost: data.activityCost,
+        activity_url: data.activityUrl,
+      };
     } else if (type === "reminder") {
       const data = emailData as ReminderEmailData;
-      subject = `Recordatorio: ${data.activityTitle} en ${data.hoursUntil}h`;
-      html = `<!DOCTYPE html><html><body style="font-family: sans-serif; background: #f6f9fc; padding: 20px;"><div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; padding: 40px;"><h1 style="text-align: center;">¡Tu actividad es pronto! ⏰</h1><p>Hola ${data.recipientName},</p><p>En <strong>${data.hoursUntil} horas</strong> comienza:</p><div style="background: #fff5e6; padding: 24px; border-radius: 8px; border: 2px solid #ffd966; margin: 20px 0;"><h2>${data.activityTitle}</h2><p>📅 ${data.activityDate}</p><p>🕐 ${data.activityTime}</p><p>📍 ${data.activityLocation}</p></div><a href="${data.activityUrl}" style="display: block; background: #5469d4; color: white; text-align: center; padding: 14px; border-radius: 6px; text-decoration: none; margin: 20px 0;">Ver ubicación</a><p style="text-align: center; color: #8898aa; margin-top: 40px;"><a href="https://tardeo.app" style="color: #5469d4;">Tardeo</a></p></div></body></html>`;
+      variables = {
+        ...variables,
+        activity_title: data.activityTitle,
+        activity_date: data.activityDate,
+        activity_time: data.activityTime,
+        activity_location: data.activityLocation,
+        activity_url: data.activityUrl,
+      };
     } else if (type === "cancellation") {
       const data = emailData as CancellationEmailData;
-      subject = `Cancelación: ${data.activityTitle}`;
-      html = `<!DOCTYPE html><html><body style="font-family: sans-serif; background: #f6f9fc; padding: 20px;"><div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; padding: 40px;"><h1 style="text-align: center;">Actividad cancelada</h1><p>Hola ${data.recipientName},</p><p>La siguiente actividad ha sido cancelada:</p><div style="background: #fff0f0; padding: 24px; border-radius: 8px; border: 2px solid #ffcccc; margin: 20px 0;"><h2>${data.activityTitle}</h2><p>📅 ${data.activityDate}</p><p>🕐 ${data.activityTime}</p>${data.cancellationReason ? `<p><strong>Motivo:</strong> ${data.cancellationReason}</p>` : ''}</div><a href="https://tardeo.app" style="display: block; background: #5469d4; color: white; text-align: center; padding: 14px; border-radius: 6px; text-decoration: none; margin: 20px 0;">Explorar actividades</a><p style="text-align: center; color: #8898aa; margin-top: 40px;"><a href="https://tardeo.app" style="color: #5469d4;">Tardeo</a></p></div></body></html>`;
-    } else {
+      variables = {
+        ...variables,
+        activity_title: data.activityTitle,
+        activity_date: data.activityDate,
+        activity_time: data.activityTime,
+        cancellation_reason: data.cancellationReason || 'No especificado',
+      };
+    } else if (type === "new_activity") {
       const data = emailData as NewActivityEmailData;
-      subject = `Nueva actividad: ${data.activityTitle}`;
-      html = `<!DOCTYPE html><html><body style="font-family: sans-serif; background: #f6f9fc; padding: 20px;"><div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; padding: 40px;"><h1 style="text-align: center;">¡Nueva actividad! ✨</h1><p>Hola ${data.recipientName},</p><div style="background: #f8f9fa; padding: 24px; border-radius: 8px; margin: 20px 0;"><span style="background: #e7f3ff; color: #0066cc; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 600;">${data.activityCategory}</span><h2>${data.activityTitle}</h2><p>${data.activityDescription}</p><p>📅 ${data.activityDate} | 🕐 ${data.activityTime}</p><p>📍 ${data.activityLocation} | 💰 ${data.activityCost}</p></div><a href="${data.activityUrl}" style="display: block; background: #5469d4; color: white; text-align: center; padding: 14px; border-radius: 6px; text-decoration: none; margin: 20px 0;">Ver y registrarse</a><p style="text-align: center; color: #8898aa; margin-top: 40px;"><a href="https://tardeo.app" style="color: #5469d4;">Tardeo</a></p></div></body></html>`;
+      variables = {
+        ...variables,
+        activity_title: data.activityTitle,
+        activity_description: data.activityDescription,
+        activity_date: data.activityDate,
+        activity_time: data.activityTime,
+        activity_location: data.activityLocation,
+        activity_cost: data.activityCost,
+        activity_url: data.activityUrl,
+      };
     }
 
+    // Replace variables in subject and HTML
+    const subject = replaceVariables(template.subject, variables);
+    const html = replaceVariables(template.html_content, variables);
+
+    // Send email using Resend
     const emailResponse = await resend.emails.send({
       from: "Tardeo <team@tardeo.app>",
       to: [recipientEmail],
@@ -98,16 +162,34 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Email sent successfully:", emailResponse);
 
-    return new Response(JSON.stringify({ success: true, messageId: emailResponse.data?.id }), {
-      status: 200,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
-    });
+    return new Response(
+      JSON.stringify({
+        success: true,
+        data: emailResponse,
+      }),
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      }
+    );
   } catch (error: any) {
-    console.error("Error:", error);
-    return new Response(JSON.stringify({ error: error.message, success: false }), {
-      status: 500,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
-    });
+    console.error("Error sending email:", error);
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error.message,
+      }),
+      {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      }
+    );
   }
 };
 

@@ -68,7 +68,9 @@ export default function EmailTester() {
         activityUrl: formData.activityUrl,
       };
 
-      if (emailType === "reminder") {
+      if (emailType === "confirmation") {
+        payload.activityCost = formData.activityCost;
+      } else if (emailType === "reminder") {
         payload.hoursUntil = formData.hoursUntil;
       } else if (emailType === "cancellation") {
         payload.cancellationReason = formData.cancellationReason;

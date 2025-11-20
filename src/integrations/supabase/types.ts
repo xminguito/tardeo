@@ -193,6 +193,39 @@ export type Database = {
           },
         ]
       }
+      admin_alert_emails: {
+        Row: {
+          created_at: string
+          email: string
+          enabled: boolean
+          id: string
+          name: string | null
+          receives_critical_only: boolean
+          receives_tts_alerts: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          enabled?: boolean
+          id?: string
+          name?: string | null
+          receives_critical_only?: boolean
+          receives_tts_alerts?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          enabled?: boolean
+          id?: string
+          name?: string | null
+          receives_critical_only?: boolean
+          receives_tts_alerts?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       interests: {
         Row: {
           created_at: string | null

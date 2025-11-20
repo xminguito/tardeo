@@ -1,4 +1,7 @@
+import { voiceTranslations } from './voice';
+
 export default {
+  ...voiceTranslations.fr,
   common: {
     back: 'Retour',
     save: 'Enregistrer',

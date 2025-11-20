@@ -1,4 +1,7 @@
+import { voiceTranslations } from './voice';
+
 export default {
+  ...voiceTranslations.de,
   common: {
     back: 'Zurück',
     save: 'Speichern',

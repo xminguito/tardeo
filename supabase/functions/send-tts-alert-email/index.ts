@@ -147,7 +147,7 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     const emailResponse = await resend.emails.send({
-      from: "Tardeo TTS Monitor <onboarding@resend.dev>",
+      from: "Tardeo <team@tardeo.app>",
       to: [recipientEmail],
       subject: `[${alertSeverity.toUpperCase()}] Alerta TTS: ${metricName}`,
       html: emailHtml,

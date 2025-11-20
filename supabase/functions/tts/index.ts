@@ -183,6 +183,9 @@ async function generateWithOpenAI(
 }
 
 serve(async (req) => {
+  const startTime = Date.now();
+  const requestId = crypto.randomUUID();
+  
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -228,6 +231,19 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+    // Get user info for tracking (optional)
+    const authHeader = req.headers.get('Authorization');
+    let userId: string | null = null;
+    if (authHeader) {
+      try {
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user } } = await supabase.auth.getUser(token);
+        userId = user?.id || null;
+      } catch (e) {
+        console.warn('Could not extract user from auth token');
+      }
+    }
+
     // Check cache
     const { data: cached, error: cacheError } = await supabase
       .from('tts_cache')
@@ -242,6 +258,28 @@ serve(async (req) => {
 
     if (cached) {
       console.log('Cache hit:', hash)
+      
+      // Log cache hit to monitoring
+      try {
+        const estimatedCost = (sanitizedText.length / 1000) * 0.10; // ElevenLabs pricing
+        await supabase.from('tts_monitoring_logs').insert({
+          request_id: requestId,
+          user_id: userId,
+          text_input: sanitizedText,
+          text_length: sanitizedText.length,
+          provider: 'cached',
+          voice_name: cached.voice_name,
+          cached: true,
+          cache_hit_saved_cost: estimatedCost,
+          generation_time_ms: Date.now() - startTime,
+          estimated_cost: 0,
+          status: 'success',
+        });
+        console.log('[TTS Monitor] Logged cache hit:', requestId);
+      } catch (logError) {
+        console.error('[TTS Monitor] Failed to log cache hit:', logError);
+      }
+      
       return new Response(
         JSON.stringify({
           audio_url: cached.audio_url,
@@ -340,6 +378,35 @@ serve(async (req) => {
 
     console.log('TTS generation successful:', { hash, provider, audioUrl })
 
+    // Estimate costs based on provider and text length
+    const estimatedCost = provider === 'elevenlabs'
+      ? (sanitizedText.length / 1000) * 0.10  // ElevenLabs: ~$0.10 per 1K chars
+      : (sanitizedText.length / 1000) * 0.015; // OpenAI: ~$0.015 per 1K chars
+
+    // Estimate audio duration (rough: ~150 words per minute)
+    const wordCount = sanitizedText.split(/\s+/).length;
+    const estimatedDuration = wordCount / 2.5; // 2.5 words per second
+
+    // Log monitoring data
+    try {
+      await supabase.from('tts_monitoring_logs').insert({
+        request_id: requestId,
+        user_id: userId,
+        text_input: sanitizedText,
+        text_length: sanitizedText.length,
+        provider: provider === 'elevenlabs' ? 'ElevenLabs' : 'OpenAI',
+        voice_name: voice || (provider === 'elevenlabs' ? 'Adam' : 'alloy'),
+        cached: false,
+        generation_time_ms: Date.now() - startTime,
+        audio_duration_seconds: estimatedDuration,
+        estimated_cost: estimatedCost,
+        status: 'success',
+      });
+      console.log('[TTS Monitor] Logged generation:', requestId);
+    } catch (logError) {
+      console.error('[TTS Monitor] Failed to log metrics:', logError);
+    }
+
     return new Response(
       JSON.stringify({
         audio_url: audioUrl,
@@ -352,6 +419,26 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('TTS function error:', error)
+    
+    // Log error to monitoring
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+      
+      await supabase.from('tts_monitoring_logs').insert({
+        request_id: requestId,
+        text_input: '',
+        text_length: 0,
+        provider: 'unknown',
+        status: 'error',
+        error_message: error instanceof Error ? error.message : 'Unknown error',
+        generation_time_ms: Date.now() - startTime,
+      });
+    } catch (logError) {
+      console.error('[TTS Monitor] Failed to log error:', logError);
+    }
+    
     return new Response(
       JSON.stringify({ 
         error: error instanceof Error ? error.message : 'Unknown error occurred' 

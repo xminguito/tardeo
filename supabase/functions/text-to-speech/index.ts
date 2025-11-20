@@ -1,4 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -45,6 +46,13 @@ function analyzeEmotionalContext(text: string): { speed: number; style?: string 
 }
 
 serve(async (req) => {
+  const startTime = Date.now();
+  const requestId = crypto.randomUUID();
+  let logData: any = {
+    request_id: requestId,
+    status: 'success',
+  };
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -56,6 +64,34 @@ serve(async (req) => {
     if (!text) {
       throw new Error('Text is required')
     }
+
+    // Initialize Supabase client for logging
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Get user info for tracking (optional)
+    const authHeader = req.headers.get('Authorization');
+    let userId: string | null = null;
+    if (authHeader) {
+      try {
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user } } = await supabase.auth.getUser(token);
+        userId = user?.id || null;
+      } catch (e) {
+        console.warn('Could not extract user from auth token:', e);
+      }
+    }
+
+    logData = {
+      ...logData,
+      user_id: userId,
+      text_input: text,
+      text_length: text.length,
+      provider: 'OpenAI',
+      voice_name: 'shimmer',
+      mode: 'full', // Could be extracted from request if you pass it
+    };
 
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')
     if (!OPENAI_API_KEY) {
@@ -110,6 +146,36 @@ serve(async (req) => {
 
     console.log('Speech generated successfully')
 
+    const generationTime = Date.now() - startTime;
+
+    // Estimate audio duration (rough: ~150 words per minute = 2.5 words per second)
+    const wordCount = text.split(/\s+/).length;
+    const estimatedDuration = wordCount / 2.5;
+
+    // Estimate cost (OpenAI TTS: ~$0.015 per 1K characters)
+    const estimatedCost = (text.length / 1000) * 0.015;
+
+    // Log monitoring data
+    try {
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      );
+
+      await supabase.from('tts_monitoring_logs').insert({
+        ...logData,
+        generation_time_ms: generationTime,
+        audio_duration_seconds: estimatedDuration,
+        estimated_cost: estimatedCost,
+        cached: false, // This endpoint doesn't use cache
+      });
+
+      console.log('[TTS Monitor] Logged request:', requestId);
+    } catch (logError) {
+      console.error('[TTS Monitor] Failed to log metrics:', logError);
+      // Don't fail the request if logging fails
+    }
+
     return new Response(
       JSON.stringify({ audioContent: base64Audio }),
       {
@@ -124,6 +190,24 @@ serve(async (req) => {
     )
   } catch (error) {
     console.error('Error in text-to-speech function:', error)
+
+    // Log error to monitoring
+    try {
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      );
+
+      await supabase.from('tts_monitoring_logs').insert({
+        ...logData,
+        status: 'error',
+        error_message: error instanceof Error ? error.message : 'Unknown error',
+        generation_time_ms: Date.now() - startTime,
+      });
+    } catch (logError) {
+      console.error('[TTS Monitor] Failed to log error:', logError);
+    }
+
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
       {

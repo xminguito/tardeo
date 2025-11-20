@@ -1,17 +1,20 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowLeft, Languages, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { Languages, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
+import Header from '@/components/Header';
+import PageTransition from '@/components/PageTransition';
+import PageHeader from '@/components/PageHeader';
+import { useFavorites } from '@/features/activities/hooks/useFavorites';
 
 export default function TranslateActivities() {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const { isAdmin, loading: adminLoading } = useAdminCheck(true);
+  const [user, setUser] = useState<any>(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [results, setResults] = useState<{
     total: number;
@@ -19,6 +22,16 @@ export default function TranslateActivities() {
     failed: number;
     errors: string[];
   } | null>(null);
+  const { favorites } = useFavorites(user?.id);
+
+  const checkUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setUser(user);
+  };
+
+  useEffect(() => {
+    checkUser();
+  }, []);
 
   const handleBatchTranslate = async () => {
     setIsTranslating(true);
@@ -80,28 +93,23 @@ export default function TranslateActivities() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <PageTransition>
+      <Header user={user} isUserAdmin={isAdmin || false} favoritesCount={favorites.size} />
       <div className="container mx-auto px-4 py-8 max-w-3xl">
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/admin')}
-          className="mb-6"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Volver al admin
-        </Button>
+        <PageHeader
+          title="Traducir actividades existentes"
+          icon={<Languages className="h-10 w-10 text-primary" />}
+          breadcrumbs={[
+            { label: 'Admin', href: '/admin' },
+            { label: 'Traducir Actividades', href: '/traducir-actividades' },
+          ]}
+        />
 
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-3">
-              <Languages className="h-8 w-8 text-primary" />
-              <div>
-                <CardTitle>Traducir actividades existentes</CardTitle>
-                <CardDescription>
-                  Traduce automáticamente todas las actividades que solo tienen texto en español
-                </CardDescription>
-              </div>
-            </div>
+            <CardDescription>
+              Traduce automáticamente todas las actividades que solo tienen texto en español
+            </CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-6">
@@ -189,6 +197,6 @@ export default function TranslateActivities() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </PageTransition>
   );
 }

@@ -2,11 +2,15 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { RefreshCw, TrendingUp, TrendingDown, Minus, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import Header from '@/components/Header';
+import PageTransition from '@/components/PageTransition';
+import PageHeader from '@/components/PageHeader';
+import { useFavorites } from '@/features/activities/hooks/useFavorites';
 import {
   LineChart,
   Line,
@@ -59,6 +63,7 @@ const LANGUAGE_NAMES: Record<string, string> = {
 };
 
 export default function VoiceQualityDashboard() {
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [languageMetrics, setLanguageMetrics] = useState<LanguageMetrics[]>([]);
@@ -73,6 +78,12 @@ export default function VoiceQualityDashboard() {
   });
   const { toast } = useToast();
   const { isAdmin, loading: adminLoading } = useAdminCheck();
+  const { favorites } = useFavorites(user?.id);
+
+  const checkUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setUser(user);
+  };
 
   const fetchMetrics = async () => {
     try {
@@ -201,6 +212,10 @@ export default function VoiceQualityDashboard() {
   };
 
   useEffect(() => {
+    checkUser();
+  }, []);
+
+  useEffect(() => {
     if (isAdmin) {
       fetchMetrics();
     }
@@ -244,17 +259,23 @@ export default function VoiceQualityDashboard() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Voice Quality Metrics</h1>
-          <p className="text-muted-foreground mt-2">Monitor voice assistant response quality and user satisfaction</p>
-        </div>
-        <Button onClick={fetchMetrics} disabled={refreshing} variant="outline" size="sm">
-          <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
-      </div>
+    <PageTransition>
+      <Header user={user} isUserAdmin={isAdmin || false} favoritesCount={favorites.size} />
+      <div className="container mx-auto p-6 space-y-6">
+        <PageHeader
+          title="Voice Quality Metrics"
+          icon={<BarChart3 className="h-10 w-10 text-primary" />}
+          breadcrumbs={[
+            { label: 'Admin', href: '/admin' },
+            { label: 'Voice Quality', href: '/admin/voice-quality' },
+          ]}
+          actions={
+            <Button onClick={fetchMetrics} disabled={refreshing} variant="outline" size="sm">
+              <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          }
+        />
 
       {/* Overall Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
@@ -549,6 +570,7 @@ export default function VoiceQualityDashboard() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </PageTransition>
   );
 }

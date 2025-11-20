@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 import { Bell, Save, Trash2, Plus, Copy, Code } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -9,10 +8,8 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import Header from '@/components/Header';
 import PageHeader from '@/components/PageHeader';
 import PageTransition from '@/components/PageTransition';
-import { useAdminCheck } from '@/hooks/useAdminCheck';
 
 interface NotificationSettings {
   id: string;
@@ -24,35 +21,16 @@ interface NotificationSettings {
 export default function NotificationSettings() {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState<NotificationSettings | null>(null);
   const [newHour, setNewHour] = useState<string>('');
-  const [user, setUser] = useState<any>(null);
-  const { isAdmin, loading: adminLoading } = useAdminCheck();
   const [showSql, setShowSql] = useState(false);
   const [updatingCron, setUpdatingCron] = useState(false);
 
   useEffect(() => {
-    if (!adminLoading && !isAdmin) {
-      navigate('/');
-    }
-  }, [isAdmin, adminLoading, navigate]);
-
-  useEffect(() => {
-    const loadUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-    };
-    loadUser();
+    loadSettings();
   }, []);
-
-  useEffect(() => {
-    if (isAdmin) {
-      loadSettings();
-    }
-  }, [isAdmin]);
 
   const loadSettings = async () => {
     try {
@@ -215,31 +193,23 @@ SELECT cron.schedule(
     }
   };
 
-  if (adminLoading || loading) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">{t('common.loading')}</p>
-      </div>
+      <PageTransition>
+        <div className="container mx-auto px-4 py-8">
+          <p className="text-muted-foreground">{t('common.loading')}</p>
+        </div>
+      </PageTransition>
     );
   }
 
-  if (!isAdmin) {
-    return null;
-  }
-
   return (
-    <div className="min-h-screen bg-background">
-      <Header user={user} isUserAdmin={isAdmin} favoritesCount={0} />
-      <PageTransition>
-        <div className="container mx-auto px-4 py-8">
-          <PageHeader
-            title="Configuración de Notificaciones"
-            icon={<Bell className="h-8 w-8 text-primary" />}
-            breadcrumbs={[
-              { label: 'Admin', href: '/admin' },
-              { label: 'Notificaciones' },
-            ]}
-          />
+    <PageTransition>
+      <div className="container mx-auto px-4 py-8">
+        <PageHeader
+          title="Configuración de Notificaciones"
+          icon={<Bell className="h-8 w-8 text-primary" />}
+        />
 
           <Card className="max-w-2xl mx-auto mt-8">
             <CardHeader>
@@ -393,6 +363,5 @@ SELECT cron.schedule(
           </Card>
         </div>
       </PageTransition>
-    </div>
   );
 }

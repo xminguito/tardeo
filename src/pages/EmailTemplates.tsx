@@ -8,11 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Mail, Save, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useAdminCheck } from '@/hooks/useAdminCheck';
-import Header from '@/components/Header';
 import PageTransition from '@/components/PageTransition';
 import PageHeader from '@/components/PageHeader';
-import { useFavorites } from '@/features/activities/hooks/useFavorites';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface EmailTemplate {
@@ -27,33 +24,19 @@ interface EmailTemplate {
 }
 
 export default function EmailTemplates() {
-  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [activeTemplate, setActiveTemplate] = useState<string>('confirmation');
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
-  const { isAdmin, loading: adminLoading } = useAdminCheck(true);
-  const { favorites } = useFavorites(user?.id);
 
   // Form state
   const [subject, setSubject] = useState('');
   const [htmlContent, setHtmlContent] = useState('');
 
-  const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    setUser(user);
-  };
-
   useEffect(() => {
-    checkUser();
+    fetchTemplates();
   }, []);
-
-  useEffect(() => {
-    if (isAdmin) {
-      fetchTemplates();
-    }
-  }, [isAdmin]);
 
   useEffect(() => {
     const template = templates.find(t => t.template_type === activeTemplate);
@@ -129,10 +112,9 @@ export default function EmailTemplates() {
     }
   };
 
-  if (adminLoading || loading) {
+  if (loading) {
     return (
       <PageTransition>
-        <Header user={user} isUserAdmin={isAdmin || false} favoritesCount={favorites.size} />
         <div className="container mx-auto p-6">
           <p className="text-muted-foreground">Cargando plantillas...</p>
         </div>
@@ -140,23 +122,14 @@ export default function EmailTemplates() {
     );
   }
 
-  if (!isAdmin) {
-    return null;
-  }
-
   const currentTemplate = templates.find(t => t.template_type === activeTemplate);
 
   return (
     <PageTransition>
-      <Header user={user} isUserAdmin={isAdmin || false} favoritesCount={favorites.size} />
       <div className="container mx-auto p-6 max-w-7xl">
         <PageHeader
           title="Plantillas de Email"
           icon={<Mail className="h-10 w-10 text-primary" />}
-          breadcrumbs={[
-            { label: 'Admin', href: '/admin' },
-            { label: 'Plantillas de Email', href: '/admin/plantillas-email' },
-          ]}
           actions={
             <div className="flex gap-2">
               <Button variant="outline" onClick={handleReset} disabled={saving}>

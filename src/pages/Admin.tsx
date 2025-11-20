@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Languages, Mic, Settings, Bell, DollarSign, BarChart3, Activity } from 'lucide-react';
+import { Languages, Mic, Settings, Bell, DollarSign, BarChart3, Activity, Mail } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { useEffect, useState } from 'react';
@@ -83,6 +83,13 @@ export default function Admin() {
       icon: Activity,
       path: '/admin/tts-monitor',
       color: 'text-orange-500',
+    },
+    {
+      title: 'Configuración de Alertas TTS',
+      description: 'Gestiona emails de administradores y umbrales de alertas',
+      icon: Mail,
+      path: '/admin/tts-alerts',
+      color: 'text-pink-500',
     },
   ];
 

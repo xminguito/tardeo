@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Languages, Mic, Settings, Bell, DollarSign } from 'lucide-react';
+import { Languages, Mic, Settings, Bell, DollarSign, BarChart3 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { useEffect, useState } from 'react';
@@ -69,6 +69,13 @@ export default function Admin() {
       icon: DollarSign,
       path: '/admin/tts-costs',
       color: 'text-yellow-500',
+    },
+    {
+      title: 'Voice Quality Metrics',
+      description: 'Analiza métricas de calidad, claridad y satisfacción por idioma',
+      icon: BarChart3,
+      path: '/admin/voice-quality',
+      color: 'text-cyan-500',
     },
   ];
 

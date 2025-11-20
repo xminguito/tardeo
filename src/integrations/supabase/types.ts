@@ -433,9 +433,77 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_response_metrics: {
+        Row: {
+          cache_hit: boolean | null
+          clarity_score: number | null
+          created_at: string | null
+          feedback_comment: string | null
+          feedback_submitted_at: string | null
+          generation_time_ms: number | null
+          id: string
+          intent: string
+          language: string
+          response_length: number
+          response_text: string
+          satisfaction_score: number | null
+          session_id: string
+          tts_provider: string | null
+          user_id: string | null
+        }
+        Insert: {
+          cache_hit?: boolean | null
+          clarity_score?: number | null
+          created_at?: string | null
+          feedback_comment?: string | null
+          feedback_submitted_at?: string | null
+          generation_time_ms?: number | null
+          id?: string
+          intent: string
+          language: string
+          response_length: number
+          response_text: string
+          satisfaction_score?: number | null
+          session_id: string
+          tts_provider?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          cache_hit?: boolean | null
+          clarity_score?: number | null
+          created_at?: string | null
+          feedback_comment?: string | null
+          feedback_submitted_at?: string | null
+          generation_time_ms?: number | null
+          id?: string
+          intent?: string
+          language?: string
+          response_length?: number
+          response_text?: string
+          satisfaction_score?: number | null
+          session_id?: string
+          tts_provider?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      voice_quality_stats: {
+        Row: {
+          avg_clarity_score: number | null
+          avg_generation_time_ms: number | null
+          avg_response_length: number | null
+          avg_satisfaction_score: number | null
+          cache_hits: number | null
+          date: string | null
+          feedback_count: number | null
+          intent: string | null
+          language: string | null
+          total_responses: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cleanup_expired_tts_cache: { Args: never; Returns: undefined }
@@ -447,6 +515,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      refresh_voice_quality_stats: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

@@ -83,32 +83,58 @@ serve(async (req) => {
       // Send email notifications immediately if configured
       if (threshold.notification_channels?.includes('email')) {
         try {
-          // TODO: Get admin emails from database or configuration
-          const adminEmail = 'admin@example.com'; // Replace with actual admin email
-          
-          console.log(`[TTS Alerts] Sending email notification for ${alert.metric_name}`);
-          
-          const emailResponse = await supabase.functions.invoke('send-tts-alert-email', {
-            body: {
-              alertId: alert.threshold_id,
-              metricName: alert.metric_name,
-              metricValue: alert.metric_value,
-              thresholdValue: alert.threshold_value,
-              alertSeverity: threshold.alert_severity,
-              alertMessage: alert.alert_message,
-              timeWindowStart: timeWindowStart,
-              timeWindowEnd: now,
-              affectedUsersCount: affectedUsers || 0,
-              recipientEmail: adminEmail,
-            },
-          });
-          
-          if (emailResponse.error) {
-            console.error('[TTS Alerts] Failed to send email:', emailResponse.error);
+          // Get enabled admin emails from database
+          const { data: adminEmails, error: emailError } = await supabase
+            .from('admin_alert_emails')
+            .select('email, name, receives_critical_only')
+            .eq('enabled', true)
+            .eq('receives_tts_alerts', true);
+
+          if (emailError) {
+            console.error('[TTS Alerts] Error fetching admin emails:', emailError);
+          } else if (adminEmails && adminEmails.length > 0) {
+            // Filter emails based on alert severity
+            const recipientEmails = adminEmails.filter(admin => {
+              if (admin.receives_critical_only) {
+                return threshold.alert_severity === 'critical' || threshold.alert_severity === 'error';
+              }
+              return true;
+            });
+
+            // Send email to each recipient
+            for (const admin of recipientEmails) {
+              console.log(`[TTS Alerts] Sending email notification to ${admin.email} for ${alert.metric_name}`);
+              
+              const emailResponse = await supabase.functions.invoke('send-tts-alert-email', {
+                body: {
+                  alertId: alert.threshold_id,
+                  metricName: alert.metric_name,
+                  metricValue: alert.metric_value,
+                  thresholdValue: alert.threshold_value,
+                  alertSeverity: threshold.alert_severity,
+                  alertMessage: alert.alert_message,
+                  timeWindowStart: timeWindowStart,
+                  timeWindowEnd: now,
+                  affectedUsersCount: affectedUsers || 0,
+                  recipientEmail: admin.email,
+                },
+              });
+              
+              if (emailResponse.error) {
+                console.error(`[TTS Alerts] Failed to send email to ${admin.email}:`, emailResponse.error);
+              } else {
+                console.log(`[TTS Alerts] Email sent successfully to ${admin.email}:`, emailResponse.data);
+                if (!alertData.notified_channels.includes('email')) {
+                  alertData.notified_channels.push('email');
+                }
+              }
+            }
+
+            if (recipientEmails.length === 0) {
+              console.log('[TTS Alerts] No admin emails match alert severity criteria');
+            }
           } else {
-            console.log('[TTS Alerts] Email sent successfully:', emailResponse.data);
-            alertData.notified_channels.push('email');
-            alertData.notified_channels = [...new Set(alertData.notified_channels)]; // Remove duplicates
+            console.log('[TTS Alerts] No enabled admin emails found for TTS alerts');
           }
         } catch (emailError) {
           console.error('[TTS Alerts] Error sending email notification:', emailError);

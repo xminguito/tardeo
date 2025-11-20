@@ -24,6 +24,7 @@ import Notifications from "./pages/Notifications";
 import NotificationSettings from "./pages/NotificationSettings";
 import TTSCostDashboard from "./pages/TTSCostDashboard";
 import VoiceQualityDashboard from "./pages/VoiceQualityDashboard";
+import TTSMonitor from "./pages/TTSMonitor";
 import { UserLocationProvider } from "@/hooks/useUserLocation";
  
 const queryClient = new QueryClient();
@@ -51,6 +52,7 @@ const AppContent = () => {
           <Route path="/admin/notificaciones" element={<NotificationSettings />} />
           <Route path="/admin/tts-costs" element={<TTSCostDashboard />} />
           <Route path="/admin/voice-quality" element={<VoiceQualityDashboard />} />
+          <Route path="/admin/tts-monitor" element={<TTSMonitor />} />
           <Route path="/update-agent" element={<UpdateAgent />} />
           <Route path="/actualizar-ubicaciones" element={<UpdateActivitiesLocation />} />
           <Route path="/traducir-actividades" element={<TranslateActivities />} />

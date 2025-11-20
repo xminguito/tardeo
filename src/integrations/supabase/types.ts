@@ -319,6 +319,116 @@ export type Database = {
         }
         Relationships: []
       }
+      tts_alert_thresholds: {
+        Row: {
+          alert_severity: string | null
+          created_at: string | null
+          description: string | null
+          enabled: boolean | null
+          id: string
+          last_triggered_at: string | null
+          metric_name: string
+          notification_channels: string[] | null
+          threshold_value: number
+          time_window_minutes: number
+          trigger_count: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          alert_severity?: string | null
+          created_at?: string | null
+          description?: string | null
+          enabled?: boolean | null
+          id?: string
+          last_triggered_at?: string | null
+          metric_name: string
+          notification_channels?: string[] | null
+          threshold_value: number
+          time_window_minutes: number
+          trigger_count?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          alert_severity?: string | null
+          created_at?: string | null
+          description?: string | null
+          enabled?: boolean | null
+          id?: string
+          last_triggered_at?: string | null
+          metric_name?: string
+          notification_channels?: string[] | null
+          threshold_value?: number
+          time_window_minutes?: number
+          trigger_count?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      tts_alerts_log: {
+        Row: {
+          acknowledged: boolean | null
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          affected_users_count: number | null
+          alert_message: string
+          alert_severity: string
+          created_at: string | null
+          id: string
+          metric_name: string
+          metric_value: number
+          notification_sent_at: string | null
+          notified_channels: string[] | null
+          threshold_id: string | null
+          threshold_value: number
+          time_window_end: string
+          time_window_start: string
+        }
+        Insert: {
+          acknowledged?: boolean | null
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          affected_users_count?: number | null
+          alert_message: string
+          alert_severity: string
+          created_at?: string | null
+          id?: string
+          metric_name: string
+          metric_value: number
+          notification_sent_at?: string | null
+          notified_channels?: string[] | null
+          threshold_id?: string | null
+          threshold_value: number
+          time_window_end: string
+          time_window_start: string
+        }
+        Update: {
+          acknowledged?: boolean | null
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          affected_users_count?: number | null
+          alert_message?: string
+          alert_severity?: string
+          created_at?: string | null
+          id?: string
+          metric_name?: string
+          metric_value?: number
+          notification_sent_at?: string | null
+          notified_channels?: string[] | null
+          threshold_id?: string | null
+          threshold_value?: number
+          time_window_end?: string
+          time_window_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tts_alerts_log_threshold_id_fkey"
+            columns: ["threshold_id"]
+            isOneToOne: false
+            referencedRelation: "tts_alert_thresholds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tts_cache: {
         Row: {
           audio_url: string
@@ -352,6 +462,72 @@ export type Database = {
           text?: string
           text_hash?: string
           voice_name?: string
+        }
+        Relationships: []
+      }
+      tts_monitoring_logs: {
+        Row: {
+          actual_cost: number | null
+          audio_duration_seconds: number | null
+          cache_hit_saved_cost: number | null
+          cached: boolean | null
+          created_at: string | null
+          error_message: string | null
+          estimated_cost: number | null
+          generation_time_ms: number | null
+          id: string
+          mode: string | null
+          provider: string
+          request_id: string
+          request_metadata: Json | null
+          session_id: string | null
+          status: string | null
+          text_input: string
+          text_length: number
+          user_id: string | null
+          voice_name: string | null
+        }
+        Insert: {
+          actual_cost?: number | null
+          audio_duration_seconds?: number | null
+          cache_hit_saved_cost?: number | null
+          cached?: boolean | null
+          created_at?: string | null
+          error_message?: string | null
+          estimated_cost?: number | null
+          generation_time_ms?: number | null
+          id?: string
+          mode?: string | null
+          provider: string
+          request_id: string
+          request_metadata?: Json | null
+          session_id?: string | null
+          status?: string | null
+          text_input: string
+          text_length: number
+          user_id?: string | null
+          voice_name?: string | null
+        }
+        Update: {
+          actual_cost?: number | null
+          audio_duration_seconds?: number | null
+          cache_hit_saved_cost?: number | null
+          cached?: boolean | null
+          created_at?: string | null
+          error_message?: string | null
+          estimated_cost?: number | null
+          generation_time_ms?: number | null
+          id?: string
+          mode?: string | null
+          provider?: string
+          request_id?: string
+          request_metadata?: Json | null
+          session_id?: string | null
+          status?: string | null
+          text_input?: string
+          text_length?: number
+          user_id?: string | null
+          voice_name?: string | null
         }
         Relationships: []
       }
@@ -489,6 +665,29 @@ export type Database = {
       }
     }
     Views: {
+      tts_monitoring_stats: {
+        Row: {
+          avg_audio_duration_seconds: number | null
+          avg_cost_per_request: number | null
+          avg_generation_time_ms: number | null
+          avg_text_length: number | null
+          brief_mode_count: number | null
+          cache_hit_rate: number | null
+          cache_hits: number | null
+          error_count: number | null
+          error_rate: number | null
+          full_mode_count: number | null
+          provider: string | null
+          time_bucket: string | null
+          total_actual_cost: number | null
+          total_cache_savings: number | null
+          total_estimated_cost: number | null
+          total_requests: number | null
+          unique_sessions: number | null
+          unique_users: number | null
+        }
+        Relationships: []
+      }
       voice_quality_stats: {
         Row: {
           avg_clarity_score: number | null
@@ -506,6 +705,17 @@ export type Database = {
       }
     }
     Functions: {
+      check_tts_alert_thresholds: {
+        Args: never
+        Returns: {
+          alert_message: string
+          exceeded: boolean
+          metric_name: string
+          metric_value: number
+          threshold_id: string
+          threshold_value: number
+        }[]
+      }
       cleanup_expired_tts_cache: { Args: never; Returns: undefined }
       has_role: {
         Args: {
@@ -515,6 +725,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      refresh_tts_monitoring_stats: { Args: never; Returns: undefined }
       refresh_voice_quality_stats: { Args: never; Returns: undefined }
     }
     Enums: {

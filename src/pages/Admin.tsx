@@ -98,6 +98,13 @@ export default function Admin() {
       path: '/admin/tts-analytics',
       color: 'text-indigo-500',
     },
+    {
+      title: 'Probar Emails',
+      description: 'Envía emails de prueba para notificaciones de actividades',
+      icon: Mail,
+      path: '/admin/email-tester',
+      color: 'text-teal-500',
+    },
   ];
 
   return (

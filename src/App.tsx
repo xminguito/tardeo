@@ -27,6 +27,7 @@ import VoiceQualityDashboard from "./pages/VoiceQualityDashboard";
 import TTSMonitor from "./pages/TTSMonitor";
 import TTSAlertsConfig from "./pages/TTSAlertsConfig";
 import TTSAnalytics from "./pages/TTSAnalytics";
+import EmailTester from "./pages/EmailTester";
 import { UserLocationProvider } from "@/hooks/useUserLocation";
  
 const queryClient = new QueryClient();
@@ -57,6 +58,7 @@ const AppContent = () => {
           <Route path="/admin/tts-monitor" element={<TTSMonitor />} />
           <Route path="/admin/tts-alerts" element={<TTSAlertsConfig />} />
           <Route path="/admin/tts-analytics" element={<TTSAnalytics />} />
+          <Route path="/admin/email-tester" element={<EmailTester />} />
           <Route path="/update-agent" element={<UpdateAgent />} />
           <Route path="/actualizar-ubicaciones" element={<UpdateActivitiesLocation />} />
           <Route path="/traducir-actividades" element={<TranslateActivities />} />

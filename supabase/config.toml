@@ -35,3 +35,6 @@ verify_jwt = false
 
 [functions.check-tts-budget]
 verify_jwt = false
+
+[functions.send-activity-notification]
+verify_jwt = false

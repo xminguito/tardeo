@@ -56,7 +56,7 @@ serve(async (req) => {
         .gte('created_at', timeWindowStart)
         .not('user_id', 'is', null);
 
-      alertsToLog.push({
+      const alertData = {
         threshold_id: alert.threshold_id,
         metric_name: alert.metric_name,
         metric_value: alert.metric_value,
@@ -67,7 +67,9 @@ serve(async (req) => {
         time_window_end: now,
         affected_users_count: affectedUsers || 0,
         notified_channels: ['dashboard'], // Default to dashboard
-      });
+      };
+
+      alertsToLog.push(alertData);
 
       // Update threshold last_triggered_at and trigger_count
       await supabase
@@ -77,9 +79,46 @@ serve(async (req) => {
           trigger_count: (threshold.trigger_count || 0) + 1,
         })
         .eq('id', alert.threshold_id);
+
+      // Send email notifications immediately if configured
+      if (threshold.notification_channels?.includes('email')) {
+        try {
+          // TODO: Get admin emails from database or configuration
+          const adminEmail = 'admin@example.com'; // Replace with actual admin email
+          
+          console.log(`[TTS Alerts] Sending email notification for ${alert.metric_name}`);
+          
+          const emailResponse = await supabase.functions.invoke('send-tts-alert-email', {
+            body: {
+              alertId: alert.threshold_id,
+              metricName: alert.metric_name,
+              metricValue: alert.metric_value,
+              thresholdValue: alert.threshold_value,
+              alertSeverity: threshold.alert_severity,
+              alertMessage: alert.alert_message,
+              timeWindowStart: timeWindowStart,
+              timeWindowEnd: now,
+              affectedUsersCount: affectedUsers || 0,
+              recipientEmail: adminEmail,
+            },
+          });
+          
+          if (emailResponse.error) {
+            console.error('[TTS Alerts] Failed to send email:', emailResponse.error);
+          } else {
+            console.log('[TTS Alerts] Email sent successfully:', emailResponse.data);
+            alertData.notified_channels.push('email');
+            alertData.notified_channels = [...new Set(alertData.notified_channels)]; // Remove duplicates
+          }
+        } catch (emailError) {
+          console.error('[TTS Alerts] Error sending email notification:', emailError);
+        }
+      }
+
+      console.warn(`[TTS Alert ${threshold.alert_severity.toUpperCase()}] ${alert.alert_message}`);
     }
 
-    // Insert all alert logs
+    // Insert all alert logs with notification status
     if (alertsToLog.length > 0) {
       const { error: logError } = await supabase
         .from('tts_alerts_log')
@@ -89,12 +128,20 @@ serve(async (req) => {
         console.error('[TTS Alerts] Error logging alerts:', logError);
       } else {
         console.log(`[TTS Alerts] Logged ${alertsToLog.length} alerts`);
-      }
-
-      // TODO: Send notifications based on notification_channels
-      // For now, just log to console
-      for (const alert of alertsToLog) {
-        console.warn(`[TTS Alert ${alert.alert_severity.toUpperCase()}] ${alert.alert_message}`);
+        
+        // Update notification timestamps for alerts that were emailed
+        const emailedAlerts = alertsToLog.filter(a => a.notified_channels.includes('email'));
+        if (emailedAlerts.length > 0) {
+          for (const alert of emailedAlerts) {
+            await supabase
+              .from('tts_alerts_log')
+              .update({
+                notification_sent_at: now,
+              })
+              .eq('threshold_id', alert.threshold_id)
+              .eq('time_window_start', alert.time_window_start);
+          }
+        }
       }
     }
 

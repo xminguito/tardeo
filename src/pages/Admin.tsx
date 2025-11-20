@@ -10,6 +10,8 @@ import { useFavorites } from '@/features/activities/hooks/useFavorites';
 import PageHeader from '@/components/PageHeader';
 import Header from '@/components/Header';
 import PageTransition from '@/components/PageTransition';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { AdminSidebar } from '@/components/AdminSidebar';
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -115,57 +117,65 @@ export default function Admin() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header 
-        user={user} 
-        isUserAdmin={isAdmin} 
-        favoritesCount={favorites.size}
-      />
-      <PageTransition>
-        <div className="container mx-auto px-4 py-8 max-w-5xl">
-        <PageHeader
-          title={t('admin.title')}
-          icon={<Settings className="h-8 w-8 text-primary" />}
-          breadcrumbs={[
-            { label: t('admin.title') }
-          ]}
-        />
+    <SidebarProvider>
+      <div className="min-h-screen w-full bg-background flex">
+        <AdminSidebar />
+        <div className="flex-1 flex flex-col">
+          <Header 
+            user={user} 
+            isUserAdmin={isAdmin} 
+            favoritesCount={favorites.size}
+          />
+          <div className="flex items-center gap-2 px-4 py-2 border-b">
+            <SidebarTrigger />
+          </div>
+          <PageTransition>
+            <div className="container mx-auto px-4 py-8 max-w-5xl">
+              <PageHeader
+                title={t('admin.title')}
+                icon={<Settings className="h-8 w-8 text-primary" />}
+                breadcrumbs={[
+                  { label: t('admin.title') }
+                ]}
+              />
 
-        <p className="text-muted-foreground text-lg mb-8">
-          {t('admin.description')}
-        </p>
+              <p className="text-muted-foreground text-lg mb-8">
+                {t('admin.description')}
+              </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {adminTools.map((tool) => {
-            const Icon = tool.icon;
-            return (
-              <Card 
-                key={tool.path}
-                className="hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => navigate(tool.path)}
-              >
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-2">
-                      <CardTitle className="text-2xl">{tool.title}</CardTitle>
-                      <CardDescription className="text-base">
-                        {tool.description}
-                      </CardDescription>
-                    </div>
-                    <Icon className={`h-8 w-8 ${tool.color} flex-shrink-0`} />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <Button variant="outline" className="w-full">
-                    Abrir herramienta
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {adminTools.map((tool) => {
+                  const Icon = tool.icon;
+                  return (
+                    <Card 
+                      key={tool.path}
+                      className="hover:shadow-lg transition-shadow cursor-pointer"
+                      onClick={() => navigate(tool.path)}
+                    >
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-2">
+                            <CardTitle className="text-2xl">{tool.title}</CardTitle>
+                            <CardDescription className="text-base">
+                              {tool.description}
+                            </CardDescription>
+                          </div>
+                          <Icon className={`h-8 w-8 ${tool.color} flex-shrink-0`} />
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <Button variant="outline" className="w-full">
+                          Abrir herramienta
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          </PageTransition>
         </div>
-        </div>
-      </PageTransition>
-    </div>
+      </div>
+    </SidebarProvider>
   );
 }

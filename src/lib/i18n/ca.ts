@@ -329,6 +329,7 @@ export default {
     activityFull: "Activitat completa",
     alreadyJoined: "Ja hi estàs apuntat",
     joinButton: "M'apunto!",
+    processing: "Processant reserva...",
     reminderText: "Rebràs un recordatori abans de l'activitat",
     reservationConfirmed: "Reserva confirmada",
     joinedActivity: "T'has unit a {{title}}",

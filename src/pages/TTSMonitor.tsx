@@ -4,10 +4,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { RefreshCw, AlertTriangle, CheckCircle, Shield, Power, DollarSign, Users } from 'lucide-react';
+import { RefreshCw, AlertTriangle, CheckCircle, Shield, Power, DollarSign, Users, Activity } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
+import Header from '@/components/Header';
+import PageTransition from '@/components/PageTransition';
+import PageHeader from '@/components/PageHeader';
+import { useFavorites } from '@/features/activities/hooks/useFavorites';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -56,6 +60,7 @@ interface ActiveAlert {
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 export default function TTSMonitor() {
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [metrics, setMetrics] = useState<RealTimeMetrics>({
@@ -86,6 +91,16 @@ export default function TTSMonitor() {
 
   const { toast } = useToast();
   const { isAdmin, loading: adminLoading } = useAdminCheck();
+  const { favorites } = useFavorites(user?.id);
+
+  const checkUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setUser(user);
+  };
+
+  useEffect(() => {
+    checkUser();
+  }, []);
 
   useEffect(() => {
     if (isAdmin) {
@@ -405,13 +420,18 @@ export default function TTSMonitor() {
   );
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">TTS Real-Time Monitor</h1>
-          <p className="text-muted-foreground mt-1">Live monitoring, circuit breakers & cost control</p>
-        </div>
-        <div className="flex gap-2">
+    <PageTransition>
+      <Header user={user} isUserAdmin={isAdmin || false} favoritesCount={favorites.size} />
+      <div className="container mx-auto p-6 space-y-6">
+        <PageHeader
+          title="TTS Real-Time Monitor"
+          icon={<Activity className="h-10 w-10 text-primary" />}
+          breadcrumbs={[
+            { label: 'Admin', href: '/admin' },
+            { label: 'TTS Monitor', href: '/admin/tts-monitor' },
+          ]}
+          actions={
+            <div className="flex gap-2">
           <Dialog open={overrideOpen} onOpenChange={setOverrideOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" size="sm">
@@ -470,8 +490,9 @@ export default function TTSMonitor() {
             <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-        </div>
-      </div>
+            </div>
+          }
+        />
 
       {isSystemDisabled && (
         <Alert variant="destructive">
@@ -766,6 +787,7 @@ export default function TTSMonitor() {
           </div>
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </PageTransition>
   );
 }

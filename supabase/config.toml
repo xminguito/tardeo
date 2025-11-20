@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.update-cron-schedule]
 verify_jwt = true
+
+[functions.tts]
+verify_jwt = false

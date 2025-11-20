@@ -29,6 +29,7 @@ import TTSAlertsConfig from "./pages/TTSAlertsConfig";
 import TTSAnalytics from "./pages/TTSAnalytics";
 import EmailTester from "./pages/EmailTester";
 import EmailTemplates from "./pages/EmailTemplates";
+import AdminLayout from "./layouts/AdminLayout";
 import { UserLocationProvider } from "@/hooks/useUserLocation";
  
 const queryClient = new QueryClient();
@@ -52,18 +53,22 @@ const AppContent = () => {
           <Route path="/notificaciones" element={<Notifications />} />
           <Route path="/actividades" element={<ActivitiesCalendar />} />
           <Route path="/actividades/:slug" element={<ActivityDetail />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/admin/notificaciones" element={<NotificationSettings />} />
-          <Route path="/admin/tts-costs" element={<TTSCostDashboard />} />
-          <Route path="/admin/voice-quality" element={<VoiceQualityDashboard />} />
-          <Route path="/admin/tts-monitor" element={<TTSMonitor />} />
-          <Route path="/admin/tts-alerts" element={<TTSAlertsConfig />} />
-          <Route path="/admin/tts-analytics" element={<TTSAnalytics />} />
-          <Route path="/admin/email-tester" element={<EmailTester />} />
-          <Route path="/admin/plantillas-email" element={<EmailTemplates />} />
-          <Route path="/update-agent" element={<UpdateAgent />} />
-          <Route path="/actualizar-ubicaciones" element={<UpdateActivitiesLocation />} />
-          <Route path="/traducir-actividades" element={<TranslateActivities />} />
+          
+          {/* Admin routes with layout */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Admin />} />
+            <Route path="notificaciones" element={<NotificationSettings />} />
+            <Route path="tts-costs" element={<TTSCostDashboard />} />
+            <Route path="voice-quality" element={<VoiceQualityDashboard />} />
+            <Route path="tts-monitor" element={<TTSMonitor />} />
+            <Route path="tts-alerts" element={<TTSAlertsConfig />} />
+            <Route path="tts-analytics" element={<TTSAnalytics />} />
+            <Route path="email-tester" element={<EmailTester />} />
+            <Route path="plantillas-email" element={<EmailTemplates />} />
+            <Route path="update-agent" element={<UpdateAgent />} />
+            <Route path="traducir-actividades" element={<TranslateActivities />} />
+          </Route>
+          
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

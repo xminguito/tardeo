@@ -1,33 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, CheckCircle, AlertCircle, Settings2 } from "lucide-react";
-import { useAdminCheck } from "@/hooks/useAdminCheck";
-import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
 import PageHeader from "@/components/PageHeader";
-import { useFavorites } from "@/features/activities/hooks/useFavorites";
 
 const UpdateAgent = () => {
-  const { isAdmin, loading: adminLoading } = useAdminCheck(true);
-  const [user, setUser] = useState<any>(null);
   const [agentId, setAgentId] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const { toast } = useToast();
-  const { favorites } = useFavorites(user?.id);
-
-  const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    setUser(user);
-  };
-
-  useEffect(() => {
-    checkUser();
-  }, []);
 
   const handleUpdate = async () => {
     if (!agentId.trim()) {
@@ -71,29 +56,12 @@ const UpdateAgent = () => {
     }
   };
 
-  if (adminLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-lg text-muted-foreground">Verificando permisos...</p>
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return null;
-  }
-
   return (
     <PageTransition>
-      <Header user={user} isUserAdmin={isAdmin || false} favoritesCount={favorites.size} />
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         <PageHeader
           title="Actualizar Agente de ElevenLabs"
           icon={<Settings2 className="h-10 w-10 text-primary" />}
-          breadcrumbs={[
-            { label: 'Admin', href: '/admin' },
-            { label: 'Actualizar Agente', href: '/update-agent' },
-          ]}
         />
 
         <Card>

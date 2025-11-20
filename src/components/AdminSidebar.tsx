@@ -1,4 +1,4 @@
-import { Languages, Mic, Settings, Bell, DollarSign, BarChart3, Activity, Mail } from 'lucide-react';
+import { Languages, Mic, Settings, Bell, DollarSign, BarChart3, Activity, Mail, LayoutDashboard } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -15,14 +15,19 @@ import {
 
 const adminTools = [
   {
+    title: 'Dashboard',
+    icon: LayoutDashboard,
+    path: '/admin',
+  },
+  {
     title: 'Actualizar Agente de Voz',
     icon: Mic,
-    path: '/update-agent',
+    path: '/admin/update-agent',
   },
   {
     title: 'Traducir Actividades',
     icon: Languages,
-    path: '/traducir-actividades',
+    path: '/admin/traducir-actividades',
   },
   {
     title: 'Configuración de Notificaciones',

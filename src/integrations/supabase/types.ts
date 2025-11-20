@@ -352,6 +352,39 @@ export type Database = {
         }
         Relationships: []
       }
+      system_flags: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          flag_key: string
+          flag_value: Json
+          id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          flag_key: string
+          flag_value: Json
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          flag_key?: string
+          flag_value?: Json
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       tts_alert_thresholds: {
         Row: {
           alert_severity: string | null
@@ -495,6 +528,33 @@ export type Database = {
           text?: string
           text_hash?: string
           voice_name?: string
+        }
+        Relationships: []
+      }
+      tts_config: {
+        Row: {
+          config_key: string
+          config_value: Json
+          created_at: string
+          description: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          config_key: string
+          config_value: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          config_key?: string
+          config_value?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -642,6 +702,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_tts_usage: {
+        Row: {
+          created_at: string
+          day_window_start: string
+          id: string
+          last_request_at: string
+          minute_window_start: string
+          requests_last_day: number
+          requests_last_minute: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_window_start?: string
+          id?: string
+          last_request_at?: string
+          minute_window_start?: string
+          requests_last_day?: number
+          requests_last_minute?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day_window_start?: string
+          id?: string
+          last_request_at?: string
+          minute_window_start?: string
+          requests_last_day?: number
+          requests_last_minute?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       voice_response_metrics: {
         Row: {
           cache_hit: boolean | null
@@ -747,6 +843,19 @@ export type Database = {
           metric_value: number
           threshold_id: string
           threshold_value: number
+        }[]
+      }
+      check_user_tts_throttle: {
+        Args: {
+          _max_per_day?: number
+          _max_per_minute?: number
+          _user_id: string
+        }
+        Returns: {
+          allowed: boolean
+          current_day: number
+          current_minute: number
+          reason: string
         }[]
       }
       cleanup_expired_tts_cache: { Args: never; Returns: undefined }

@@ -6,6 +6,13 @@
 export const voiceTranslations = {
   en: {
     voice: {
+      // Welcome message
+      welcome: 'Hi, how can I help you? You can speak or type a message.',
+      // Toast messages
+      toast: {
+        textMode: 'Text mode',
+        textModeDesc: 'Response without audio. Press 🎙️ to enable voice.',
+      },
       // Search responses
       search: {
         found: 'Found {{count}} activities',
@@ -69,6 +76,13 @@ export const voiceTranslations = {
   },
   es: {
     voice: {
+      // Welcome message
+      welcome: 'Hola, ¿en qué puedo ayudarte? Puedes hablar o escribir un mensaje.',
+      // Toast messages
+      toast: {
+        textMode: 'Modo texto',
+        textModeDesc: 'Respuesta sin audio. Presiona 🎙️ para activar voz.',
+      },
       // Search responses
       search: {
         found: 'Encontré {{count}} actividades',
@@ -132,6 +146,11 @@ export const voiceTranslations = {
   },
   ca: {
     voice: {
+      welcome: 'Hola, com puc ajudar-te? Pots parlar o escriure un missatge.',
+      toast: {
+        textMode: 'Mode text',
+        textModeDesc: 'Resposta sense àudio. Prem 🎙️ per activar veu.',
+      },
       search: {
         found: 'He trobat {{count}} activitats',
         foundOne: 'He trobat "{{title}}"',
@@ -186,6 +205,11 @@ export const voiceTranslations = {
   },
   fr: {
     voice: {
+      welcome: 'Bonjour, comment puis-je vous aider? Vous pouvez parler ou écrire un message.',
+      toast: {
+        textMode: 'Mode texte',
+        textModeDesc: 'Réponse sans audio. Appuyez sur 🎙️ pour activer la voix.',
+      },
       search: {
         found: 'Trouvé {{count}} activités',
         foundOne: 'Trouvé "{{title}}"',
@@ -240,6 +264,11 @@ export const voiceTranslations = {
   },
   it: {
     voice: {
+      welcome: 'Ciao, come posso aiutarti? Puoi parlare o scrivere un messaggio.',
+      toast: {
+        textMode: 'Modalità testo',
+        textModeDesc: 'Risposta senza audio. Premi 🎙️ per attivare la voce.',
+      },
       search: {
         found: 'Trovato {{count}} attività',
         foundOne: 'Trovato "{{title}}"',
@@ -294,6 +323,11 @@ export const voiceTranslations = {
   },
   de: {
     voice: {
+      welcome: 'Hallo, wie kann ich dir helfen? Du kannst sprechen oder eine Nachricht eingeben.',
+      toast: {
+        textMode: 'Textmodus',
+        textModeDesc: 'Antwort ohne Audio. Drücke 🎙️ um Sprache zu aktivieren.',
+      },
       search: {
         found: '{{count}} Aktivitäten gefunden',
         foundOne: '"{{title}}" gefunden',

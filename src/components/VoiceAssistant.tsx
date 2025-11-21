@@ -22,7 +22,7 @@ interface VoiceAssistantProps {
 const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [showHistory, setShowHistory] = useState(true);
+  const [showHistory, setShowHistory] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isTextMessageLoading, setIsTextMessageLoading] = useState(false);
   const { toast } = useToast();
@@ -143,7 +143,17 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
     },
     onConnect: () => {
       setIsConnecting(false);
-      setMessages([]);
+      
+      // Show popup immediately when connected
+      setShowHistory(true);
+      
+      // Add welcome message from assistant
+      const welcomeMessage: Message = {
+        role: 'assistant',
+        content: t('voice.welcome', 'Hola, ¿en qué puedo ayudarte? Puedes hablar o escribir un mensaje.'),
+        timestamp: Date.now()
+      };
+      setMessages([welcomeMessage]);
       
       // Reset session and create new session ID for metrics tracking
       VoiceMetricsTracker.resetSession();
@@ -281,6 +291,24 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
     setMessages(prev => [...prev, userMessage]);
     setIsTextMessageLoading(true);
 
+    // Temporarily disconnect ElevenLabs to prevent audio response
+    const wasConnected = conversation.status === 'connected';
+    if (wasConnected) {
+      try {
+        await conversation.endSession();
+        console.log('[VoiceAssistant] Disconnected voice for text-only response');
+        
+        // Show a subtle toast that voice was disconnected
+        toast({
+          title: t('voice.toast.textMode', 'Modo texto'),
+          description: t('voice.toast.textModeDesc', 'Respuesta sin audio. Presiona 🎙️ para activar voz.'),
+          duration: 2000,
+        });
+      } catch (error) {
+        console.error('[VoiceAssistant] Error disconnecting voice:', error);
+      }
+    }
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -370,7 +398,7 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
     <>
       <ConversationHistory 
         messages={messages} 
-        isVisible={showHistory && messages.length > 0}
+        isVisible={showHistory || conversation.status === 'connected'}
         onClose={() => setShowHistory(false)}
         onSendTextMessage={handleSendTextMessage}
         isTextMessageLoading={isTextMessageLoading}
@@ -378,15 +406,23 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
       
       <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-2 items-end">
         {messages.length > 0 && (
-          <Button
-            onClick={() => setShowHistory(!showHistory)}
-            size="sm"
-            variant="secondary"
-            className="rounded-full shadow-lg"
-          >
-            <MessageSquare className="h-4 w-4 mr-2" />
-            {showHistory ? t('voice.hideChat', 'Ocultar') : t('voice.showChat', 'Ver chat')}
-          </Button>
+          <div className="flex flex-col gap-2 items-end">
+            <Button
+              onClick={() => setShowHistory(!showHistory)}
+              size="sm"
+              variant="secondary"
+              className="rounded-full shadow-lg"
+            >
+              <MessageSquare className="h-4 w-4 mr-2" />
+              {showHistory ? t('voice.hideChat', 'Ocultar') : t('voice.showChat', 'Ver chat')}
+            </Button>
+            
+            {!isConnected && !isConnecting && (
+              <div className="text-xs text-muted-foreground bg-background/90 px-3 py-2 rounded-full shadow-lg border">
+                💬 Modo texto · Presiona 🎙️ para voz
+              </div>
+            )}
+          </div>
         )}
         
         {!isConnected && !isConnecting ? (

@@ -45,7 +45,7 @@ const ConversationHistory = ({ messages, isVisible, onClose, onSendTextMessage, 
     }
   };
 
-  if (!isVisible || messages.length === 0) return null;
+  if (!isVisible) return null;
 
   return (
     <Card className="fixed bottom-32 right-8 z-40 w-96 h-[500px] flex flex-col shadow-2xl">

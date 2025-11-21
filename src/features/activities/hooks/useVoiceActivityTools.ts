@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { generateActivitySlug } from '@/lib/utils';
 import { truncateList, summarizeActivity } from '@/lib/tts/voiceResponseHelper';
+import { VoiceMetricsTracker } from '@/lib/tts/voiceMetricsTracker';
 import type {
   VoiceToolsMap,
   SearchActivitiesParams,
@@ -42,7 +43,7 @@ export function useVoiceActivityTools(
         const queryText = params.category?.trim();
         const isSimpleTitleQuery = !!queryText && !params.dateFrom && !params.dateTo && !params.location && !params.maxCost;
 
-        if (isSimpleTitleQuery) {
+          if (isSimpleTitleQuery) {
           const { data: matches, error: titleError } = await supabase
             .from('activities')
             .select('*')
@@ -53,7 +54,9 @@ export function useVoiceActivityTools(
 
           if (!matches || matches.length === 0) {
             if (navigate) navigate('/actividades');
-            return t('voice.search.notFound', { query: queryText });
+            const response = t('voice.search.notFound', { query: queryText });
+            VoiceMetricsTracker.trackQuick('searchActivities', response, i18n.language);
+            return response;
           }
 
           const normalize = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
@@ -66,12 +69,16 @@ export function useVoiceActivityTools(
           }
 
           if (matches.length > 1 && !exact) {
-            return t('voice.search.multiple', { count: matches.length, title: chosen.title });
+            const response = t('voice.search.multiple', { count: matches.length, title: chosen.title });
+            VoiceMetricsTracker.trackQuick('searchActivities', response, i18n.language);
+            return response;
           }
 
           // Brief activity summary
           const summary = summarizeActivity(chosen, lang);
-          return `${t('voice.search.foundOne', { title: chosen.title })}. ${summary}`;
+          const response = `${t('voice.search.foundOne', { title: chosen.title })}. ${summary}`;
+          VoiceMetricsTracker.trackQuick('searchActivities', response, i18n.language);
+          return response;
         }
 
         // Search with filters
@@ -107,7 +114,12 @@ export function useVoiceActivityTools(
         const count = filtered?.length || 0;
         if (navigate) navigate('/actividades');
         
-        return t('voice.search.found', { count });
+        const response = t('voice.search.found', { count });
+        
+        // Track metrics
+        VoiceMetricsTracker.trackQuick('searchActivities', response, i18n.language);
+        
+        return response;
       } catch (error) {
         console.error('[Voice Tool] Error in searchActivities:', error);
         if (navigate) navigate('/actividades');
@@ -179,7 +191,10 @@ export function useVoiceActivityTools(
           description: t('voice.reservation.success', { title: activity.title }),
         });
 
-        return t('voice.reservation.success', { title: activity.title });
+        const response = t('voice.reservation.success', { title: activity.title });
+        VoiceMetricsTracker.trackQuick('reserveActivity', response, i18n.language);
+        
+        return response;
       } catch (error) {
         console.error('[Voice Tool] Error in reserveActivity:', error);
         return t('voice.reservation.error');

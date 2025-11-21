@@ -24,6 +24,7 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [showHistory, setShowHistory] = useState(true);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isTextMessageLoading, setIsTextMessageLoading] = useState(false);
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
   
@@ -270,6 +271,98 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
     }
   };
 
+  const handleSendTextMessage = async (text: string) => {
+    // Add user message immediately
+    const userMessage: Message = {
+      role: 'user',
+      content: text,
+      timestamp: Date.now()
+    };
+    setMessages(prev => [...prev, userMessage]);
+    setIsTextMessageLoading(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-chat`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({
+            messages: [...messages, userMessage].map(m => ({
+              role: m.role,
+              content: m.content
+            }))
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to send text message');
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let assistantMessage = '';
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content;
+                
+                if (content) {
+                  assistantMessage += content;
+                  setMessages(prev => {
+                    const lastMsg = prev[prev.length - 1];
+                    if (lastMsg?.role === 'assistant') {
+                      return prev.slice(0, -1).concat({
+                        ...lastMsg,
+                        content: assistantMessage
+                      });
+                    } else {
+                      return [...prev, {
+                        role: 'assistant',
+                        content: assistantMessage,
+                        timestamp: Date.now()
+                      }];
+                    }
+                  });
+                }
+              } catch (e) {
+                // Ignore parse errors for partial chunks
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error sending text message:', error);
+      toast({
+        title: t('voice.toast.error'),
+        description: t('voice.errors.textMessage', 'No se pudo enviar el mensaje'),
+        variant: "destructive",
+      });
+    } finally {
+      setIsTextMessageLoading(false);
+    }
+  };
+
   const isConnected = conversation.status === 'connected';
   const isSpeaking = conversation.isSpeaking;
 
@@ -279,6 +372,8 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
         messages={messages} 
         isVisible={showHistory && messages.length > 0}
         onClose={() => setShowHistory(false)}
+        onSendTextMessage={handleSendTextMessage}
+        isTextMessageLoading={isTextMessageLoading}
       />
       
       <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-2 items-end">

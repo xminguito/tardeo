@@ -24,6 +24,7 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [showHistory, setShowHistory] = useState(true);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
   
@@ -140,9 +141,15 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
         }
       },
     },
-    onConnect: () => {
+    onConnect: ({ conversationId: conversationIdFromEL }) => {
       setIsConnecting(false);
       setMessages([]);
+      
+      // Store conversation ID for text messages
+      if (conversationIdFromEL) {
+        setConversationId(conversationIdFromEL);
+        console.log('[VoiceAssistant] Conversation ID:', conversationIdFromEL);
+      }
       
       // Reset session and create new session ID for metrics tracking
       VoiceMetricsTracker.resetSession();
@@ -273,12 +280,47 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
   const isConnected = conversation.status === 'connected';
   const isSpeaking = conversation.isSpeaking;
 
+  const sendTextMessage = async (text: string) => {
+    if (!conversationId) {
+      toast({
+        title: t('voice.toast.error'),
+        description: "No active conversation",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Add user message immediately to UI
+      setMessages(prev => [...prev, {
+        role: 'user',
+        content: text,
+        timestamp: Date.now()
+      }]);
+
+      // Send to ElevenLabs via edge function
+      const { error } = await supabase.functions.invoke('elevenlabs-text-message', {
+        body: { conversationId, text }
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error sending text message:', error);
+      toast({
+        title: t('voice.toast.error'),
+        description: t('voice.toast.errorDesc'),
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <>
       <ConversationHistory 
         messages={messages} 
         isVisible={showHistory && messages.length > 0}
         onClose={() => setShowHistory(false)}
+        onSendText={sendTextMessage}
       />
       
       <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-2 items-end">

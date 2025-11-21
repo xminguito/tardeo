@@ -9,6 +9,9 @@ verify_jwt = false
 [functions.elevenlabs-signed-url]
 verify_jwt = false
 
+[functions.elevenlabs-text-message]
+verify_jwt = false
+
 [functions.send-activity-reminders]
 verify_jwt = false
 

@@ -40,7 +40,8 @@ export function useVoiceActivityTools(
   const searchActivities = useCallback(
     async (params: SearchActivitiesParams = {} as any): Promise<string> => {
       try {
-        const queryText = params.category?.trim();
+        // Check for simple title query (activityTitle takes precedence over category)
+        const queryText = (params.activityTitle || params.category)?.trim();
         const isSimpleTitleQuery = !!queryText && !params.dateFrom && !params.dateTo && !params.location && params.maxCost === undefined;
 
           if (isSimpleTitleQuery) {

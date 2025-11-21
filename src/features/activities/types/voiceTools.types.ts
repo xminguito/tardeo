@@ -1,4 +1,5 @@
 export interface SearchActivitiesParams {
+  activityTitle?: string;
   category?: string;
   location?: string;
   dateFrom?: string;

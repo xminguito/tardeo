@@ -7,6 +7,7 @@ import { useConversation } from "@11labs/react";
 import type { VoiceToolsMap } from '@/features/activities/types/voiceTools.types';
 import ConversationHistory from "./ConversationHistory";
 import { useTranslation } from "react-i18next";
+import { VoiceMetricsTracker } from "@/lib/tts/voiceMetricsTracker";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -22,6 +23,7 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
   
@@ -141,6 +143,14 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
     onConnect: () => {
       setIsConnecting(false);
       setMessages([]);
+      
+      // Reset session and create new session ID for metrics tracking
+      VoiceMetricsTracker.resetSession();
+      const newSessionId = VoiceMetricsTracker.getSessionId();
+      setSessionId(newSessionId);
+      
+      console.log('[VoiceAssistant] New session started:', newSessionId);
+      
       toast({
         title: t('voice.toast.connected'),
         description: t('voice.toast.connectedDesc'),
@@ -181,6 +191,19 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
             }];
           }
         });
+        
+        // Track voice response metrics
+        if (sessionId && message.message) {
+          VoiceMetricsTracker.trackResponse({
+            sessionId,
+            intent: 'ai_response',
+            responseText: message.message,
+            language: i18n.language,
+            ttsProvider: 'elevenlabs',
+          }).catch(err => {
+            console.error('[VoiceAssistant] Failed to track metrics:', err);
+          });
+        }
       }
     },
     onError: (error) => {

@@ -41,7 +41,7 @@ export function useVoiceActivityTools(
     async (params: SearchActivitiesParams = {} as any): Promise<string> => {
       try {
         const queryText = params.category?.trim();
-        const isSimpleTitleQuery = !!queryText && !params.dateFrom && !params.dateTo && !params.location && !params.maxCost;
+        const isSimpleTitleQuery = !!queryText && !params.dateFrom && !params.dateTo && !params.location && params.maxCost === undefined;
 
           if (isSimpleTitleQuery) {
           const { data: matches, error: titleError } = await supabase

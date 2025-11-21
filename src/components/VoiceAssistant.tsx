@@ -22,7 +22,7 @@ interface VoiceAssistantProps {
 const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [showHistory, setShowHistory] = useState(false);
+  const [showHistory, setShowHistory] = useState(true);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
@@ -275,10 +275,14 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
 
   return (
     <>
-      <ConversationHistory messages={messages} isVisible={isConnected && showHistory} />
+      <ConversationHistory 
+        messages={messages} 
+        isVisible={showHistory && messages.length > 0}
+        onClose={() => setShowHistory(false)}
+      />
       
       <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-2 items-end">
-        {isConnected && messages.length > 0 && (
+        {messages.length > 0 && (
           <Button
             onClick={() => setShowHistory(!showHistory)}
             size="sm"
@@ -286,7 +290,7 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
             className="rounded-full shadow-lg"
           >
             <MessageSquare className="h-4 w-4 mr-2" />
-            {showHistory ? 'Ocultar' : 'Ver chat'}
+            {showHistory ? t('voice.hideChat', 'Ocultar') : t('voice.showChat', 'Ver chat')}
           </Button>
         )}
         

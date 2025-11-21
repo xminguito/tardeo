@@ -1,9 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { User, Bot, X, Send } from "lucide-react";
+import { User, Bot, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 interface Message {
@@ -16,12 +15,10 @@ interface ConversationHistoryProps {
   messages: Message[];
   isVisible: boolean;
   onClose?: () => void;
-  onSendText?: (text: string) => void;
 }
 
-const ConversationHistory = ({ messages, isVisible, onClose, onSendText }: ConversationHistoryProps) => {
+const ConversationHistory = ({ messages, isVisible, onClose }: ConversationHistoryProps) => {
   const { t } = useTranslation();
-  const [inputText, setInputText] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -29,20 +26,6 @@ const ConversationHistory = ({ messages, isVisible, onClose, onSendText }: Conve
       scrollRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
-
-  const handleSend = () => {
-    if (inputText.trim() && onSendText) {
-      onSendText(inputText.trim());
-      setInputText("");
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
 
   if (!isVisible || messages.length === 0) return null;
 
@@ -89,27 +72,6 @@ const ConversationHistory = ({ messages, isVisible, onClose, onSendText }: Conve
           <div ref={scrollRef} />
         </div>
       </ScrollArea>
-      {onSendText && (
-        <div className="p-4 border-t bg-background">
-          <div className="flex gap-2">
-            <Input
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder={t('voice.typeMessage', 'Escribe un mensaje...')}
-              className="flex-1"
-              autoComplete="off"
-            />
-            <Button 
-              onClick={handleSend} 
-              size="icon"
-              disabled={!inputText.trim()}
-            >
-              <Send className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      )}
     </Card>
   );
 };

@@ -17,6 +17,7 @@ import PageHeader from '@/components/PageHeader';
 import Header from '@/components/Header';
 import PageTransition from '@/components/PageTransition';
 import { useUserLocation } from '@/hooks/useUserLocation';
+import { useAnalytics } from '@/lib/analytics/useAnalytics';
 
 export default function ActivitiesCalendarPage() {
   const { t } = useTranslation();
@@ -27,6 +28,7 @@ export default function ActivitiesCalendarPage() {
   const [isUserAdmin, setIsUserAdmin] = useState(false);
   const [user, setUser] = useState<any>(null);
   const { location: userLocation } = useUserLocation();
+  const { track } = useAnalytics();
 
   const { data: activities, isLoading, error } = useActivities(filters);
   const { isFavorite, toggleFavorite, favorites } = useFavorites(userId);
@@ -41,6 +43,18 @@ export default function ActivitiesCalendarPage() {
       setFilters((prev) => ({ ...prev, location: userLocation.city }));
     }
   }, [userLocation?.city]);
+
+  // Analytics: Track view_activity_list on mount and when activities change
+  useEffect(() => {
+    if (!isLoading && activities) {
+      // track('view_activity_list', { page: 1, filters: filters, result_count: activities.length })
+      track('view_activity_list', {
+        page: 1,
+        filters: Object.keys(filters).length > 0 ? filters : null,
+        result_count: activities.length,
+      });
+    }
+  }, [activities, isLoading]);
   
   
   const checkUser = async () => {
@@ -62,6 +76,18 @@ export default function ActivitiesCalendarPage() {
   };
 
   const categories = [...new Set(activities?.map((a) => a.category) || [])];
+
+  const handleFiltersChange = (newFilters: ActivityFilters) => {
+    setFilters(newFilters);
+    
+    // Analytics: Track filter_applied { filters: object, source: 'activity_list' }
+    if (Object.keys(newFilters).length > 0) {
+      track('filter_applied', {
+        filters: newFilters,
+        source: 'activity_list',
+      });
+    }
+  };
 
   const handleReserve = async (activityId: string) => {
     const activity = activities?.find(a => a.id === activityId);
@@ -99,7 +125,7 @@ export default function ActivitiesCalendarPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <aside className="lg:col-span-1">
-            <ActivityFiltersComponent onFiltersChange={setFilters} categories={categories} />
+            <ActivityFiltersComponent onFiltersChange={handleFiltersChange} categories={categories} />
           </aside>
 
           <main className="lg:col-span-3">

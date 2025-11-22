@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
+import { track } from '@/lib/analytics';
 
 export const useFavorites = (userId: string | null) => {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
@@ -61,6 +62,12 @@ export const useFavorites = (userId: string | null) => {
           return newSet;
         });
 
+        // Analytics: Track favorite_toggled { activity_id, favorited: false }
+        track('favorite_toggled', {
+          activity_id: activityId,
+          favorited: false,
+        });
+
         toast({
           title: t('favorites.removed'),
           description: t('favorites.removedDesc'),
@@ -76,6 +83,12 @@ export const useFavorites = (userId: string | null) => {
         if (error) throw error;
 
         setFavorites(prev => new Set([...prev, activityId]));
+
+        // Analytics: Track favorite_toggled { activity_id, favorited: true }
+        track('favorite_toggled', {
+          activity_id: activityId,
+          favorited: true,
+        });
 
         toast({
           title: t('favorites.added'),

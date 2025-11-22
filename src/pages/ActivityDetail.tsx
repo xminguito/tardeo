@@ -19,6 +19,7 @@ import { useFavorites } from '@/features/activities/hooks/useFavorites';
 import PageTransition from '@/components/PageTransition';
 import type { ActivityFilters } from '@/features/activities/types/activity.types';
 import { extractIdFromSlug } from '@/lib/utils';
+import { useAnalytics } from '@/lib/analytics/useAnalytics';
 
 interface Activity {
   id: string;
@@ -61,6 +62,7 @@ export default function ActivityDetail() {
   const [user, setUser] = useState<any>(null);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
   const { favorites } = useFavorites(userId);
+  const { track, serverTrack } = useAnalytics();
 
   const getDateLocale = () => {
     switch (i18n.language) {
@@ -132,6 +134,14 @@ export default function ActivityDetail() {
 
       if (error) throw error;
       setActivity(data);
+
+      // Analytics: Track activity_view { activity_id, category, source: 'activity_details', price }
+      track('activity_view', {
+        activity_id: data.id,
+        category: data.category || null,
+        source: 'activity_details',
+        price: data.cost ?? null,
+      });
     } catch (error) {
       toast({
         title: 'Error',
@@ -157,6 +167,11 @@ export default function ActivityDetail() {
 
     if (!activity) return;
 
+    // Analytics: Track reserve_start { activity_id }
+    track('reserve_start', {
+      activity_id: activity.id,
+    });
+
     setIsJoining(true);
     try {
       // Check if already participating
@@ -176,12 +191,14 @@ export default function ActivityDetail() {
       }
 
       // Create participation
-      const { error: participationError } = await supabase
+      const { data: participationData, error: participationError } = await supabase
         .from('activity_participants')
         .insert({
           activity_id: activity.id,
           user_id: userId,
-        });
+        })
+        .select()
+        .single();
 
       if (participationError) throw participationError;
 
@@ -226,6 +243,13 @@ export default function ActivityDetail() {
         type: 'info',
       });
 
+      // Analytics: Track reserve_success via server-side (sensitive event)
+      await serverTrack('reserve_success', {
+        activity_id: activity.id,
+        reservation_id: participationData.id,
+        amount: activity.cost,
+      });
+
       toast({
         title: t('activityDetail.enrolled'),
         description: t('activityDetail.joinedActivity', { title: getTranslatedTitle(activity) }),
@@ -235,6 +259,13 @@ export default function ActivityDetail() {
       loadActivity();
     } catch (error) {
       console.error('Error joining activity:', error);
+      
+      // Analytics: Track reserve_failed { activity_id, error_code }
+      track('reserve_failed', {
+        activity_id: activity.id,
+        error_code: 'reservation_error',
+      });
+
       toast({
         title: t('common.error'),
         description: t('activityDetail.reservationError'),

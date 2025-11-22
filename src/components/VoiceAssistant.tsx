@@ -8,6 +8,7 @@ import type { VoiceToolsMap } from '@/features/activities/types/voiceTools.types
 import ConversationHistory from "./ConversationHistory";
 import { useTranslation } from "react-i18next";
 import { VoiceMetricsTracker } from "@/lib/tts/voiceMetricsTracker";
+import { useAnalytics } from "@/lib/analytics/useAnalytics";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -27,28 +28,61 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
   const [isTextMessageLoading, setIsTextMessageLoading] = useState(false);
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
+  const { track } = useAnalytics();
   
   const conversation = useConversation({
     clientTools: {
       searchActivities: async (params: any) => {
+        const startTime = Date.now();
         console.log('[Voice Tool Wrapper] searchActivities called with:', params);
         try {
           const result = await clientTools.searchActivities(params);
           console.log('[Voice Tool Wrapper] searchActivities result:', result);
+          
+          // Analytics: Track assistant_used_tool { tool_name, success: true, duration_ms }
+          track('assistant_used_tool', {
+            tool_name: 'searchActivities',
+            success: true,
+            duration_ms: Date.now() - startTime,
+          });
+          
           return result;
         } catch (error) {
           console.error('[Voice Tool Wrapper] searchActivities error:', error);
+          
+          // Analytics: Track assistant_used_tool { tool_name, success: false }
+          track('assistant_used_tool', {
+            tool_name: 'searchActivities',
+            success: false,
+          });
+          
           return t('voice.errors.searchActivities');
         }
       },
       reserveActivity: async (params: any) => {
+        const startTime = Date.now();
         console.log('[Voice Tool Wrapper] reserveActivity called with:', params);
         try {
           const result = await clientTools.reserveActivity(params);
           console.log('[Voice Tool Wrapper] reserveActivity result:', result);
+          
+          // Analytics: Track assistant_used_tool { tool_name, success: true, duration_ms }
+          track('assistant_used_tool', {
+            tool_name: 'reserveActivity',
+            success: true,
+            duration_ms: Date.now() - startTime,
+          });
+          
           return result;
         } catch (error) {
           console.error('[Voice Tool Wrapper] reserveActivity error:', error);
+          
+          // Analytics: Track assistant_used_tool { tool_name, success: false }
+          track('assistant_used_tool', {
+            tool_name: 'reserveActivity',
+            success: false,
+          });
+          
           return t('voice.errors.reserveActivity');
         }
       },
@@ -75,13 +109,35 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
         }
       },
       navigateToActivities: async (params: any) => {
+        const startTime = Date.now();
         console.log('[Voice Tool Wrapper] navigateToActivities called with:', params);
         try {
           const result = await clientTools.navigateToActivities(params);
           console.log('[Voice Tool Wrapper] navigateToActivities result:', result);
+          
+          // Analytics: Track assistant_used_tool { tool_name, success: true, duration_ms }
+          track('assistant_used_tool', {
+            tool_name: 'navigateToActivities',
+            success: true,
+            duration_ms: Date.now() - startTime,
+          });
+          
+          // Analytics: Track assistant_action_navigate with target route
+          track('assistant_action_navigate', {
+            target_route: '/actividades',
+            category: params?.category || null,
+          });
+          
           return result;
         } catch (error) {
           console.error('[Voice Tool Wrapper] navigateToActivities error:', error);
+          
+          // Analytics: Track assistant_used_tool { tool_name, success: false }
+          track('assistant_used_tool', {
+            tool_name: 'navigateToActivities',
+            success: false,
+          });
+          
           return t('voice.errors.navigate');
         }
       },
@@ -162,6 +218,11 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
       
       console.log('[VoiceAssistant] New session started:', newSessionId);
       
+      // Analytics: Track assistant_invoked { mode: 'voice' }
+      track('assistant_invoked', {
+        mode: 'voice',
+      });
+      
       toast({
         title: t('voice.toast.connected'),
         description: t('voice.toast.connectedDesc'),
@@ -220,6 +281,12 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
     onError: (error) => {
       console.error("Error en conversación:", error);
       setIsConnecting(false);
+      
+      // Analytics: Track assistant_failure { error_code }
+      track('assistant_failure', {
+        error_code: 'connection_error',
+      });
+      
       toast({
         title: t('voice.toast.error'),
         description: t('voice.toast.errorDesc'),
@@ -290,6 +357,11 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
     };
     setMessages(prev => [...prev, userMessage]);
     setIsTextMessageLoading(true);
+
+    // Analytics: Track assistant_invoked { mode: 'text' }
+    track('assistant_invoked', {
+      mode: 'text',
+    });
 
     // Temporarily disconnect ElevenLabs to prevent audio response
     const wasConnected = conversation.status === 'connected';
@@ -381,6 +453,12 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
       }
     } catch (error) {
       console.error('Error sending text message:', error);
+      
+      // Analytics: Track assistant_failure { error_code }
+      track('assistant_failure', {
+        error_code: 'text_message_error',
+      });
+      
       toast({
         title: t('voice.toast.error'),
         description: t('voice.errors.textMessage', 'No se pudo enviar el mensaje'),

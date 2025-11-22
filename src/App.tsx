@@ -31,6 +31,8 @@ import EmailTester from "./pages/EmailTester";
 import EmailTemplates from "./pages/EmailTemplates";
 import AdminLayout from "./layouts/AdminLayout";
 import { UserLocationProvider } from "@/hooks/useUserLocation";
+import { useEffect } from "react";
+import { initAnalytics, track } from "@/lib/analytics";
  
 const queryClient = new QueryClient();
  
@@ -77,17 +79,25 @@ const AppContent = () => {
     </UserLocationProvider>
   );
 };
- 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AppContent />
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
- 
+
+const App = () => {
+  useEffect(() => {
+    initAnalytics().then(r =>
+    console.log("Analytics initialized:", r));
+    track("app_opened", {});
+  }, []);
+
+  return (
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppContent />
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+  );
+};
+
 export default App;

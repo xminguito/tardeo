@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Languages, Mic, Settings, Bell, DollarSign, BarChart3, Activity, Mail } from 'lucide-react';
+import { Languages, Mic, Settings, Bell, DollarSign, BarChart3, Activity, Mail, TrendingUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import PageHeader from '@/components/PageHeader';
 import PageTransition from '@/components/PageTransition';
@@ -80,6 +80,13 @@ export default function Admin() {
       icon: Mail,
       path: '/admin/plantillas-email',
       color: 'text-emerald-500',
+    },
+    {
+      title: 'Mixpanel Analytics',
+      description: 'Dashboard completo de analytics: funnels, retention, eventos en vivo y métricas del asistente',
+      icon: TrendingUp,
+      path: '/admin/analytics',
+      color: 'text-violet-500',
     },
   ];
 

@@ -32,6 +32,10 @@ import EmailTemplates from "./pages/EmailTemplates";
 import AdminLayout from "./layouts/AdminLayout";
 import { UserLocationProvider } from "@/hooks/useUserLocation";
 import { initAnalytics, track } from "@/lib/analytics";
+import { lazy } from "react";
+
+// Lazy load Analytics Dashboard (heavy component)
+const AnalyticsDashboard = lazy(() => import("./pages/admin/AnalyticsDashboard"));
  
 const queryClient = new QueryClient();
  
@@ -67,6 +71,7 @@ const AppContent = () => {
           {/* Admin routes with layout */}
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Admin />} />
+            <Route path="analytics" element={<AnalyticsDashboard />} />
             <Route path="notificaciones" element={<NotificationSettings />} />
             <Route path="tts-costs" element={<TTSCostDashboard />} />
             <Route path="voice-quality" element={<VoiceQualityDashboard />} />

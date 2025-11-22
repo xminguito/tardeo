@@ -7,7 +7,6 @@ import { generateActivitySlug } from "@/lib/utils";
 import { calculateDistance, geocodeLocation } from "@/lib/distance";
 import ActivityCard from "@/components/ActivityCard";
 import CreateActivityDialog from "@/components/CreateActivityDialog";
-import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFavorites } from "@/features/activities/hooks/useFavorites";
 import { useUserLocation } from "@/hooks/useUserLocation";
@@ -201,23 +200,6 @@ const Index = () => {
               {t('home.joinFree')}
             </Button>
           </div>
-        )}
-
-        {notifications.length > 0 && (
-          <section className="mb-12">
-            <h2 className="text-3xl font-semibold mb-6">{t('home.notifications')}</h2>
-            <div className="space-y-3">
-              {notifications.map((notif) => (
-                <div
-                  key={notif.id}
-                  className="bg-accent/10 border border-accent/20 rounded-xl p-4 hover:bg-accent/20 transition-colors"
-                >
-                  <h3 className="font-semibold text-lg">{notif.title}</h3>
-                  <p className="text-muted-foreground">{notif.message}</p>
-                </div>
-              ))}
-            </div>
-          </section>
         )}
 
         <section className="mb-12">

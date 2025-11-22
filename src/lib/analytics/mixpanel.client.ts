@@ -151,7 +151,7 @@ export async function initMixpanel(config: AnalyticsConfig): Promise<void> {
       track_pageview: false, // Manual pageview tracking
       persistence: 'localStorage',
       ignore_dnt: false, // Respect Do Not Track
-      ip: true, // Track IP for geolocation
+      ip: false, // Track IP for geolocation
       property_blacklist: [], // Can add fields to never track
       api_host: 'https://api-js.mixpanel.com', // Explicit API endpoint
     };

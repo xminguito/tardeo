@@ -133,8 +133,12 @@ export async function initMixpanel(config: AnalyticsConfig): Promise<void> {
   // Validate token
   if (!config.token || config.token === '__REDACTED__') {
     console.warn('[Analytics] Invalid or missing Mixpanel token');
+    console.warn('[Analytics] Token received:', config.token ? '***PRESENT BUT INVALID***' : 'MISSING');
+    console.warn('[Analytics] Please set VITE_MIXPANEL_TOKEN in your .env.local file');
     return;
   }
+  
+  console.log('[Analytics] Token validated successfully');
   
   isInitializing = true;
   
@@ -143,13 +147,18 @@ export async function initMixpanel(config: AnalyticsConfig): Promise<void> {
     const { default: mixpanel } = await import('mixpanel-browser');
     
     const mixpanelConfig: Partial<Config> = {
-      debug: config.debug || false,
+      debug: true, // TEMPORARY: Enable debug mode to see what's happening
       track_pageview: false, // Manual pageview tracking
       persistence: 'localStorage',
       ignore_dnt: false, // Respect Do Not Track
       ip: false, // Don't send IP for privacy
       property_blacklist: [], // Can add fields to never track
     };
+    
+    console.log('[Analytics] Initializing Mixpanel with config:', {
+      token: config.token?.substring(0, 8) + '...',
+      debug: true,
+    });
     
     mixpanel.init(config.token, mixpanelConfig);
     mixpanelInstance = mixpanel;

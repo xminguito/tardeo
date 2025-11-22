@@ -151,8 +151,11 @@ export async function initMixpanel(config: AnalyticsConfig): Promise<void> {
       track_pageview: false, // Manual pageview tracking
       persistence: 'localStorage',
       ignore_dnt: false, // Respect Do Not Track
-      ip: false, // Don't send IP for privacy
+      // TEMPORARY: Changed from false to 1 to fix "data missing" error
+      // Mixpanel's ip:false might be causing the payload to be empty
+      ip: 1, // Will revert to false after testing
       property_blacklist: [], // Can add fields to never track
+      api_host: 'https://api-js.mixpanel.com', // Explicit API endpoint
     };
     
     console.log('[Analytics] Initializing Mixpanel with config:', {
@@ -165,6 +168,11 @@ export async function initMixpanel(config: AnalyticsConfig): Promise<void> {
     isInitialized = true;
     
     console.log('[Analytics] Mixpanel initialized successfully');
+    console.log('[Analytics] Instance check:', {
+      hasInstance: !!mixpanelInstance,
+      hasTrack: typeof mixpanelInstance?.track === 'function',
+      config: mixpanelInstance?.config,
+    });
     
     // Process queued events
     if (eventQueue.length > 0) {
@@ -224,10 +232,17 @@ export async function trackEvent(
       ...sanitizedProps,
     };
     
+    console.log(`[Analytics] About to track: ${event}`, {
+      hasInstance: !!mixpanelInstance,
+      propsCount: Object.keys(enrichedProps).length,
+      eventName: event,
+    });
+    
     mixpanelInstance.track(event, enrichedProps);
     console.log(`[Analytics] Tracked: ${event}`, enrichedProps);
   } catch (error) {
     console.error(`[Analytics] Error tracking ${event}:`, error);
+    console.error('[Analytics] Stack:', error instanceof Error ? error.stack : 'Unknown');
   }
 }
 

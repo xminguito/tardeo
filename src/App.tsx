@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { useVoiceActivityTools } from "@/features/activities/hooks/useVoiceActivityTools";
 import VoiceAssistant from "@/components/VoiceAssistant";
 import type { ActivityFilters } from "@/features/activities/types/activity.types";
@@ -31,16 +31,24 @@ import EmailTester from "./pages/EmailTester";
 import EmailTemplates from "./pages/EmailTemplates";
 import AdminLayout from "./layouts/AdminLayout";
 import { UserLocationProvider } from "@/hooks/useUserLocation";
-import { useEffect } from "react";
 import { initAnalytics, track } from "@/lib/analytics";
  
 const queryClient = new QueryClient();
  
 const AppContent = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [filters, setFilters] = useState<ActivityFilters>({});
   const voiceTools = useVoiceActivityTools(setFilters, filters, navigate);
  
+  // Track page navigation
+  useEffect(() => {
+    track('page_view', {
+      path: location.pathname,
+      title: document.title,
+    });
+  }, [location.pathname]);
+
   return (
     <UserLocationProvider>
       <>
@@ -82,9 +90,15 @@ const AppContent = () => {
 
 const App = () => {
   useEffect(() => {
-    initAnalytics().then(r =>
-    console.log("Analytics initialized:", r));
-    track("app_opened", {});
+    // Initialize analytics (lazy-loaded after interaction or 2s idle)
+    initAnalytics()
+      .then(() => {
+        console.log('[Analytics] Initialized');
+        track('app_opened', {});
+      })
+      .catch((error) => {
+        console.error('[Analytics] Failed to initialize:', error);
+      });
   }, []);
 
   return (

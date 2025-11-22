@@ -5,6 +5,7 @@
 
 export type AnalyticsEventNames =
   | 'app_opened'
+  | 'page_view'
   | 'view_activity_list'
   | 'activity_view'
   | 'filter_applied'
@@ -19,6 +20,10 @@ export type AnalyticsEventNames =
 
 export interface AnalyticsEventPayloads {
   app_opened: Record<string, never>;
+  page_view: {
+    path: string;
+    title?: string;
+  };
   view_activity_list: {
     page?: number;
     filters?: Record<string, any> | null;

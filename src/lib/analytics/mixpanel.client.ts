@@ -153,7 +153,7 @@ export async function initMixpanel(config: AnalyticsConfig): Promise<void> {
       ignore_dnt: false, // Respect Do Not Track
       ip: false, // Track IP for geolocation
       property_blacklist: [], // Can add fields to never track
-      api_host: 'https://api-js.mixpanel.com', // Explicit API endpoint
+      api_host: 'https://api-eu.mixpanel.com', // Explicit API endpoint
     };
     
     console.log('[Analytics] Initializing Mixpanel with config:', {

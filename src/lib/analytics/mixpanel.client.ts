@@ -133,12 +133,8 @@ export async function initMixpanel(config: AnalyticsConfig): Promise<void> {
   // Validate token
   if (!config.token || config.token === '__REDACTED__') {
     console.warn('[Analytics] Invalid or missing Mixpanel token');
-    console.warn('[Analytics] Token received:', config.token ? '***PRESENT BUT INVALID***' : 'MISSING');
-    console.warn('[Analytics] Please set VITE_MIXPANEL_TOKEN in your .env.local file');
     return;
   }
-  
-  console.log('[Analytics] Token validated successfully');
   
   isInitializing = true;
   
@@ -147,36 +143,23 @@ export async function initMixpanel(config: AnalyticsConfig): Promise<void> {
     const { default: mixpanel } = await import('mixpanel-browser');
     
     const mixpanelConfig: Partial<Config> = {
-      debug: true, // TEMPORARY: Enable debug mode to see what's happening
-      track_pageview: false, // Manual pageview tracking
+      debug: config.debug || false,
+      track_pageview: false,
       persistence: 'localStorage',
-      ignore_dnt: false, // Respect Do Not Track
-      ip: false, // Track IP for geolocation
-      property_blacklist: [], // Can add fields to never track
-      api_host: 'https://api-eu.mixpanel.com', // Explicit API endpoint
+      ignore_dnt: false,
+      ip: true,
+      property_blacklist: [],
+      api_host: 'https://api-eu.mixpanel.com',
     };
-    
-    console.log('[Analytics] Initializing Mixpanel with config:', {
-      token: config.token?.substring(0, 8) + '...',
-      debug: true,
-    });
     
     mixpanel.init(config.token, mixpanelConfig);
     mixpanelInstance = mixpanel;
     isInitialized = true;
     
-    console.log('[Analytics] Mixpanel initialized successfully');
-    console.log('[Analytics] Instance check:', {
-      hasInstance: !!mixpanelInstance,
-      hasTrack: typeof mixpanelInstance?.track === 'function',
-    });
-    
-    // Process queued events with delay to avoid rate limiting
+    // Process queued events
     if (eventQueue.length > 0) {
-      console.log(`[Analytics] Processing ${eventQueue.length} queued events`);
       for (let i = 0; i < eventQueue.length; i++) {
         const queuedEvent = eventQueue[i];
-        // Add small delay between events to avoid rate limiting
         if (i > 0) {
           await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_MS + 10));
         }
@@ -203,15 +186,13 @@ export async function trackEvent(
   // Rate limiting
   const now = Date.now();
   if (now - lastEventTime < RATE_LIMIT_MS) {
-    console.log(`[Analytics] Rate limit: skipping ${event}`);
     return;
   }
   lastEventTime = now;
   
   // Queue if not ready
   if (!isInitialized) {
-    if (eventQueue.length < 50) { // Max queue size
-      console.log(`[Analytics] Queueing event: ${event}`);
+    if (eventQueue.length < 50) {
       eventQueue.push({
         event,
         properties,
@@ -222,29 +203,19 @@ export async function trackEvent(
   }
   
   if (!mixpanelInstance) {
-    console.warn('[Analytics] Mixpanel instance not available');
     return;
   }
   
   try {
-    // Sanitize and enrich properties
     const sanitizedProps = properties ? await sanitizeProperties(properties) : {};
     const enrichedProps = {
       ...getDefaultMetadata(),
       ...sanitizedProps,
     };
     
-    console.log(`[Analytics] About to track: ${event}`, {
-      hasInstance: !!mixpanelInstance,
-      propsCount: Object.keys(enrichedProps).length,
-      eventName: event,
-    });
-    
     mixpanelInstance.track(event, enrichedProps);
-    console.log(`[Analytics] Tracked: ${event}`, enrichedProps);
   } catch (error) {
     console.error(`[Analytics] Error tracking ${event}:`, error);
-    console.error('[Analytics] Stack:', error instanceof Error ? error.stack : 'Unknown');
   }
 }
 
@@ -256,7 +227,6 @@ export function identifyUser(
   traits?: Record<string, any>
 ): void {
   if (!isInitialized || !mixpanelInstance) {
-    console.log('[Analytics] Cannot identify: not initialized');
     return;
   }
   
@@ -264,21 +234,15 @@ export function identifyUser(
     mixpanelInstance.identify(userId);
     
     if (traits) {
-      // Only set safe traits (no PII)
       const safeTraits: Record<string, any> = {};
-      
-      // Allowed traits
       const allowedFields = ['role', 'created_at', 'locale', 'plan'];
       for (const field of allowedFields) {
         if (traits[field]) {
           safeTraits[field] = traits[field];
         }
       }
-      
       mixpanelInstance.people.set(safeTraits);
     }
-    
-    console.log(`[Analytics] Identified user: ${userId}`);
   } catch (error) {
     console.error('[Analytics] Error identifying user:', error);
   }
@@ -295,8 +259,6 @@ export function optOut(): void {
     if (mixpanelInstance) {
       mixpanelInstance.opt_out_tracking();
     }
-    
-    console.log('[Analytics] User opted out');
   } catch (error) {
     console.error('[Analytics] Error opting out:', error);
   }
@@ -313,8 +275,6 @@ export function optIn(): void {
     if (mixpanelInstance) {
       mixpanelInstance.opt_in_tracking();
     }
-    
-    console.log('[Analytics] User opted in');
   } catch (error) {
     console.error('[Analytics] Error opting in:', error);
   }
@@ -326,7 +286,6 @@ export function optIn(): void {
 export function reset(): void {
   if (mixpanelInstance) {
     mixpanelInstance.reset();
-    console.log('[Analytics] Reset');
   }
 }
 

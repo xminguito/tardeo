@@ -43,7 +43,6 @@ export async function initAnalytics(config?: {
   
   // Check if disabled
   if ((window as any).__TARDEO_ANALYTICS_DISABLED__) {
-    console.log('[Analytics] Disabled by global flag');
     return Promise.resolve();
   }
   

@@ -151,9 +151,7 @@ export async function initMixpanel(config: AnalyticsConfig): Promise<void> {
       track_pageview: false, // Manual pageview tracking
       persistence: 'localStorage',
       ignore_dnt: false, // Respect Do Not Track
-      // TEMPORARY: Changed from false to 1 to fix "data missing" error
-      // Mixpanel's ip:false might be causing the payload to be empty
-      ip: 1, // Will revert to false after testing
+      ip: true, // Track IP for geolocation
       property_blacklist: [], // Can add fields to never track
       api_host: 'https://api-js.mixpanel.com', // Explicit API endpoint
     };
@@ -171,7 +169,6 @@ export async function initMixpanel(config: AnalyticsConfig): Promise<void> {
     console.log('[Analytics] Instance check:', {
       hasInstance: !!mixpanelInstance,
       hasTrack: typeof mixpanelInstance?.track === 'function',
-      config: mixpanelInstance?.config,
     });
     
     // Process queued events with delay to avoid rate limiting

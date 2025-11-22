@@ -11,7 +11,7 @@ let isInitialized = false;
 let isInitializing = false;
 let eventQueue: QueuedEvent[] = [];
 let lastEventTime = 0;
-const RATE_LIMIT_MS = 100; // Min time between events
+const RATE_LIMIT_MS = 50; // Min time between events (reduced from 100ms)
 
 /**
  * Hash sensitive data with SHA-256
@@ -174,10 +174,15 @@ export async function initMixpanel(config: AnalyticsConfig): Promise<void> {
       config: mixpanelInstance?.config,
     });
     
-    // Process queued events
+    // Process queued events with delay to avoid rate limiting
     if (eventQueue.length > 0) {
       console.log(`[Analytics] Processing ${eventQueue.length} queued events`);
-      for (const queuedEvent of eventQueue) {
+      for (let i = 0; i < eventQueue.length; i++) {
+        const queuedEvent = eventQueue[i];
+        // Add small delay between events to avoid rate limiting
+        if (i > 0) {
+          await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_MS + 10));
+        }
         await trackEvent(queuedEvent.event, queuedEvent.properties);
       }
       eventQueue = [];

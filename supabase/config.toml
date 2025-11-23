@@ -40,7 +40,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.admin-mixpanel-query]
-verify_jwt = true
+verify_jwt = false
 
 [functions.check-upcoming-favorites]
 verify_jwt = false

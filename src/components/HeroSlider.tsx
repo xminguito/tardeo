@@ -9,6 +9,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -35,6 +36,7 @@ export default function HeroSlider({
   autoplayInterval = 5000,
   className,
 }: HeroSliderProps) {
+  const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoplayPaused, setIsAutoplayPaused] = useState(false);
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set([0]));
@@ -190,9 +192,9 @@ export default function HeroSlider({
                         }}
                         onClick={() => {
                           if (slide.cta?.link.startsWith('http')) {
-                            window.location.href = slide.cta.link;
+                            window.open(slide.cta.link, '_blank', 'noopener,noreferrer');
                           } else {
-                            window.location.hash = slide.cta.link;
+                            navigate(slide.cta.link);
                           }
                         }}
                       >

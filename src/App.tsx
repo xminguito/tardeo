@@ -36,6 +36,7 @@ import { initAnalytics, track } from "@/lib/analytics";
 // Lazy load Analytics Dashboard (heavy component)
 const AnalyticsDashboard = lazy(() => import("./pages/admin/AnalyticsDashboard"));
 const HeroBannersManager = lazy(() => import("./pages/admin/HeroBannersManager"));
+const UserManagement = lazy(() => import("./pages/admin/UserManagement"));
  
 const queryClient = new QueryClient();
  
@@ -79,6 +80,11 @@ const AppContent = () => {
             <Route path="hero-banners" element={
               <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><p className="text-lg text-muted-foreground">Loading...</p></div>}>
                 <HeroBannersManager />
+              </Suspense>
+            } />
+            <Route path="usuarios" element={
+              <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><p className="text-lg text-muted-foreground">Loading...</p></div>}>
+                <UserManagement />
               </Suspense>
             } />
             <Route path="notificaciones" element={<NotificationSettings />} />

@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Languages, Mic, Settings, Bell, DollarSign, BarChart3, Activity, Mail, TrendingUp, Image } from 'lucide-react';
+import { Languages, Mic, Settings, Bell, DollarSign, BarChart3, Activity, Mail, TrendingUp, Image, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import PageHeader from '@/components/PageHeader';
 import PageTransition from '@/components/PageTransition';
@@ -94,6 +94,13 @@ export default function Admin() {
       icon: Image,
       path: '/admin/hero-banners',
       color: 'text-rose-500',
+    },
+    {
+      title: 'Gestión de Usuarios',
+      description: 'Administra usuarios registrados, roles, permisos y estadísticas de uso',
+      icon: Users,
+      path: '/admin/usuarios',
+      color: 'text-amber-500',
     },
   ];
 

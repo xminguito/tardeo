@@ -214,102 +214,56 @@ export default function AnalyticsDashboard() {
   );
 }
 
-// API Functions (placeholder implementations with mock data)
+// API Functions - Real implementation using Supabase Edge Functions
+
+async function queryMixpanelAPI(type: string, params?: Record<string, any>): Promise<any> {
+  const { supabase } = await import('@/integrations/supabase/client');
+  
+  const { data, error } = await supabase.functions.invoke('admin-mixpanel-query', {
+    body: { type, params },
+  });
+  
+  if (error) {
+    console.error(`[Analytics] Query failed for ${type}:`, error);
+    throw error;
+  }
+  
+  return data?.data || data;
+}
 
 async function fetchKPIMetrics(): Promise<KPIMetrics> {
-  // TODO: Replace with actual API call to /api/admin/mixpanel-query
-  // For now, return mock data
-  return {
-    dau: 127,
-    wau: 423,
-    totalReservations: 89,
-    ttsCostBurnRate: 4.25,
-  };
+  return queryMixpanelAPI('kpi');
 }
 
 async function fetchFunnelData(dateRange: DateRangeOption): Promise<FunnelData> {
-  // TODO: Replace with actual API call
-  return {
-    steps: [
-      { step: 'Discovery', count: 1000, conversionRate: 100 },
-      { step: 'View Activity', count: 650, conversionRate: 65 },
-      { step: 'Reserve Start', count: 320, conversionRate: 49.2 },
-      { step: 'Reserve Success', count: 245, conversionRate: 76.6 },
-    ],
-    totalConversion: 24.5,
-    dateRange,
-  };
+  return queryMixpanelAPI('funnel', { dateRange });
 }
 
 async function fetchRetentionData(): Promise<RetentionCohort[]> {
-  // TODO: Replace with actual API call
-  return [
-    { cohort: 'Nov 15-21', users: 145, d1: 68.2, d7: 42.1, d30: 28.3 },
-    { cohort: 'Nov 8-14', users: 132, d1: 71.2, d7: 45.5, d30: 31.1 },
-    { cohort: 'Nov 1-7', users: 118, d1: 65.3, d7: 38.1, d30: 25.4 },
-  ];
+  return queryMixpanelAPI('retention');
 }
 
 async function fetchLiveEvents(): Promise<LiveEvent[]> {
-  // TODO: Replace with actual SSE or polling endpoint
-  // Mock data for demonstration
-  return [
-    {
-      id: '1',
-      timestamp: new Date().toISOString(),
-      eventName: 'activity_view',
-      userId: '$device:abc123',
-      properties: { activity_id: '123', category: 'yoga' },
-    },
-    {
-      id: '2',
-      timestamp: new Date(Date.now() - 10000).toISOString(),
-      eventName: 'reserve_success',
-      userId: '$device:def456',
-      properties: { activity_id: '456', amount: 25 },
-    },
-  ];
+  return queryMixpanelAPI('events_tail', { limit: 100 });
 }
 
 async function fetchAssistantMetrics(): Promise<AssistantMetrics> {
-  // TODO: Replace with actual API call
-  return {
-    invocationsPerDay: [
-      { date: '2025-11-16', count: 45 },
-      { date: '2025-11-17', count: 52 },
-      { date: '2025-11-18', count: 38 },
-      { date: '2025-11-19', count: 61 },
-      { date: '2025-11-20', count: 55 },
-      { date: '2025-11-21', count: 48 },
-      { date: '2025-11-22', count: 42 },
-    ],
-    topTools: [
-      { tool: 'searchActivities', count: 234 },
-      { tool: 'getActivityDetails', count: 189 },
-      { tool: 'reserveActivity', count: 145 },
-      { tool: 'navigateToActivities', count: 98 },
-      { tool: 'setFilter', count: 67 },
-    ],
-    avgDuration: 1250,
-    errorRate: 3.8,
-  };
+  return queryMixpanelAPI('assistant_metrics');
 }
 
 async function searchEvents(eventName: string, property?: string): Promise<EventExplorerResult> {
-  // TODO: Replace with actual API call
+  // TODO: Implement event search endpoint if needed
+  // For now, filter from recent_events
+  const events = await queryMixpanelAPI('events_tail', { limit: 1000 });
+  const filtered = events.filter((e: LiveEvent) => e.eventName === eventName);
+  
   return {
     eventName,
-    count: 1523,
-    samples: [
-      {
-        timestamp: new Date().toISOString(),
-        properties: { activity_id: '123', category: 'yoga', source: 'activity_details' },
-      },
-      {
-        timestamp: new Date(Date.now() - 60000).toISOString(),
-        properties: { activity_id: '456', category: 'sports', source: 'activity_details' },
-      },
-    ],
+    count: filtered.length,
+    samples: filtered.slice(0, 10).map((e: LiveEvent) => ({
+      timestamp: e.timestamp,
+      properties: e.properties,
+    })),
   };
 }
 

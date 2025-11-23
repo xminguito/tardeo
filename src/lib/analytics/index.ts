@@ -152,30 +152,30 @@ export async function serverTrack<T extends AnalyticsEventNames>(
   properties?: AnalyticsEventPayloads[T]
 ): Promise<boolean> {
   try {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    // Dynamic import to avoid circular dependency
+    const { supabase } = await import('@/integrations/supabase/client');
     
-    if (!supabaseUrl) {
-      console.warn('[Analytics] Cannot server-track: no Supabase URL');
+    // Get current session for auth token
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      console.warn('[Analytics] Cannot server-track: no session');
       return false;
     }
     
-    const response = await fetch(`${supabaseUrl}/functions/v1/mixpanel-proxy`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    const { data, error } = await supabase.functions.invoke('mixpanel-proxy', {
+      body: {
         event,
         properties: properties || {},
-      }),
+        user_id: session.user.id,
+      },
     });
     
-    if (!response.ok) {
-      console.error('[Analytics] Server-track failed:', response.statusText);
+    if (error) {
+      console.error('[Analytics] Server-track failed:', error);
       return false;
     }
     
-    console.log(`[Analytics] Server-tracked: ${event}`);
     return true;
   } catch (error) {
     console.error('[Analytics] Server-track error:', error);

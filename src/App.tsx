@@ -36,6 +36,7 @@ import { lazy } from "react";
 
 // Lazy load Analytics Dashboard (heavy component)
 const AnalyticsDashboard = lazy(() => import("./pages/admin/AnalyticsDashboard"));
+const HeroBannersManager = lazy(() => import("./pages/admin/HeroBannersManager"));
  
 const queryClient = new QueryClient();
  
@@ -72,6 +73,7 @@ const AppContent = () => {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Admin />} />
             <Route path="analytics" element={<AnalyticsDashboard />} />
+            <Route path="hero-banners" element={<HeroBannersManager />} />
             <Route path="notificaciones" element={<NotificationSettings />} />
             <Route path="tts-costs" element={<TTSCostDashboard />} />
             <Route path="voice-quality" element={<VoiceQualityDashboard />} />

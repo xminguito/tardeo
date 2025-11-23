@@ -1,4 +1,4 @@
-import { Languages, Mic, Settings, Bell, DollarSign, BarChart3, Activity, Mail, LayoutDashboard } from 'lucide-react';
+import { Languages, Mic, Settings, Bell, DollarSign, BarChart3, Activity, Mail, LayoutDashboard, TrendingUp, Image } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -18,6 +18,16 @@ const adminTools = [
     title: 'Dashboard',
     icon: LayoutDashboard,
     path: '/admin',
+  },
+  {
+    title: 'Mixpanel Analytics',
+    icon: TrendingUp,
+    path: '/admin/analytics',
+  },
+  {
+    title: 'Gestión de Banners',
+    icon: Image,
+    path: '/admin/hero-banners',
   },
   {
     title: 'Actualizar Agente de Voz',

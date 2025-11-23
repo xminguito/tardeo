@@ -67,35 +67,13 @@ export default function UserManagement() {
   const { data: users, isLoading: usersLoading } = useQuery<UserProfile[]>({
     queryKey: ['admin-users'],
     queryFn: async () => {
-      // Get users from auth.users via admin API
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+      // Call Edge Function to get users (requires admin role)
+      const { data, error } = await supabase.functions.invoke('admin-list-users');
       
-      if (authError) throw authError;
+      if (error) throw error;
+      if (!data?.users) throw new Error('No users data returned');
       
-      // Get user roles
-      const { data: roles } = await supabase
-        .from('user_roles')
-        .select('user_id, role');
-      
-      const rolesMap = new Map(roles?.map(r => [r.user_id, r.role]) || []);
-      
-      // Get profiles
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, full_name');
-      
-      const profilesMap = new Map(profiles?.map(p => [p.id, p.full_name]) || []);
-      
-      return authUsers.users.map(user => ({
-        id: user.id,
-        email: user.email || 'No email',
-        full_name: profilesMap.get(user.id) || user.user_metadata?.full_name,
-        created_at: user.created_at,
-        last_sign_in_at: user.last_sign_in_at,
-        role: rolesMap.get(user.id),
-        email_confirmed_at: user.email_confirmed_at,
-        banned_until: user.banned_until,
-      }));
+      return data.users;
     },
     staleTime: 30 * 1000, // 30 seconds
     enabled: isAdmin === true,

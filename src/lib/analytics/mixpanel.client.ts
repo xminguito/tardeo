@@ -178,6 +178,7 @@ export async function initMixpanel(config: AnalyticsConfig): Promise<void> {
 /**
  * Track an event
  * Queues if not initialized, rate-limits to prevent floods
+ * Also sends important events to server for dashboard analytics
  */
 export async function trackEvent(
   event: string,
@@ -214,8 +215,58 @@ export async function trackEvent(
     };
     
     mixpanelInstance.track(event, enrichedProps);
+    
+    // Also send important events to server (for admin dashboard analytics)
+    const serverTrackedEvents = [
+      'page_view',
+      'view_activity_list',
+      'activity_view',
+      'reserve_start',
+      'reserve_success',
+      'reserve_failed',
+      'assistant_invoked',
+      'assistant_used_tool',
+      'assistant_failure',
+      'favorite_toggled',
+      'filter_applied',
+    ];
+    
+    if (serverTrackedEvents.includes(event)) {
+      // Send to server in background (don't await to avoid blocking)
+      sendToServer(event, enrichedProps).catch(err => {
+        console.warn(`[Analytics] Failed to send ${event} to server:`, err);
+      });
+    }
   } catch (error) {
     console.error(`[Analytics] Error tracking ${event}:`, error);
+  }
+}
+
+/**
+ * Send event to server for storage in recent_events table
+ */
+async function sendToServer(event: string, properties: Record<string, any>): Promise<void> {
+  try {
+    // Dynamic import to avoid circular dependency
+    const { supabase } = await import('@/integrations/supabase/client');
+    
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    // Only send if user is authenticated
+    if (!session) {
+      return;
+    }
+    
+    await supabase.functions.invoke('mixpanel-proxy', {
+      body: {
+        event,
+        properties,
+        user_id: session.user.id,
+      },
+    });
+  } catch (error) {
+    // Silent fail - server tracking is optional
+    console.debug('[Analytics] Server track failed:', error);
   }
 }
 

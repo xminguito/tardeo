@@ -134,25 +134,20 @@ serve(async (req) => {
       );
     }
 
-    // Verify Supabase JWT
-    const supabase = createClient(
-      SUPABASE_URL,
-      SUPABASE_SERVICE_ROLE_KEY,
-      {
-        global: {
-          headers: { Authorization: authHeader },
-        },
-      }
-    );
-
+    // Extract JWT token
+    const token = authHeader.replace('Bearer ', '');
+    
+    // Verify Supabase JWT using service role client
+    const serviceClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser();
+    } = await serviceClient.auth.getUser(token);
 
     if (authError || !user) {
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+        JSON.stringify({ error: 'Unauthorized', details: authError?.message || 'Invalid token' }),
         { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -32,7 +32,6 @@ import EmailTemplates from "./pages/EmailTemplates";
 import AdminLayout from "./layouts/AdminLayout";
 import { UserLocationProvider } from "@/hooks/useUserLocation";
 import { initAnalytics, track } from "@/lib/analytics";
-import { lazy } from "react";
 
 // Lazy load Analytics Dashboard (heavy component)
 const AnalyticsDashboard = lazy(() => import("./pages/admin/AnalyticsDashboard"));
@@ -72,8 +71,16 @@ const AppContent = () => {
           {/* Admin routes with layout */}
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Admin />} />
-            <Route path="analytics" element={<AnalyticsDashboard />} />
-            <Route path="hero-banners" element={<HeroBannersManager />} />
+            <Route path="analytics" element={
+              <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><p className="text-lg text-muted-foreground">Loading...</p></div>}>
+                <AnalyticsDashboard />
+              </Suspense>
+            } />
+            <Route path="hero-banners" element={
+              <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><p className="text-lg text-muted-foreground">Loading...</p></div>}>
+                <HeroBannersManager />
+              </Suspense>
+            } />
             <Route path="notificaciones" element={<NotificationSettings />} />
             <Route path="tts-costs" element={<TTSCostDashboard />} />
             <Route path="voice-quality" element={<VoiceQualityDashboard />} />

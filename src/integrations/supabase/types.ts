@@ -385,6 +385,30 @@ export type Database = {
         }
         Relationships: []
       }
+      recent_events: {
+        Row: {
+          created_at: string
+          event_name: string
+          id: string
+          properties: Json | null
+          user_id_text: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_name: string
+          id?: string
+          properties?: Json | null
+          user_id_text?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_name?: string
+          id?: string
+          properties?: Json | null
+          user_id_text?: string | null
+        }
+        Relationships: []
+      }
       system_flags: {
         Row: {
           created_at: string
@@ -892,6 +916,7 @@ export type Database = {
         }[]
       }
       cleanup_expired_tts_cache: { Args: never; Returns: undefined }
+      cleanup_old_recent_events: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

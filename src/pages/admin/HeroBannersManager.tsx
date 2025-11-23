@@ -116,7 +116,7 @@ export default function HeroBannersManager() {
         .order('order_index', { ascending: true });
 
       if (error) throw error;
-      setBanners(data || []);
+      setBanners((data || []) as any);
     } catch (error) {
       console.error('Error loading banners:', error);
       toast({
@@ -193,8 +193,8 @@ export default function HeroBannersManager() {
 
       if (editingBanner) {
         // Update
-        const { error } = await supabase
-          .from('hero_banners')
+        const { error } = await (supabase
+          .from('hero_banners') as any)
           .update(formData)
           .eq('id', editingBanner.id);
 
@@ -206,8 +206,8 @@ export default function HeroBannersManager() {
         });
       } else {
         // Create
-        const { error } = await supabase
-          .from('hero_banners')
+        const { error } = await (supabase
+          .from('hero_banners') as any)
           .insert([{ ...formData, created_by: (await supabase.auth.getUser()).data.user?.id }]);
 
         if (error) throw error;
@@ -264,7 +264,7 @@ export default function HeroBannersManager() {
     if (!confirm('¿Estás seguro de eliminar este banner?')) return;
 
     try {
-      const { error } = await supabase.from('hero_banners').delete().eq('id', id);
+      const { error } = await (supabase.from('hero_banners') as any).delete().eq('id', id);
 
       if (error) throw error;
 
@@ -286,8 +286,8 @@ export default function HeroBannersManager() {
 
   const handleToggleActive = async (banner: HeroBanner) => {
     try {
-      const { error } = await supabase
-        .from('hero_banners')
+      const { error } = await (supabase
+        .from('hero_banners') as any)
         .update({ is_active: !banner.is_active })
         .eq('id', banner.id);
 
@@ -314,8 +314,8 @@ export default function HeroBannersManager() {
     if (!prevBanner) return;
 
     try {
-      await supabase.from('hero_banners').update({ order_index: banner.order_index }).eq('id', prevBanner.id);
-      await supabase.from('hero_banners').update({ order_index: prevBanner.order_index }).eq('id', banner.id);
+      await (supabase.from('hero_banners') as any).update({ order_index: banner.order_index }).eq('id', prevBanner.id);
+      await (supabase.from('hero_banners') as any).update({ order_index: prevBanner.order_index }).eq('id', banner.id);
 
       loadBanners();
     } catch (error: any) {
@@ -328,8 +328,8 @@ export default function HeroBannersManager() {
     if (!nextBanner) return;
 
     try {
-      await supabase.from('hero_banners').update({ order_index: banner.order_index }).eq('id', nextBanner.id);
-      await supabase.from('hero_banners').update({ order_index: nextBanner.order_index }).eq('id', banner.id);
+      await (supabase.from('hero_banners') as any).update({ order_index: banner.order_index }).eq('id', nextBanner.id);
+      await (supabase.from('hero_banners') as any).update({ order_index: nextBanner.order_index }).eq('id', banner.id);
 
       loadBanners();
     } catch (error: any) {

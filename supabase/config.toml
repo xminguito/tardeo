@@ -38,3 +38,15 @@ verify_jwt = false
 
 [functions.send-activity-notification]
 verify_jwt = false
+
+[functions.admin-mixpanel-query]
+verify_jwt = true
+
+[functions.check-upcoming-favorites]
+verify_jwt = false
+
+[functions.geocode-activities]
+verify_jwt = false
+
+[functions.mixpanel-proxy]
+verify_jwt = false

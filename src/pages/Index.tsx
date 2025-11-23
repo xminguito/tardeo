@@ -102,10 +102,12 @@ const Index = () => {
 
       if (error) throw error;
 
-      if (data && data.length > 0) {
+      const bannerData = data as any[] || [];
+
+      if (bannerData && bannerData.length > 0) {
         // Map banners to slider format with i18n
         const currentLang = i18n.language || 'es';
-        const mappedSlides = data.map((banner) => ({
+        const mappedSlides = bannerData.map((banner) => ({
           id: banner.id,
           image: banner.image_url,
           title: (banner as any)[`title_${currentLang}`] || banner.title_es,

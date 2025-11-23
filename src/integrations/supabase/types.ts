@@ -259,6 +259,93 @@ export type Database = {
         }
         Relationships: []
       }
+      hero_banners: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          cta_link: string | null
+          cta_text_ca: string | null
+          cta_text_de: string | null
+          cta_text_en: string | null
+          cta_text_es: string | null
+          cta_text_fr: string | null
+          cta_text_it: string | null
+          description_ca: string | null
+          description_de: string | null
+          description_en: string | null
+          description_es: string
+          description_fr: string | null
+          description_it: string | null
+          id: string
+          image_url: string
+          is_active: boolean | null
+          order_index: number | null
+          title_ca: string | null
+          title_de: string | null
+          title_en: string | null
+          title_es: string
+          title_fr: string | null
+          title_it: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          cta_link?: string | null
+          cta_text_ca?: string | null
+          cta_text_de?: string | null
+          cta_text_en?: string | null
+          cta_text_es?: string | null
+          cta_text_fr?: string | null
+          cta_text_it?: string | null
+          description_ca?: string | null
+          description_de?: string | null
+          description_en?: string | null
+          description_es: string
+          description_fr?: string | null
+          description_it?: string | null
+          id?: string
+          image_url: string
+          is_active?: boolean | null
+          order_index?: number | null
+          title_ca?: string | null
+          title_de?: string | null
+          title_en?: string | null
+          title_es: string
+          title_fr?: string | null
+          title_it?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          cta_link?: string | null
+          cta_text_ca?: string | null
+          cta_text_de?: string | null
+          cta_text_en?: string | null
+          cta_text_es?: string | null
+          cta_text_fr?: string | null
+          cta_text_it?: string | null
+          description_ca?: string | null
+          description_de?: string | null
+          description_en?: string | null
+          description_es?: string
+          description_fr?: string | null
+          description_it?: string | null
+          id?: string
+          image_url?: string
+          is_active?: boolean | null
+          order_index?: number | null
+          title_ca?: string | null
+          title_de?: string | null
+          title_en?: string | null
+          title_es?: string
+          title_fr?: string | null
+          title_it?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       interests: {
         Row: {
           created_at: string | null

@@ -58,13 +58,13 @@ export function AssistantMetricsComponent({ data, loading = false }: AssistantMe
         <div className="grid grid-cols-2 gap-4">
           <div className="border rounded-lg p-4">
             <div className="text-sm text-muted-foreground mb-1">Avg Tool Duration</div>
-            <div className="text-2xl font-bold">{data.avgDuration.toFixed(0)}ms</div>
+            <div className="text-2xl font-bold">{(data.avgDuration ?? 0).toFixed(0)}ms</div>
           </div>
           <div className="border rounded-lg p-4">
             <div className="text-sm text-muted-foreground mb-1">Error Rate</div>
             <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold">{data.errorRate.toFixed(1)}%</span>
-              <Badge variant="outline" className={getErrorRateColor(data.errorRate)}>
+              <span className="text-2xl font-bold">{(data.errorRate ?? 0).toFixed(1)}%</span>
+              <Badge variant="outline" className={getErrorRateColor(data.errorRate ?? 0)}>
                 {data.errorRate < 5 ? 'Good' : data.errorRate < 10 ? 'Warning' : 'Critical'}
               </Badge>
             </div>
@@ -82,7 +82,7 @@ export function AssistantMetricsComponent({ data, loading = false }: AssistantMe
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.topTools.length === 0 ? (
+              {(!data.topTools || data.topTools.length === 0) ? (
                 <TableRow>
                   <TableCell colSpan={2} className="text-center text-muted-foreground">
                     No tool usage data
@@ -111,7 +111,7 @@ export function AssistantMetricsComponent({ data, loading = false }: AssistantMe
         <div>
           <h4 className="text-sm font-medium mb-3">Daily Invocations (Last 7 Days)</h4>
           <div className="space-y-2">
-            {data.invocationsPerDay.length === 0 ? (
+            {(!data.invocationsPerDay || data.invocationsPerDay.length === 0) ? (
               <div className="text-center py-4 text-muted-foreground text-sm">
                 No invocation data
               </div>

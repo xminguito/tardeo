@@ -312,7 +312,7 @@ async function fetchRetentionData(): Promise<any> {
   }
 
   // TODO: Implement actual retention calculation
-  // For now, return mock data
+  // For now, return mock data with correct structure
   const data = [
     { cohort: 'Nov 15-21', users: 145, d1: 68.2, d7: 42.1, d30: 28.3 },
     { cohort: 'Nov 8-14', users: 132, d1: 71.2, d7: 45.5, d30: 31.1 },
@@ -353,6 +353,9 @@ serve(async (req) => {
       );
     }
 
+    // Extract the token from the Authorization header
+    const token = authHeader.replace('Bearer ', '');
+
     // Create a Supabase client with the user's token
     const supabase = createClient(SUPABASE_URL, ANON_KEY, {
       auth: {
@@ -365,7 +368,8 @@ serve(async (req) => {
       },
     });
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    // Pass the token directly to getUser() as per Supabase docs
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
     console.log('[admin-mixpanel-query] getUser result:', {
       hasUser: !!user,

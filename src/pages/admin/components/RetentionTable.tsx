@@ -69,27 +69,29 @@ export function RetentionTable({ data, loading = false }: RetentionTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map((cohort) => (
-              <TableRow key={cohort.cohort}>
-                <TableCell className="font-medium">{cohort.cohort}</TableCell>
-                <TableCell className="text-right">{cohort.users.toLocaleString()}</TableCell>
-                <TableCell className="text-right">
-                  <span className={`px-2 py-1 rounded text-sm ${getCellColor(cohort.d1)}`}>
-                    {formatPercent(cohort.d1)}
-                  </span>
-                </TableCell>
-                <TableCell className="text-right">
-                  <span className={`px-2 py-1 rounded text-sm ${getCellColor(cohort.d7)}`}>
-                    {formatPercent(cohort.d7)}
-                  </span>
-                </TableCell>
-                <TableCell className="text-right">
-                  <span className={`px-2 py-1 rounded text-sm ${getCellColor(cohort.d30)}`}>
-                    {formatPercent(cohort.d30)}
-                  </span>
-                </TableCell>
-              </TableRow>
-            ))}
+            {data
+              .filter(cohort => cohort && typeof cohort.users === 'number')
+              .map((cohort) => (
+                <TableRow key={cohort.cohort}>
+                  <TableCell className="font-medium">{cohort.cohort}</TableCell>
+                  <TableCell className="text-right">{cohort.users.toLocaleString()}</TableCell>
+                  <TableCell className="text-right">
+                    <span className={`px-2 py-1 rounded text-sm ${getCellColor(cohort.d1)}`}>
+                      {formatPercent(cohort.d1)}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <span className={`px-2 py-1 rounded text-sm ${getCellColor(cohort.d7)}`}>
+                      {formatPercent(cohort.d7)}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <span className={`px-2 py-1 rounded text-sm ${getCellColor(cohort.d30)}`}>
+                      {formatPercent(cohort.d30)}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              ))}
           </TableBody>
         </Table>
       </CardContent>

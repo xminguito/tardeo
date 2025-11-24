@@ -32,6 +32,7 @@ export function LiveStreamPanel({ events, loading = false }: LiveStreamPanelProp
   }, [events, isPaused]);
 
   const maskUserId = (userId: string): string => {
+    if (!userId) return 'anonymous';
     if (userId.length <= 6) return userId;
     return userId.substring(0, 6) + '…';
   };

@@ -226,17 +226,9 @@ async function queryMixpanelAPI(type: string, params?: Record<string, any>): Pro
   if (error) {
     console.error(`[Analytics] Query failed for ${type}:`, error);
 
-    // Try to log the response body if available
-    if (error instanceof Error && 'context' in error) {
-      try {
-        const context = (error as any).context;
-        if (context && typeof context.json === 'function') {
-          const body = await context.json();
-          console.error(`[Analytics] Error details for ${type}:`, body);
-        }
-      } catch (e) {
-        console.error('[Analytics] Failed to parse error body:', e);
-      }
+    // FunctionsHttpError has the response body in error.context
+    if ('context' in error && error.context) {
+      console.error(`[Analytics] Error response body for ${type}:`, error.context);
     }
 
     throw error;
@@ -254,7 +246,13 @@ async function fetchFunnelData(dateRange: DateRangeOption): Promise<FunnelData> 
 }
 
 async function fetchRetentionData(): Promise<RetentionCohort[]> {
-  return queryMixpanelAPI('retention');
+  const result = await queryMixpanelAPI('retention');
+  console.log('[Analytics] Retention data received:', result);
+  console.log('[Analytics] Retention data length:', result?.length);
+  result?.forEach((cohort, index) => {
+    console.log(`[Analytics] Cohort ${index}:`, cohort);
+  });
+  return result;
 }
 
 async function fetchLiveEvents(): Promise<LiveEvent[]> {

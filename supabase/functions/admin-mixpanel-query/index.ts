@@ -346,16 +346,16 @@ serve(async (req) => {
     if (!authHeader) {
       return new Response(
         JSON.stringify({ error: 'Missing authorization header' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
+        { status: 401, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
       );
     }
 
     // Extract JWT token
     const token = authHeader.replace('Bearer ', '');
-    
+
     // Verify Supabase JWT using service role client
     const serviceClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    
+
     const {
       data: { user },
       error: authError,
@@ -364,7 +364,7 @@ serve(async (req) => {
     if (authError || !user) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized', details: authError?.message || 'Invalid token' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
+        { status: 401, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
       );
     }
 
@@ -373,7 +373,7 @@ serve(async (req) => {
     if (!userIsAdmin) {
       return new Response(
         JSON.stringify({ error: 'Forbidden: Admin access required' }),
-        { status: 403, headers: { 'Content-Type': 'application/json' } }
+        { status: 403, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
       );
     }
 
@@ -408,7 +408,7 @@ serve(async (req) => {
       default:
         return new Response(
           JSON.stringify({ error: `Unknown query type: ${type}` }),
-          { status: 400, headers: { 'Content-Type': 'application/json' } }
+          { status: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
         );
     }
 
@@ -435,4 +435,3 @@ serve(async (req) => {
     );
   }
 });
-

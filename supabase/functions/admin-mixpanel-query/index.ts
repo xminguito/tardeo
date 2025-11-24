@@ -53,6 +53,34 @@ async function isAdmin(userId: string): Promise<boolean> {
 }
 
 /**
+ * Query Mixpanel JQL API
+ * https://developer.mixpanel.com/reference/jql-overview
+ */
+async function queryMixpanelJQL(script: string): Promise<any> {
+  if (!MIXPANEL_API_SECRET) {
+    throw new Error('MIXPANEL_API_SECRET not configured');
+  }
+
+  const response = await fetch(`${MIXPANEL_API_HOST}/api/2.0/jql`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': `Basic ${btoa(MIXPANEL_API_SECRET + ':')}`,
+    },
+    body: `script=${encodeURIComponent(script)}`,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[Mixpanel JQL] Error:', errorText);
+    throw new Error(`Mixpanel JQL API error: ${response.status} ${errorText}`);
+  }
+
+  const data = await response.json();
+  return data;
+}
+
+/**
  * Fetch recent events from DB
  */
 async function fetchRecentEvents(limit = 100): Promise<any[]> {
@@ -105,21 +133,29 @@ async function fetchKPIMetrics(): Promise<any> {
   // For now, return enhanced mock data based on recent_events
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-  // Count distinct users in last 24h
+  // Fetch distinct users in last 24h (DAU)
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const { count: dauCount } = await supabase
+  const { data: dauData } = await supabase
     .from('recent_events')
-    .select('user_id_text', { count: 'exact', head: true })
+    .select('user_id_text')
     .gte('created_at', oneDayAgo)
     .not('user_id_text', 'is', null);
 
-  // Count distinct users in last 7 days
+  // Count unique users for DAU
+  const uniqueDauUsers = new Set((dauData || []).map(row => row.user_id_text));
+  const dau = uniqueDauUsers.size;
+
+  // Fetch distinct users in last 7 days (WAU)
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  const { count: wauCount } = await supabase
+  const { data: wauData } = await supabase
     .from('recent_events')
-    .select('user_id_text', { count: 'exact', head: true })
+    .select('user_id_text')
     .gte('created_at', sevenDaysAgo)
     .not('user_id_text', 'is', null);
+
+  // Count unique users for WAU
+  const uniqueWauUsers = new Set((wauData || []).map(row => row.user_id_text));
+  const wau = uniqueWauUsers.size;
 
   // Count reserve_success events in last 7 days
   const { count: reservationsCount } = await supabase
@@ -129,8 +165,8 @@ async function fetchKPIMetrics(): Promise<any> {
     .gte('created_at', sevenDaysAgo);
 
   const metrics = {
-    dau: dauCount || 0,
-    wau: wauCount || 0,
+    dau,
+    wau,
     totalReservations: reservationsCount || 0,
     ttsCostBurnRate: 4.25, // TODO: Connect to TTS cost tracking
   };
@@ -161,36 +197,60 @@ async function fetchFunnelData(params: any): Promise<any> {
   const days = daysMap[dateRange] || 7;
   const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 
-  // Count events for each funnel step
-  const steps = [
-    'view_activity_list',
-    'activity_view',
-    'reserve_start',
-    'reserve_success',
+  // Get all unique event types to build a dynamic funnel
+  const { data: eventTypes } = await supabase
+    .from('recent_events')
+    .select('event_name')
+    .gte('created_at', startDate);
+
+  const uniqueEvents = [...new Set((eventTypes || []).map(e => e.event_name))];
+
+  // Define funnel steps in order (only use events that exist)
+  const allSteps = [
+    { event: 'page_view', label: 'Page View' },
+    { event: 'view_activity_list', label: 'View Activities' },
+    { event: 'activity_view', label: 'View Activity' },
+    { event: 'reserve_start', label: 'Start Reservation' },
+    { event: 'reserve_success', label: 'Complete Reservation' },
   ];
 
+  // Filter to only steps that have data
+  const availableSteps = allSteps.filter(s => uniqueEvents.includes(s.event));
+
+  if (availableSteps.length === 0) {
+    // No funnel data available
+    const data = {
+      steps: [],
+      totalConversion: 0,
+      dateRange,
+    };
+    cache.set(cacheKey, { data, expires: Date.now() + 10 * 60 * 1000 });
+    return data;
+  }
+
+  // Count events for each available step
   const stepCounts = await Promise.all(
-    steps.map(async (step) => {
+    availableSteps.map(async (step) => {
       const { count } = await supabase
         .from('recent_events')
         .select('*', { count: 'exact', head: true })
-        .eq('event_name', step)
+        .eq('event_name', step.event)
         .gte('created_at', startDate);
-      return { step, count: count || 0 };
+      return { step: step.label, count: count || 0 };
     })
   );
 
   const maxCount = Math.max(...stepCounts.map((s) => s.count), 1);
 
-  const funnelSteps = stepCounts.map((s, index) => ({
-    step: ['Discovery', 'View Activity', 'Reserve Start', 'Reserve Success'][index],
+  const funnelSteps = stepCounts.map((s) => ({
+    step: s.step,
     count: s.count,
     conversionRate: (s.count / maxCount) * 100,
   }));
 
   const totalConversion =
-    maxCount > 0
-      ? (stepCounts[stepCounts.length - 1].count / maxCount) * 100
+    maxCount > 0 && stepCounts.length > 0
+      ? (stepCounts[stepCounts.length - 1].count / stepCounts[0].count) * 100
       : 0;
 
   const data = {
@@ -301,7 +361,7 @@ async function fetchAssistantMetrics(): Promise<any> {
 }
 
 /**
- * Fetch retention data
+ * Fetch retention data from Mixpanel
  */
 async function fetchRetentionData(): Promise<any> {
   const cacheKey = 'retention_data';
@@ -311,18 +371,118 @@ async function fetchRetentionData(): Promise<any> {
     return cached.data;
   }
 
-  // TODO: Implement actual retention calculation
-  // For now, return mock data with correct structure
-  const data = [
-    { cohort: 'Nov 15-21', users: 145, d1: 68.2, d7: 42.1, d30: 28.3 },
-    { cohort: 'Nov 8-14', users: 132, d1: 71.2, d7: 45.5, d30: 31.1 },
-    { cohort: 'Nov 1-7', users: 118, d1: 65.3, d7: 38.1, d30: 25.4 },
-  ];
+  if (!MIXPANEL_API_SECRET) {
+    console.warn('[fetchRetentionData] MIXPANEL_API_SECRET not configured');
+    return [];
+  }
 
-  // Cache for 15 minutes
-  cache.set(cacheKey, { data, expires: Date.now() + 15 * 60 * 1000 });
+  try {
+    // Calculate retention for last 3 weeks
+    const cohorts = [];
+    const now = new Date();
 
-  return data;
+    for (let weekOffset = 0; weekOffset < 3; weekOffset++) {
+      const cohortEnd = new Date(now);
+      cohortEnd.setDate(cohortEnd.getDate() - (weekOffset * 7));
+      cohortEnd.setHours(23, 59, 59, 999);
+
+      const cohortStart = new Date(cohortEnd);
+      cohortStart.setDate(cohortStart.getDate() - 6);
+      cohortStart.setHours(0, 0, 0, 0);
+
+      // Format dates for Mixpanel (YYYY-MM-DD)
+      const startDate = cohortStart.toISOString().split('T')[0];
+      const endDate = cohortEnd.toISOString().split('T')[0];
+
+      // JQL script to calculate retention
+      const script = `
+        function main() {
+          // Get users who had any event in the cohort week
+          var cohortUsers = Events({
+            from_date: '${startDate}',
+            to_date: '${endDate}'
+          })
+          .groupBy(['distinct_id'], mixpanel.reducer.count())
+          .map(function(row) {
+            return {
+              user: row.key[0],
+              cohortDate: '${startDate}'
+            };
+          });
+
+          // Calculate D1 retention (returned next day)
+          var d1Date = new Date('${endDate}');
+          d1Date.setDate(d1Date.getDate() + 1);
+          var d1End = new Date(d1Date);
+          d1End.setDate(d1End.getDate() + 1);
+          
+          var d1Users = Events({
+            from_date: d1Date.toISOString().split('T')[0],
+            to_date: d1End.toISOString().split('T')[0]
+          })
+          .groupBy(['distinct_id'], mixpanel.reducer.count())
+          .map(function(row) { return row.key[0]; });
+
+          // Calculate D7 retention (returned in week 2)
+          var d7Start = new Date('${endDate}');
+          d7Start.setDate(d7Start.getDate() + 7);
+          var d7End = new Date(d7Start);
+          d7End.setDate(d7End.getDate() + 1);
+          
+          var d7Users = Events({
+            from_date: d7Start.toISOString().split('T')[0],
+            to_date: d7End.toISOString().split('T')[0]
+          })
+          .groupBy(['distinct_id'], mixpanel.reducer.count())
+          .map(function(row) { return row.key[0]; });
+
+          // Calculate D30 retention (returned in month 2)
+          var d30Start = new Date('${endDate}');
+          d30Start.setDate(d30Start.getDate() + 30);
+          var d30End = new Date(d30Start);
+          d30End.setDate(d30End.getDate() + 1);
+          
+          var d30Users = Events({
+            from_date: d30Start.toISOString().split('T')[0],
+            to_date: d30End.toISOString().split('T')[0]
+          })
+          .groupBy(['distinct_id'], mixpanel.reducer.count())
+          .map(function(row) { return row.key[0]; });
+
+          return {
+            cohortSize: cohortUsers.length,
+            d1Count: d1Users.length,
+            d7Count: d7Users.length,
+            d30Count: d30Users.length
+          };
+        }
+      `;
+
+      const result = await queryMixpanelJQL(script);
+
+      // Format cohort label
+      const cohortLabel = `${cohortStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}-${cohortEnd.getDate()}`;
+
+      const cohortSize = result[0]?.cohortSize || 0;
+
+      cohorts.push({
+        cohort: cohortLabel,
+        users: cohortSize,
+        d1: cohortSize > 0 ? (result[0]?.d1Count / cohortSize) * 100 : 0,
+        d7: cohortSize > 0 ? (result[0]?.d7Count / cohortSize) * 100 : 0,
+        d30: cohortSize > 0 ? (result[0]?.d30Count / cohortSize) * 100 : 0,
+      });
+    }
+
+    // Cache for 15 minutes
+    cache.set(cacheKey, { data: cohorts, expires: Date.now() + 15 * 60 * 1000 });
+
+    return cohorts;
+  } catch (error) {
+    console.error('[fetchRetentionData] Error fetching from Mixpanel:', error);
+    // Return empty array instead of mock data
+    return [];
+  }
 }
 
 /**

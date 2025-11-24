@@ -78,7 +78,7 @@ export function FunnelChart({
           const widthPercent = (step.count / maxCount) * 100;
 
           return (
-            <div key={step.step}>
+            <div key={`${step.step}-${index}`}>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm font-medium">{step.step}</span>
                 <span className="text-sm text-muted-foreground">

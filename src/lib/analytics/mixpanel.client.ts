@@ -38,17 +38,17 @@ async function sanitizeProperties(
   props: Record<string, any>
 ): Promise<Record<string, any>> {
   const sanitized = { ...props };
-  
+
   // Hash sensitive fields
   const sensitiveFields = ['email', 'phone', 'full_name', 'name'];
-  
+
   for (const field of sensitiveFields) {
     if (sanitized[field]) {
       sanitized[`${field}_hash`] = await hashSensitiveData(String(sanitized[field]));
       delete sanitized[field];
     }
   }
-  
+
   return sanitized;
 }
 
@@ -61,7 +61,7 @@ function getDefaultMetadata(): Record<string, any> {
     env: import.meta.env.MODE || 'development',
     timestamp: new Date().toISOString(),
   };
-  
+
   // Add locale if i18next is available
   try {
     const i18nLang = localStorage.getItem('i18nextLng') || navigator.language;
@@ -69,14 +69,14 @@ function getDefaultMetadata(): Record<string, any> {
   } catch (e) {
     metadata.locale = 'unknown';
   }
-  
+
   // Add user agent (truncated)
   if (typeof navigator !== 'undefined') {
     const ua = navigator.userAgent;
     metadata.user_agent = ua.substring(0, 100);
     metadata.platform = navigator.platform;
   }
-  
+
   // Check if user is authenticated (basic check)
   try {
     const hasSession = !!localStorage.getItem('supabase.auth.token');
@@ -84,7 +84,7 @@ function getDefaultMetadata(): Record<string, any> {
   } catch (e) {
     metadata.is_authenticated = false;
   }
-  
+
   return metadata;
 }
 
@@ -93,12 +93,12 @@ function getDefaultMetadata(): Record<string, any> {
  */
 function isAnalyticsDisabled(): boolean {
   if (typeof window === 'undefined') return true;
-  
+
   // Global opt-out flag
   if ((window as any).__TARDEO_ANALYTICS_DISABLED__) {
     return true;
   }
-  
+
   // Check localStorage opt-out
   try {
     const optOut = localStorage.getItem('analytics_opt_out');
@@ -117,31 +117,31 @@ export async function initMixpanel(config: AnalyticsConfig): Promise<void> {
     console.log('[Analytics] Already initialized or initializing');
     return;
   }
-  
+
   // Check if disabled
   if (isAnalyticsDisabled()) {
     console.log('[Analytics] Analytics disabled by user preference');
     return;
   }
-  
+
   // SSR protection
   if (typeof window === 'undefined') {
     console.log('[Analytics] Skipping init in SSR context');
     return;
   }
-  
+
   // Validate token
   if (!config.token || config.token === '__REDACTED__') {
     console.warn('[Analytics] Invalid or missing Mixpanel token');
     return;
   }
-  
+
   isInitializing = true;
-  
+
   try {
     // Dynamic import - doesn't block initial bundle
     const { default: mixpanel } = await import('mixpanel-browser');
-    
+
     const mixpanelConfig: Partial<Config> = {
       debug: config.debug || false,
       track_pageview: false,
@@ -151,11 +151,11 @@ export async function initMixpanel(config: AnalyticsConfig): Promise<void> {
       property_blacklist: [],
       api_host: 'https://api-eu.mixpanel.com',
     };
-    
+
     mixpanel.init(config.token, mixpanelConfig);
     mixpanelInstance = mixpanel;
     isInitialized = true;
-    
+
     // Process queued events
     if (eventQueue.length > 0) {
       for (let i = 0; i < eventQueue.length; i++) {
@@ -190,7 +190,7 @@ export async function trackEvent(
     return;
   }
   lastEventTime = now;
-  
+
   // Queue if not ready
   if (!isInitialized) {
     if (eventQueue.length < 50) {
@@ -202,41 +202,26 @@ export async function trackEvent(
     }
     return;
   }
-  
+
   if (!mixpanelInstance) {
     return;
   }
-  
+
   try {
     const sanitizedProps = properties ? await sanitizeProperties(properties) : {};
     const enrichedProps = {
       ...getDefaultMetadata(),
       ...sanitizedProps,
     };
-    
+
     mixpanelInstance.track(event, enrichedProps);
-    
-    // Also send important events to server (for admin dashboard analytics)
-    const serverTrackedEvents = [
-      'page_view',
-      'view_activity_list',
-      'activity_view',
-      'reserve_start',
-      'reserve_success',
-      'reserve_failed',
-      'assistant_invoked',
-      'assistant_used_tool',
-      'assistant_failure',
-      'favorite_toggled',
-      'filter_applied',
-    ];
-    
-    if (serverTrackedEvents.includes(event)) {
-      // Send to server in background (don't await to avoid blocking)
-      sendToServer(event, enrichedProps).catch(err => {
-        console.warn(`[Analytics] Failed to send ${event} to server:`, err);
-      });
-    }
+
+    // Send ALL events to server (for admin dashboard analytics)
+    // This ensures recent_events table has complete data for accurate metrics
+    console.log('[Analytics] Sending event to server:', event);
+    sendToServer(event, enrichedProps).catch(err => {
+      console.warn(`[Analytics] Failed to send ${event} to server:`, err);
+    });
   } catch (error) {
     console.error(`[Analytics] Error tracking ${event}:`, error);
   }
@@ -249,19 +234,15 @@ async function sendToServer(event: string, properties: Record<string, any>): Pro
   try {
     // Dynamic import to avoid circular dependency
     const { supabase } = await import('@/integrations/supabase/client');
-    
+
     const { data: { session } } = await supabase.auth.getSession();
-    
-    // Only send if user is authenticated
-    if (!session) {
-      return;
-    }
-    
+
+    // Send event with user_id if authenticated, otherwise send anonymously
     await supabase.functions.invoke('mixpanel-proxy', {
       body: {
         event,
         properties,
-        user_id: session.user.id,
+        user_id: session?.user.id || null,
       },
     });
   } catch (error) {
@@ -280,10 +261,10 @@ export function identifyUser(
   if (!isInitialized || !mixpanelInstance) {
     return;
   }
-  
+
   try {
     mixpanelInstance.identify(userId);
-    
+
     if (traits) {
       const safeTraits: Record<string, any> = {};
       const allowedFields = ['role', 'created_at', 'locale', 'plan'];
@@ -306,7 +287,7 @@ export function optOut(): void {
   try {
     localStorage.setItem('analytics_opt_out', 'true');
     (window as any).__TARDEO_ANALYTICS_DISABLED__ = true;
-    
+
     if (mixpanelInstance) {
       mixpanelInstance.opt_out_tracking();
     }
@@ -322,7 +303,7 @@ export function optIn(): void {
   try {
     localStorage.setItem('analytics_opt_out', 'false');
     (window as any).__TARDEO_ANALYTICS_DISABLED__ = false;
-    
+
     if (mixpanelInstance) {
       mixpanelInstance.opt_in_tracking();
     }

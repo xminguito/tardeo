@@ -90,9 +90,9 @@ export function LiveStreamPanel({ events, loading = false }: LiveStreamPanelProp
             </div>
           ) : (
             <div className="space-y-2">
-              {displayedEvents.map((event) => (
+              {displayedEvents.map((event, idx) => (
                 <div
-                  key={event.id}
+                  key={`${event.id}-${idx}`}
                   className="border rounded-lg p-3 text-sm hover:bg-muted/50 transition-colors"
                 >
                   <div className="flex items-center justify-between mb-2">

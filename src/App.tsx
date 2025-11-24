@@ -37,6 +37,9 @@ import { initAnalytics, track } from "@/lib/analytics";
 const AnalyticsDashboard = lazy(() => import("./pages/admin/AnalyticsDashboard"));
 const HeroBannersManager = lazy(() => import("./pages/admin/HeroBannersManager"));
 const UserManagement = lazy(() => import("./pages/admin/UserManagement"));
+const Chat = lazy(() => import("./features/social/pages/Chat"));
+const Friends = lazy(() => import("./features/social/pages/Friends"));
+const UserProfile = lazy(() => import("./features/social/pages/UserProfile"));
  
 const queryClient = new QueryClient();
  
@@ -68,6 +71,23 @@ const AppContent = () => {
           <Route path="/notificaciones" element={<Notifications />} />
           <Route path="/actividades" element={<ActivitiesCalendar />} />
           <Route path="/actividades/:slug" element={<ActivityDetail />} />
+          
+          {/* Social Routes */}
+          <Route path="/chat" element={
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+              <Chat />
+            </Suspense>
+          } />
+          <Route path="/friends" element={
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+              <Friends />
+            </Suspense>
+          } />
+          <Route path="/user/:id" element={
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+              <UserProfile />
+            </Suspense>
+          } />
           
           {/* Admin routes with layout */}
           <Route path="/admin" element={<AdminLayout />}>

@@ -7,10 +7,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import Header from '@/components/Header';
 import PageTransition from '@/components/PageTransition';
 import PageHeader from '@/components/PageHeader';
-import { useFavorites } from '@/features/activities/hooks/useFavorites';
 import {
   LineChart,
   Line,
@@ -63,7 +61,6 @@ const LANGUAGE_NAMES: Record<string, string> = {
 };
 
 export default function VoiceQualityDashboard() {
-  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [languageMetrics, setLanguageMetrics] = useState<LanguageMetrics[]>([]);
@@ -78,12 +75,8 @@ export default function VoiceQualityDashboard() {
   });
   const { toast } = useToast();
   const { isAdmin, loading: adminLoading } = useAdminCheck();
-  const { favorites } = useFavorites(user?.id);
 
-  const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    setUser(user);
-  };
+
 
   const fetchMetrics = async () => {
     try {
@@ -211,9 +204,7 @@ export default function VoiceQualityDashboard() {
     }
   };
 
-  useEffect(() => {
-    checkUser();
-  }, []);
+
 
   useEffect(() => {
     if (isAdmin) {
@@ -260,7 +251,6 @@ export default function VoiceQualityDashboard() {
 
   return (
     <PageTransition>
-      <Header user={user} isUserAdmin={isAdmin || false} favoritesCount={favorites.size} />
       <div className="container mx-auto p-6 space-y-6">
         <PageHeader
           title="Voice Quality Metrics"

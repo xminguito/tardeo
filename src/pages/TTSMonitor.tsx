@@ -8,10 +8,8 @@ import { RefreshCw, AlertTriangle, CheckCircle, Shield, Power, DollarSign, Users
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
-import Header from '@/components/Header';
 import PageTransition from '@/components/PageTransition';
 import PageHeader from '@/components/PageHeader';
-import { useFavorites } from '@/features/activities/hooks/useFavorites';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -60,7 +58,6 @@ interface ActiveAlert {
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 export default function TTSMonitor() {
-  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [metrics, setMetrics] = useState<RealTimeMetrics>({
@@ -91,16 +88,8 @@ export default function TTSMonitor() {
 
   const { toast } = useToast();
   const { isAdmin, loading: adminLoading } = useAdminCheck();
-  const { favorites } = useFavorites(user?.id);
 
-  const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    setUser(user);
-  };
 
-  useEffect(() => {
-    checkUser();
-  }, []);
 
   useEffect(() => {
     if (isAdmin) {
@@ -421,7 +410,6 @@ export default function TTSMonitor() {
 
   return (
     <PageTransition>
-      <Header user={user} isUserAdmin={isAdmin || false} favoritesCount={favorites.size} />
       <div className="container mx-auto p-6 space-y-6">
         <PageHeader
           title="TTS Real-Time Monitor"

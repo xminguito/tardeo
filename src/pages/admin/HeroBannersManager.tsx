@@ -50,6 +50,7 @@ interface HeroBanner {
   description_de?: string;
   description_it?: string;
   image_url: string;
+  image_url_mobile?: string;
   cta_text_es?: string;
   cta_text_en?: string;
   cta_text_ca?: string;
@@ -90,6 +91,7 @@ export default function HeroBannersManager() {
     description_de: '',
     description_it: '',
     image_url: '',
+    image_url_mobile: '',
     cta_text_es: '',
     cta_text_en: '',
     cta_text_ca: '',
@@ -164,13 +166,62 @@ export default function HeroBannersManager() {
 
       toast({
         title: 'Éxito',
-        description: 'Imagen subida correctamente',
+        description: 'Imagen de escritorio subida correctamente',
       });
     } catch (error: any) {
       console.error('Error uploading image:', error);
       toast({
         title: 'Error',
         description: error.message || 'No se pudo subir la imagen',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleMobileImageUpload = async (file: File) => {
+    try {
+      setUploadingImage(true);
+
+      // Validar tamaño (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error('La imagen debe ser menor a 5MB');
+      }
+
+      // Validar tipo
+      if (!file.type.startsWith('image/')) {
+        throw new Error('El archivo debe ser una imagen');
+      }
+
+      // Generar nombre único con prefijo mobile
+      const fileExt = file.name.split('.').pop();
+      const fileName = `mobile-${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      // Subir a Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('hero-banners')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // Obtener URL pública
+      const { data } = supabase.storage
+        .from('hero-banners')
+        .getPublicUrl(filePath);
+
+      setFormData((prev) => ({ ...prev, image_url_mobile: data.publicUrl }));
+
+      toast({
+        title: 'Éxito',
+        description: 'Imagen móvil subida correctamente',
+      });
+    } catch (error: any) {
+      console.error('Error uploading mobile image:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'No se pudo subir la imagen móvil',
         variant: 'destructive',
       });
     } finally {
@@ -247,6 +298,7 @@ export default function HeroBannersManager() {
       description_de: banner.description_de || '',
       description_it: banner.description_it || '',
       image_url: banner.image_url,
+      image_url_mobile: banner.image_url_mobile || '',
       cta_text_es: banner.cta_text_es || '',
       cta_text_en: banner.cta_text_en || '',
       cta_text_ca: banner.cta_text_ca || '',
@@ -353,6 +405,7 @@ export default function HeroBannersManager() {
       description_de: '',
       description_it: '',
       image_url: '',
+      image_url_mobile: '',
       cta_text_es: '',
       cta_text_en: '',
       cta_text_ca: '',
@@ -420,31 +473,70 @@ export default function HeroBannersManager() {
                   </DialogHeader>
 
                   <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Image Upload */}
-                    <div className="space-y-2">
-                      <Label>Imagen del Banner *</Label>
-                      <div className="flex gap-4 items-start">
-                        <div className="flex-1">
-                          <Input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) handleImageUpload(file);
-                            }}
-                            disabled={uploadingImage}
-                          />
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Recomendado: 1600x900px, máx 5MB
-                          </p>
+                    {/* Image Uploads - Desktop and Mobile */}
+                    <div className="space-y-4">
+                      <Label>Imágenes del Banner *</Label>
+                      
+                      {/* Desktop Image */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Imagen de Escritorio *</Label>
+                        <div className="flex gap-4 items-start">
+                          <div className="flex-1">
+                            <Input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleImageUpload(file);
+                              }}
+                              disabled={uploadingImage}
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Recomendado: 1600x900px (landscape), máx 5MB
+                            </p>
+                          </div>
+                          {formData.image_url && (
+                            <div className="flex flex-col items-center gap-1">
+                              <img
+                                src={formData.image_url}
+                                alt="Desktop Preview"
+                                className="w-32 h-18 object-cover rounded border"
+                              />
+                              <span className="text-xs text-muted-foreground">Desktop</span>
+                            </div>
+                          )}
                         </div>
-                        {formData.image_url && (
-                          <img
-                            src={formData.image_url}
-                            alt="Preview"
-                            className="w-32 h-18 object-cover rounded border"
-                          />
-                        )}
+                      </div>
+
+                      {/* Mobile Image */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Imagen Móvil (Opcional)</Label>
+                        <div className="flex gap-4 items-start">
+                          <div className="flex-1">
+                            <Input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleMobileImageUpload(file);
+                              }}
+                              disabled={uploadingImage}
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Recomendado: 800x1200px (portrait), máx 5MB. Si no se sube, se usará la de escritorio.
+                            </p>
+                          </div>
+                          {formData.image_url_mobile && (
+                            <div className="flex flex-col items-center gap-1">
+                              <img
+                                src={formData.image_url_mobile}
+                                alt="Mobile Preview"
+                                className="w-20 h-30 object-cover rounded border"
+                              />
+                              <span className="text-xs text-muted-foreground">Mobile</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
 

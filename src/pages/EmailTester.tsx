@@ -8,28 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import PageHeader from "@/components/PageHeader";
-import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
 import { Mail, Send } from "lucide-react";
-import { useFavorites } from "@/features/activities/hooks/useFavorites";
 
 export default function EmailTester() {
   const { toast } = useToast();
-  const [user, setUser] = useState<any>(null);
-  const { favorites } = useFavorites(user?.id);
   const [emailType, setEmailType] = useState<"confirmation" | "reminder" | "cancellation" | "new_activity">("confirmation");
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    checkUser();
-  }, []);
-
-  const checkUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      setUser(session.user);
-    }
-  };
   const [formData, setFormData] = useState({
     recipientEmail: "",
     recipientName: "",
@@ -104,7 +89,6 @@ export default function EmailTester() {
 
   return (
     <>
-      <Header user={user} favoritesCount={favorites.size} />
       <PageTransition>
         <div className="container mx-auto px-4 py-8">
           <PageHeader

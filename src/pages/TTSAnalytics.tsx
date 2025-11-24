@@ -15,10 +15,8 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
-import Header from '@/components/Header';
 import PageHeader from '@/components/PageHeader';
 import PageTransition from '@/components/PageTransition';
-import { useFavorites } from '@/features/activities/hooks/useFavorites';
 
 const COLORS = {
   elevenlabs: '#8b5cf6',
@@ -40,8 +38,6 @@ interface MetricCard {
 export default function TTSAnalytics() {
   const navigate = useNavigate();
   const { isAdmin, loading } = useAdminCheck(true);
-  const [user, setUser] = useState<any>(null);
-  const { favorites } = useFavorites(user?.id);
 
   const [costData, setCostData] = useState<any[]>([]);
   const [performanceData, setPerformanceData] = useState<any[]>([]);
@@ -52,9 +48,7 @@ export default function TTSAnalytics() {
   const [metrics, setMetrics] = useState<MetricCard[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  useEffect(() => {
-    checkUser();
-  }, []);
+
 
   useEffect(() => {
     if (isAdmin) {
@@ -63,12 +57,7 @@ export default function TTSAnalytics() {
     }
   }, [isAdmin, refreshKey]);
 
-  const checkUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      setUser(session.user);
-    }
-  };
+
 
   const setupRealtime = () => {
     const channel = supabase
@@ -330,11 +319,6 @@ export default function TTSAnalytics() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header 
-        user={user} 
-        isUserAdmin={isAdmin} 
-        favoritesCount={favorites.size}
-      />
       <PageTransition>
         <div className="container mx-auto px-4 py-8 max-w-7xl">
           <div className="flex items-center justify-between mb-6">

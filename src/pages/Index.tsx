@@ -110,6 +110,7 @@ const Index = () => {
         const mappedSlides = bannerData.map((banner) => ({
           id: banner.id,
           image: banner.image_url,
+          mobileImage: banner.image_url_mobile,
           title: (banner as any)[`title_${currentLang}`] || banner.title_es,
           description: (banner as any)[`description_${currentLang}`] || banner.description_es,
           cta: banner.cta_text_es ? {

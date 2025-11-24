@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 interface Slide {
   id: string;
   image: string;
+  mobileImage?: string;
   title: string;
   description: string;
   cta?: {
@@ -134,13 +135,21 @@ export default function HeroSlider({
               {/* Image with gradient overlay */}
               <div className="relative w-full h-full">
                 {shouldLoad ? (
-                  <img
-                    src={slide.image}
-                    alt={slide.title}
-                    className="w-full h-full object-cover"
-                    loading={index === 0 ? 'eager' : 'lazy'}
-                    decoding={index === 0 ? 'sync' : 'async'}
-                  />
+                  <picture>
+                    {slide.mobileImage && (
+                      <source 
+                        media="(max-width: 768px)" 
+                        srcSet={slide.mobileImage}
+                      />
+                    )}
+                    <img
+                      src={slide.image}
+                      alt={slide.title}
+                      className="w-full h-full object-cover"
+                      loading={index === 0 ? 'eager' : 'lazy'}
+                      decoding={index === 0 ? 'sync' : 'async'}
+                    />
+                  </picture>
                 ) : (
                   <div className="w-full h-full bg-muted animate-pulse" />
                 )}

@@ -3,9 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
-import { useFavorites } from '@/features/activities/hooks/useFavorites';
 import { useToast } from '@/hooks/use-toast';
-import Header from '@/components/Header';
 import PageHeader from '@/components/PageHeader';
 import PageTransition from '@/components/PageTransition';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,8 +43,6 @@ export default function TTSAlertsConfig() {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { isAdmin, loading: adminLoading } = useAdminCheck(true);
-  const [user, setUser] = useState<any>(null);
-  const { favorites } = useFavorites(user?.id);
 
   const [emails, setEmails] = useState<AdminEmail[]>([]);
   const [thresholds, setThresholds] = useState<AlertThreshold[]>([]);
@@ -57,9 +53,7 @@ export default function TTSAlertsConfig() {
   const [newName, setNewName] = useState('');
   const [criticalOnly, setCriticalOnly] = useState(false);
 
-  useEffect(() => {
-    checkUser();
-  }, []);
+
 
   useEffect(() => {
     if (isAdmin) {
@@ -67,12 +61,7 @@ export default function TTSAlertsConfig() {
     }
   }, [isAdmin]);
 
-  const checkUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      setUser(session.user);
-    }
-  };
+
 
   const loadData = async () => {
     setLoading(true);
@@ -240,7 +229,6 @@ export default function TTSAlertsConfig() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header user={user} isUserAdmin={isAdmin} favoritesCount={favorites.size} />
       <PageTransition>
         <div className="container mx-auto px-4 py-8 max-w-6xl">
           <PageHeader

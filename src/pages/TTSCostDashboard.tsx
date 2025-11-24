@@ -20,9 +20,7 @@ import {
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { supabase } from '@/integrations/supabase/client';
 import PageHeader from '@/components/PageHeader';
-import Header from '@/components/Header';
 import PageTransition from '@/components/PageTransition';
-import { useFavorites } from '@/features/activities/hooks/useFavorites';
 import {
   estimateCosts,
   analyzeHistoricalCosts,
@@ -39,8 +37,6 @@ export default function TTSCostDashboard() {
   const { t } = useTranslation();
   const { isAdmin, loading: adminLoading } = useAdminCheck(true);
   const { toast } = useToast();
-  const [user, setUser] = useState<any>(null);
-  const { favorites } = useFavorites(user?.id);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -50,9 +46,7 @@ export default function TTSCostDashboard() {
   const [comparison, setComparison] = useState<any>(null);
   const [monthlyUsers, setMonthlyUsers] = useState(1000);
 
-  useEffect(() => {
-    checkUser();
-  }, []);
+
 
   useEffect(() => {
     if (isAdmin) {
@@ -60,12 +54,7 @@ export default function TTSCostDashboard() {
     }
   }, [isAdmin]);
 
-  const checkUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      setUser(session.user);
-    }
-  };
+
 
   const loadDashboardData = async () => {
     try {
@@ -145,11 +134,6 @@ export default function TTSCostDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header
-        user={user}
-        isUserAdmin={isAdmin}
-        favoritesCount={favorites.size}
-      />
       <PageTransition>
         <div className="container mx-auto px-4 py-8 max-w-7xl">
           <div className="flex items-center justify-between mb-6">

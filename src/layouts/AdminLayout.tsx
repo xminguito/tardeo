@@ -4,9 +4,22 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AdminSidebar } from '@/components/AdminSidebar';
+import Header from '@/components/Header';
+import { useFavorites } from '@/features/activities/hooks/useFavorites';
 
 export default function AdminLayout() {
   const { isAdmin, loading } = useAdminCheck(true);
+  const [user, setUser] = useState<any>(null);
+  // useFavorites hook handles the case where userId is undefined gracefully
+  const { favorites } = useFavorites(user?.id);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    checkUser();
+  }, []);
 
   if (loading) {
     return (
@@ -24,7 +37,8 @@ export default function AdminLayout() {
     <SidebarProvider>
       <div className="min-h-screen w-full bg-background flex">
         <AdminSidebar />
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-w-0">
+          <Header user={user} isUserAdmin={true} favoritesCount={favorites.size} />
           <div className="flex items-center gap-2 px-4 py-2 border-b bg-muted/50">
             <SidebarTrigger />
           </div>

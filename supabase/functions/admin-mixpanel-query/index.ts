@@ -341,27 +341,35 @@ serve(async (req) => {
   }
 
   try {
-    // Validate authentication
-    const authHeader = req.headers.get('authorization');
+    // Get current user
+    const authHeader = req.headers.get('Authorization');
+    console.log('[admin-mixpanel-query] Auth header present:', !!authHeader, 'Length:', authHeader?.length);
+
     if (!authHeader) {
+      console.log('[admin-mixpanel-query] Missing authorization header');
       return new Response(
         JSON.stringify({ error: 'Missing authorization header' }),
         { status: 401, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
       );
     }
 
-    // Extract JWT token
-    const token = authHeader.replace('Bearer ', '');
+    // Create a Supabase client with the user's token
+    const supabase = createClient(SUPABASE_URL, ANON_KEY, {
+      global: {
+        headers: { Authorization: authHeader },
+      },
+    });
 
-    // Verify Supabase JWT using service role client
-    const serviceClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    const {
-      data: { user },
-      error: authError,
-    } = await serviceClient.auth.getUser(token);
+    console.log('[admin-mixpanel-query] getUser result:', {
+      hasUser: !!user,
+      userId: user?.id,
+      error: authError?.message
+    });
 
     if (authError || !user) {
+      console.log('[admin-mixpanel-query] Auth failed:', authError?.message || 'No user found');
       return new Response(
         JSON.stringify({ error: 'Unauthorized', details: authError?.message || 'Invalid token' }),
         { status: 401, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
@@ -370,7 +378,10 @@ serve(async (req) => {
 
     // Check if user is admin
     const userIsAdmin = await isAdmin(user.id);
+    console.log('[admin-mixpanel-query] isAdmin check:', { userId: user.id, isAdmin: userIsAdmin });
+
     if (!userIsAdmin) {
+      console.log('[admin-mixpanel-query] User is not admin');
       return new Response(
         JSON.stringify({ error: 'Forbidden: Admin access required' }),
         { status: 403, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }

@@ -371,7 +371,20 @@ serve(async (req) => {
     if (authError || !user) {
       console.log('[admin-mixpanel-query] Auth failed:', authError?.message || 'No user found');
       return new Response(
-        JSON.stringify({ error: 'Unauthorized', details: authError?.message || 'Invalid token' }),
+        JSON.stringify({
+          error: 'Unauthorized',
+          details: authError?.message || 'Invalid token',
+          debug: {
+            authHeaderPresent: !!authHeader,
+            authHeaderLength: authHeader?.length,
+            env: {
+              hasUrl: !!SUPABASE_URL,
+              hasAnonKey: !!ANON_KEY,
+            },
+            userError: authError?.message,
+            hasUser: !!user
+          }
+        }),
         { status: 401, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
       );
     }

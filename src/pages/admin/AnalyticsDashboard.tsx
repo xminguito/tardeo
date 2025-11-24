@@ -109,8 +109,8 @@ export default function AnalyticsDashboard() {
   }
 
   // Check if Mixpanel is configured
-  const mixpanelConfigured = import.meta.env.VITE_MIXPANEL_TOKEN && 
-                             import.meta.env.VITE_MIXPANEL_TOKEN !== '__REDACTED__';
+  const mixpanelConfigured = import.meta.env.VITE_MIXPANEL_TOKEN &&
+    import.meta.env.VITE_MIXPANEL_TOKEN !== '__REDACTED__';
 
   return (
     <PageTransition>
@@ -218,16 +218,30 @@ export default function AnalyticsDashboard() {
 
 async function queryMixpanelAPI(type: string, params?: Record<string, any>): Promise<any> {
   const { supabase } = await import('@/integrations/supabase/client');
-  
+
   const { data, error } = await supabase.functions.invoke('admin-mixpanel-query', {
     body: { type, params },
   });
-  
+
   if (error) {
     console.error(`[Analytics] Query failed for ${type}:`, error);
+
+    // Try to log the response body if available
+    if (error instanceof Error && 'context' in error) {
+      try {
+        const context = (error as any).context;
+        if (context && typeof context.json === 'function') {
+          const body = await context.json();
+          console.error(`[Analytics] Error details for ${type}:`, body);
+        }
+      } catch (e) {
+        console.error('[Analytics] Failed to parse error body:', e);
+      }
+    }
+
     throw error;
   }
-  
+
   return data?.data || data;
 }
 
@@ -256,7 +270,7 @@ async function searchEvents(eventName: string, property?: string): Promise<Event
   // For now, filter from recent_events
   const events = await queryMixpanelAPI('events_tail', { limit: 1000 });
   const filtered = events.filter((e: LiveEvent) => e.eventName === eventName);
-  
+
   return {
     eventName,
     count: filtered.length,

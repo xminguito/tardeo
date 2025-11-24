@@ -173,8 +173,10 @@ serve(async (req) => {
       console.error('[mixpanel-proxy] Insert error (non-blocking):', err);
     });
 
-    // Forward to Mixpanel (blocking - we want to know if it fails)
-    await forwardToMixpanel(event, properties);
+    // Forward to Mixpanel (non-blocking - don't fail if Mixpanel is down)
+    forwardToMixpanel(event, properties).catch((err) => {
+      console.error('[mixpanel-proxy] Mixpanel forward error (non-blocking):', err);
+    });
 
     return new Response(
       JSON.stringify({ ok: true, event }),

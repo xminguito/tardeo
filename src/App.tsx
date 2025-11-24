@@ -40,6 +40,7 @@ const UserManagement = lazy(() => import("./pages/admin/UserManagement"));
 const Chat = lazy(() => import("./features/social/pages/Chat"));
 const Friends = lazy(() => import("./features/social/pages/Friends"));
 const UserProfile = lazy(() => import("./features/social/pages/UserProfile"));
+const ExploreProfiles = lazy(() => import("./features/social/pages/ExploreProfiles"));
  
 const queryClient = new QueryClient();
  
@@ -86,6 +87,11 @@ const AppContent = () => {
           <Route path="/user/:id" element={
             <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
               <UserProfile />
+            </Suspense>
+          } />
+          <Route path="/explorar-perfiles" element={
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+              <ExploreProfiles />
             </Suspense>
           } />
           

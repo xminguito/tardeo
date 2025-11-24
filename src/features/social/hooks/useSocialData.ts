@@ -33,8 +33,9 @@ export const useSocialProfile = (userId: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       let isFollowing = false;
       let friendStatus = null;
+      const isOwnProfile = user?.id === userId;
 
-      if (user) {
+      if (user && !isOwnProfile) {
         const { data: follow } = await supabase
           .from("follows")
           .select("*")
@@ -53,13 +54,23 @@ export const useSocialProfile = (userId: string) => {
         friendStatus = friend?.status || null;
       }
 
+      // Check if profile is public or if user is friend/following
+      const profileVisibility = (profile as any).profile_visibility || 'public';
+      const isPublic = isOwnProfile || profileVisibility === 'public' || 
+        friendStatus === 'accepted' || isFollowing;
+
       return {
         ...profile,
         isFollowing,
         friendStatus,
+        isPublic,
+        isOwnProfile,
       } as SocialProfile & {
         isFollowing: boolean;
         friendStatus: "pending" | "accepted" | "blocked" | null;
+        isPublic: boolean;
+        isOwnProfile: boolean;
+        profile_visibility?: 'public' | 'private';
       };
     },
     enabled: !!userId,

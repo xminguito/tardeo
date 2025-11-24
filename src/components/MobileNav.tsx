@@ -9,7 +9,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Menu, User, Heart, Calendar, Settings, LogIn } from "lucide-react";
+import { Menu, User, Heart, Calendar, Settings, LogIn, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import LanguageSelector from "@/components/LanguageSelector";
@@ -78,6 +78,15 @@ export default function MobileNav({ user, isUserAdmin, favoritesCount }: MobileN
               >
                 <Calendar className="mr-2 h-5 w-5" />
                 {t('home.featuredActivities')}
+              </Button>
+
+              <Button
+                variant="ghost"
+                className="justify-start"
+                onClick={() => handleNavigate("/explorar-perfiles")}
+              >
+                <Users className="mr-2 h-5 w-5" />
+                Explorar Perfiles
               </Button>
 
               {isUserAdmin && (

@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { User, LogOut, Shield, Heart } from "lucide-react";
+import { User, LogOut, Shield, Heart, Lock, Globe } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { z } from "zod";
 import { useFavorites } from "@/features/activities/hooks/useFavorites";
 import PageHeader from "@/components/PageHeader";
@@ -51,7 +52,10 @@ const Profile = () => {
         .single();
 
       if (profileData) {
-        setProfile(profileData);
+        setProfile({
+          ...profileData,
+          profile_visibility: profileData.profile_visibility || 'public',
+        });
         setSelectedInterests(profileData.user_interests?.map((ui: any) => ui.interest_id) || []);
       }
 
@@ -106,6 +110,7 @@ const Profile = () => {
           full_name: profile.full_name,
           bio: profile.bio,
           city: profile.city,
+          profile_visibility: profile.profile_visibility || 'public',
         })
         .eq("id", user.id);
 
@@ -258,6 +263,66 @@ const Profile = () => {
                     {interest.icon} {interest.name}
                   </Badge>
                 ))}
+              </div>
+            </div>
+
+            {/* Privacy Settings */}
+            <div className="pt-4 border-t space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="profile-visibility" className="text-base font-semibold flex items-center gap-2">
+                    {profile?.profile_visibility === 'private' ? (
+                      <Lock className="h-4 w-4" />
+                    ) : (
+                      <Globe className="h-4 w-4" />
+                    )}
+                    Visibilidad del Perfil
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    {profile?.profile_visibility === 'private' 
+                      ? "Tu perfil es privado. Solo tus amigos pueden ver tu contenido completo."
+                      : "Tu perfil es público. Cualquiera puede ver tu contenido."}
+                  </p>
+                </div>
+                <Switch
+                  id="profile-visibility"
+                  checked={profile?.profile_visibility === 'public'}
+                  onCheckedChange={(checked) => {
+                    setProfile({ 
+                      ...profile, 
+                      profile_visibility: checked ? 'public' : 'private' 
+                    });
+                  }}
+                />
+              </div>
+              
+              {/* User ID Display */}
+              <div className="pt-4 border-t">
+                <Label className="text-sm font-semibold">ID de tu Perfil</Label>
+                <div className="mt-2 flex items-center gap-2">
+                  <code className="px-3 py-2 bg-muted rounded-md text-sm font-mono break-all">
+                    {userId}
+                  </code>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(userId || '');
+                      toast({
+                        title: "Copiado",
+                        description: "ID del perfil copiado al portapapeles",
+                      });
+                    }}
+                  >
+                    Copiar
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Comparte este ID para que otros usuarios puedan ver tu perfil:{" "}
+                  <span className="font-mono text-primary">
+                    /user/{userId}
+                  </span>
+                </p>
               </div>
             </div>
 

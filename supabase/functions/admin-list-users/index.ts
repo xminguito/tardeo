@@ -122,7 +122,6 @@ serve(async (req) => {
       last_sign_in_at: authUser.last_sign_in_at,
       role: rolesMap.get(authUser.id),
       email_confirmed_at: authUser.email_confirmed_at,
-      banned_until: authUser.banned_until,
     }));
 
     return new Response(

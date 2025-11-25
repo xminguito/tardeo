@@ -59,7 +59,7 @@ export default function UserManagement() {
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [newRole, setNewRole] = useState<string>('');
+  const [newRole, setNewRole] = useState<'admin' | 'moderator' | 'user' | 'none'>('user');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -114,7 +114,7 @@ export default function UserManagement() {
 
   // Update user role mutation
   const updateRoleMutation = useMutation({
-    mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
+    mutationFn: async ({ userId, role }: { userId: string; role: 'admin' | 'moderator' | 'user' | 'none' }) => {
       if (role === 'none') {
         // Delete role
         const { error } = await supabase
@@ -124,12 +124,21 @@ export default function UserManagement() {
         
         if (error) throw error;
       } else {
-        // Upsert role
-        const { error } = await supabase
+        // Upsert role - first try to update, then insert if not exists
+        const { data: existing } = await supabase
           .from('user_roles')
-          .upsert({ user_id: userId, role }, { onConflict: 'user_id,role' });
-        
-        if (error) throw error;
+          .select('id')
+          .eq('user_id', userId)
+          .eq('role', role)
+          .maybeSingle();
+
+        if (!existing) {
+          const { error } = await supabase
+            .from('user_roles')
+            .insert({ user_id: userId, role });
+          
+          if (error) throw error;
+        }
       }
     },
     onSuccess: () => {
@@ -151,7 +160,8 @@ export default function UserManagement() {
 
   const handleEditUser = (user: UserProfile) => {
     setSelectedUser(user);
-    setNewRole(user.role || 'user');
+    const userRole = user.role as 'admin' | 'moderator' | 'user' | undefined;
+    setNewRole(userRole || 'user');
     setIsEditDialogOpen(true);
   };
 
@@ -387,7 +397,7 @@ export default function UserManagement() {
                 
                 <div className="space-y-2">
                   <Label htmlFor="role">Rol</Label>
-                  <Select value={newRole} onValueChange={setNewRole}>
+                  <Select value={newRole} onValueChange={(value) => setNewRole(value as 'admin' | 'moderator' | 'user' | 'none')}>
                     <SelectTrigger id="role">
                       <SelectValue placeholder="Seleccionar rol" />
                     </SelectTrigger>

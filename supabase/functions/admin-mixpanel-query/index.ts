@@ -125,9 +125,13 @@ async function fetchKPIMetrics(): Promise<any> {
   const cacheKey = "kpi_metrics";
   const cached = cache.get(cacheKey);
 
-  if (cached && cached.expires > Date.now()) {
-    return cached.data;
-  }
+  // Temporarily disable cache for debugging
+  // if (cached && cached.expires > Date.now()) {
+  //   console.log('[fetchKPIMetrics] Returning cached data:', cached.data);
+  //   return cached.data;
+  // }
+
+  console.log("[fetchKPIMetrics] Cache miss or disabled, querying Mixpanel...");
 
   // Calculate dates outside of JQL (in Deno/TypeScript context)
   const today = new Date().toISOString().split("T")[0];
@@ -135,6 +139,12 @@ async function fetchKPIMetrics(): Promise<any> {
     new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split("T")[0];
   const sevenDaysAgo =
     new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
+  console.log("[fetchKPIMetrics] Date range:", {
+    today,
+    yesterday,
+    sevenDaysAgo,
+  });
 
   // Query Mixpanel for DAU (Daily Active Users - last 24 hours)
   const dauScript = `
@@ -185,12 +195,23 @@ function main() {
   `.trim();
 
   try {
+    console.log("[fetchKPIMetrics] Executing Mixpanel JQL queries...");
     // Execute all queries in parallel
     const [dauResult, wauResult, reservationsResult] = await Promise.all([
       queryMixpanelJQL(dauScript),
       queryMixpanelJQL(wauScript),
       queryMixpanelJQL(reservationsScript),
     ]);
+
+    console.log("[fetchKPIMetrics] Mixpanel results:", {
+      dauResult: Array.isArray(dauResult)
+        ? `Array(${dauResult.length})`
+        : dauResult,
+      wauResult: Array.isArray(wauResult)
+        ? `Array(${wauResult.length})`
+        : wauResult,
+      reservationsResult,
+    });
 
     // Count unique users from results
     const dau = Array.isArray(dauResult) ? dauResult.length : 0;
@@ -206,14 +227,21 @@ function main() {
       ttsCostBurnRate: 4.25, // TODO: Connect to TTS cost tracking
     };
 
+    console.log("[fetchKPIMetrics] Final metrics:", metrics);
+
     // Cache for 5 minutes
     cache.set(cacheKey, { data: metrics, expires: Date.now() + 5 * 60 * 1000 });
 
     return metrics;
   } catch (error) {
     console.error("[fetchKPIMetrics] Error querying Mixpanel:", error);
+    console.error(
+      "[fetchKPIMetrics] Error details:",
+      error instanceof Error ? error.message : String(error),
+    );
 
     // Fallback to DB if Mixpanel fails
+    console.log("[fetchKPIMetrics] Falling back to local DB...");
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -228,12 +256,12 @@ function main() {
     );
     const dau = uniqueDauUsers.size;
 
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    const sevenDaysAgoISO = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
       .toISOString();
     const { data: wauData } = await supabase
       .from("recent_events")
       .select("user_id_text")
-      .gte("created_at", sevenDaysAgo)
+      .gte("created_at", sevenDaysAgoISO)
       .not("user_id_text", "is", null);
 
     const uniqueWauUsers = new Set(
@@ -245,14 +273,18 @@ function main() {
       .from("recent_events")
       .select("*", { count: "exact", head: true })
       .eq("event_name", "reserve_success")
-      .gte("created_at", sevenDaysAgo);
+      .gte("created_at", sevenDaysAgoISO);
 
-    return {
+    const fallbackMetrics = {
       dau,
       wau,
       totalReservations: reservationsCount || 0,
       ttsCostBurnRate: 4.25,
     };
+
+    console.log("[fetchKPIMetrics] Fallback metrics:", fallbackMetrics);
+
+    return fallbackMetrics;
   }
 }
 

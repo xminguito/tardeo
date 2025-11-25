@@ -493,6 +493,7 @@ export type Database = {
       messages: {
         Row: {
           ai_generated: boolean | null
+          attachment_url: string | null
           audio_url: string | null
           content: string | null
           content_type: string | null
@@ -505,6 +506,7 @@ export type Database = {
         }
         Insert: {
           ai_generated?: boolean | null
+          attachment_url?: string | null
           audio_url?: string | null
           content?: string | null
           content_type?: string | null
@@ -517,6 +519,7 @@ export type Database = {
         }
         Update: {
           ai_generated?: boolean | null
+          attachment_url?: string | null
           audio_url?: string | null
           content?: string | null
           content_type?: string | null

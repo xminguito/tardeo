@@ -20,9 +20,9 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 
 const MIXPANEL_API_SECRET = Deno.env.get('MIXPANEL_API_SECRET');
 const MIXPANEL_API_HOST = 'https://api-eu.mixpanel.com'; // EU data residency
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
-const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY'); // For JWT validation
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'); // For DB operations
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!; // For JWT validation
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!; // For DB operations
 // Simple in-memory cache
 const cache = new Map<string, { data: any; expires: number }>();
 

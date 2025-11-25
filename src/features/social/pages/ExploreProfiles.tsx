@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, MapPin, Users, Calendar } from "lucide-react";
+import { Search, MapPin, Users, Calendar, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/PageHeader";
 import PageTransition from "@/components/PageTransition";
@@ -13,6 +13,90 @@ import Header from "@/components/Header";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useFavorites } from "@/features/activities/hooks/useFavorites";
+import FollowButton from "@/features/social/components/FollowButton";
+import { useSocialProfile } from "@/features/social/hooks/useSocialData";
+
+const UserCard = ({ profile, formatDate }: { profile: any, formatDate: (d?: string | null) => string | null }) => {
+  const navigate = useNavigate();
+  const { data: socialProfile } = useSocialProfile(profile.id);
+
+  // Prevent hydration/layout shift issues or just show basic if loading
+  // But we need socialProfile for FollowButton
+  
+  return (
+    <Card className="hover:shadow-lg transition-shadow">
+      <CardContent className="p-6">
+        <div 
+          className="flex items-start gap-4 mb-4 cursor-pointer"
+          onClick={() => navigate(`/user/${profile.id}`)}
+        >
+          <Avatar className="w-16 h-16">
+            <AvatarImage src={profile.avatar_url || ""} />
+            <AvatarFallback className="text-lg">
+              {profile.full_name?.charAt(0) || "U"}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold truncate">
+              {profile.full_name || "Usuario"}
+            </h3>
+            {profile.username && (
+              <p className="text-sm text-muted-foreground truncate">
+                @{profile.username}
+              </p>
+            )}
+            {profile.city && (
+              <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+                <MapPin className="h-3 w-3" />
+                <span className="truncate">{profile.city}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {profile.bio && (
+          <p className="text-sm text-muted-foreground line-clamp-2 mb-4 min-h-[2.5rem]">
+            {profile.bio}
+          </p>
+        )}
+
+        <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1">
+              <Users className="h-3 w-3" />
+              <span>{profile.followers_count || 0}</span>
+            </div>
+            {profile.created_at && (
+              <div className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                <span>{formatDate(profile.created_at)}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+            {socialProfile && (
+                <FollowButton 
+                    userId={profile.id} 
+                    isFollowing={socialProfile.isFollowing} 
+                    className="flex-1"
+                />
+            )}
+            <Button 
+                variant="secondary" 
+                size="sm" 
+                className="flex-1"
+                onClick={() => navigate(`/chat?userId=${profile.id}`)}
+            >
+                <MessageCircle className="mr-2 h-4 w-4" />
+                Message
+            </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 export default function ExploreProfiles() {
   const navigate = useNavigate();
@@ -143,62 +227,7 @@ export default function ExploreProfiles() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {profiles.map((profile: any) => (
-              <Card
-                key={profile.id}
-                className="cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => navigate(`/user/${profile.id}`)}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4 mb-4">
-                    <Avatar className="w-16 h-16">
-                      <AvatarImage src={profile.avatar_url || ""} />
-                      <AvatarFallback className="text-lg">
-                        {profile.full_name?.charAt(0) || "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold truncate">
-                        {profile.full_name || "Usuario"}
-                      </h3>
-                      {profile.username && (
-                        <p className="text-sm text-muted-foreground truncate">
-                          @{profile.username}
-                        </p>
-                      )}
-                      {profile.city && (
-                        <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-                          <MapPin className="h-3 w-3" />
-                          <span className="truncate">{profile.city}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {profile.bio && (
-                    <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-                      {profile.bio}
-                    </p>
-                  )}
-
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-1">
-                        <Users className="h-3 w-3" />
-                        <span>{profile.followers_count || 0}</span>
-                      </div>
-                      {profile.created_at && (
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          <span>{formatDate(profile.created_at)}</span>
-                        </div>
-                      )}
-                    </div>
-                    <Button size="sm" variant="outline" className="text-xs">
-                      Ver perfil
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <UserCard key={profile.id} profile={profile} formatDate={formatDate} />
             ))}
           </div>
         )}

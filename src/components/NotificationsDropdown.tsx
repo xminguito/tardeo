@@ -256,14 +256,14 @@ export default function NotificationsDropdown({ userId }: NotificationsDropdownP
                       <h4 className={`font-semibold text-sm ${
                         !notification.read ? 'text-primary' : ''
                       }`}>
-                        {notification.title}
+                        {notification.title.startsWith('notifications.') ? t(notification.title) : notification.title}
                       </h4>
                       {!notification.read && (
                         <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-1" />
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground line-clamp-2 mb-1">
-                      {notification.message}
+                      {notification.message.startsWith('notifications.') ? t(notification.message) : notification.message}
                     </p>
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-muted-foreground">

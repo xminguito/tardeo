@@ -89,8 +89,8 @@ serve(async (req) => {
       await supabase.from("notifications").insert({
         user_id: target_user_id,
         type: "new_follower",
-        title: "New Follower",
-        message: "Someone started following you!", // In a real app, we'd fetch the user's name
+        title: "notifications.newFollowerTitle",
+        message: "notifications.newFollowerMessage",
         read: false,
       });
     } else {

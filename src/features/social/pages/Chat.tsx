@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
+import Header from "@/components/Header";
 
 const Chat = () => {
   const [searchParams] = useSearchParams();
@@ -16,6 +17,8 @@ const Chat = () => {
   
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
   
   const queryClient = useQueryClient();
   const { mutate: sendMessage, isPending: isSending } = useSendMessage();
@@ -23,9 +26,15 @@ const Chat = () => {
 
   // Get current user
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setCurrentUserId(data.user?.id || null);
-    });
+    const fetchUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data.user) {
+        setCurrentUserId(data.user.id);
+        setUser(data.user);
+        setIsUserAdmin(false); // Simplified - chat page doesn't need admin check
+      }
+    };
+    fetchUser();
   }, []);
 
   // Handle userId param (start/open conversation with user)
@@ -128,7 +137,8 @@ const Chat = () => {
 
   return (
     <PageTransition>
-      <div className="flex h-[calc(100vh-4rem)] border-t">
+      <Header user={user} isUserAdmin={isUserAdmin} favoritesCount={0} />
+      <div className="flex h-[calc(100vh-12rem)] border-t">
         {/* Sidebar */}
         <div className="w-1/3 border-r bg-muted/10 hidden md:block">
           <div className="p-4 font-bold border-b">Messages</div>

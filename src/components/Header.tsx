@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { User, Heart, Settings, LogIn, Users } from 'lucide-react';
+import { User, Heart, Settings, LogIn, Users, MessageCircle } from 'lucide-react';
 import LanguageSelector from '@/components/LanguageSelector';
 import LocationSelector from '@/components/LocationSelector';
 import NotificationsDropdown from '@/components/NotificationsDropdown';
@@ -70,6 +70,12 @@ export default function Header({ user, isUserAdmin = false, favoritesCount = 0 }
                     onClick={() => navigate("/explorar-perfiles")}
                   >
                     <Users className="h-5 w-5" />
+                  </Button>
+                  <Button 
+                    variant="secondary" 
+                    onClick={() => navigate("/chat")}
+                  >
+                    <MessageCircle className="h-5 w-5" />
                   </Button>
                 </>
               ) : (

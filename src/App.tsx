@@ -41,6 +41,7 @@ const Chat = lazy(() => import("./features/social/pages/Chat"));
 const Friends = lazy(() => import("./features/social/pages/Friends"));
 const UserProfile = lazy(() => import("./features/social/pages/UserProfile"));
 const ExploreProfiles = lazy(() => import("./features/social/pages/ExploreProfiles"));
+
  
 const queryClient = new QueryClient();
  
@@ -94,6 +95,7 @@ const AppContent = () => {
               <ExploreProfiles />
             </Suspense>
           } />
+
           
           {/* Admin routes with layout */}
           <Route path="/admin" element={<AdminLayout />}>

@@ -158,9 +158,9 @@ export default function HeroSlider({
               </div>
 
               {/* Content */}
-              <div className="absolute inset-0 flex items-end z-20">
+              <div className="absolute inset-0 flex lg:items-end z-20 top-12">
                 <div className="container mx-auto px-4 pb-12 md:pb-16 lg:pb-20">
-                  <div className="max-w-2xl">
+                  <div className="max-w-2xl ml-12">
                     <h2
                       className={cn(
                         'text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 transition-all duration-700',

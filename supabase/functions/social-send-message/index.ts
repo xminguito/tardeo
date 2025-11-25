@@ -177,6 +177,17 @@ serve(async (req) => {
       finalConversationId,
     );
 
+    // Send notification to receiver
+    await supabase.from("notifications").insert({
+      user_id: finalReceiverId,
+      type: "new_message",
+      title: "notifications.newMessageTitle",
+      message: content_type === "audio"
+        ? "notifications.newAudioMessageContent"
+        : "notifications.newMessageContent",
+      read: false,
+    });
+
     // 5. OpenAI Integration (Reply with AI)
     if (reply_with_ai) {
       const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");

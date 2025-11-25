@@ -15,19 +15,19 @@
  * - SUPABASE_SERVICE_ROLE_KEY: Service role key (auto-provided)
  */
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
-const MIXPANEL_API_SECRET = Deno.env.get('MIXPANEL_API_SECRET');
-const MIXPANEL_API_HOST = 'https://api-eu.mixpanel.com'; // EU data residency
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!; // For JWT validation
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!; // For DB operations
+const MIXPANEL_API_SECRET = Deno.env.get("MIXPANEL_API_SECRET");
+const MIXPANEL_API_HOST = "https://api-eu.mixpanel.com"; // EU data residency
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!; // For JWT validation
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!; // For DB operations
 // Simple in-memory cache
 const cache = new Map<string, { data: any; expires: number }>();
 
 interface QueryRequest {
-  type: 'funnel' | 'retention' | 'assistant_metrics' | 'events_tail' | 'kpi';
+  type: "funnel" | "retention" | "assistant_metrics" | "events_tail" | "kpi";
   params?: Record<string, any>;
 }
 
@@ -38,14 +38,14 @@ async function isAdmin(userId: string): Promise<boolean> {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
   const { data, error } = await supabase
-    .from('user_roles')
-    .select('role')
-    .eq('user_id', userId)
-    .eq('role', 'admin')
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "admin")
     .maybeSingle();
 
   if (error) {
-    console.error('[admin-query] Error checking admin role:', error);
+    console.error("[admin-query] Error checking admin role:", error);
     return false;
   }
 
@@ -58,21 +58,21 @@ async function isAdmin(userId: string): Promise<boolean> {
  */
 async function queryMixpanelJQL(script: string): Promise<any> {
   if (!MIXPANEL_API_SECRET) {
-    throw new Error('MIXPANEL_API_SECRET not configured');
+    throw new Error("MIXPANEL_API_SECRET not configured");
   }
 
   const response = await fetch(`${MIXPANEL_API_HOST}/api/2.0/jql`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Authorization': `Basic ${btoa(MIXPANEL_API_SECRET + ':')}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+      "Authorization": `Basic ${btoa(MIXPANEL_API_SECRET + ":")}`,
     },
     body: `script=${encodeURIComponent(script)}`,
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('[Mixpanel JQL] Error:', errorText);
+    console.error("[Mixpanel JQL] Error:", errorText);
     throw new Error(`Mixpanel JQL API error: ${response.status} ${errorText}`);
   }
 
@@ -94,9 +94,9 @@ async function fetchRecentEvents(limit = 100): Promise<any[]> {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
   const { data, error } = await supabase
-    .from('recent_events')
-    .select('*')
-    .order('created_at', { ascending: false })
+    .from("recent_events")
+    .select("*")
+    .order("created_at", { ascending: false })
     .limit(limit);
 
   if (error) {
@@ -108,7 +108,7 @@ async function fetchRecentEvents(limit = 100): Promise<any[]> {
     id: row.id,
     timestamp: row.created_at,
     eventName: row.event_name,
-    userId: row.user_id_text || 'anonymous',
+    userId: row.user_id_text || "anonymous",
     properties: row.properties || {},
   }));
 
@@ -119,69 +119,148 @@ async function fetchRecentEvents(limit = 100): Promise<any[]> {
 }
 
 /**
- * Fetch KPI metrics from Mixpanel or DB
+ * Fetch KPI metrics from Mixpanel
  */
 async function fetchKPIMetrics(): Promise<any> {
-  const cacheKey = 'kpi_metrics';
+  const cacheKey = "kpi_metrics";
   const cached = cache.get(cacheKey);
 
   if (cached && cached.expires > Date.now()) {
     return cached.data;
   }
 
-  // TODO: Replace with actual Mixpanel API calls
-  // For now, return enhanced mock data based on recent_events
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  // Calculate dates outside of JQL (in Deno/TypeScript context)
+  const today = new Date().toISOString().split("T")[0];
+  const yesterday =
+    new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+  const sevenDaysAgo =
+    new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
-  // Fetch distinct users in last 24h (DAU)
-  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const { data: dauData } = await supabase
-    .from('recent_events')
-    .select('user_id_text')
-    .gte('created_at', oneDayAgo)
-    .not('user_id_text', 'is', null);
+  // Query Mixpanel for DAU (Daily Active Users - last 24 hours)
+  const dauScript = `
+function main() {
+  return Events({
+    from_date: "${yesterday}",
+    to_date: "${today}"
+  })
+  .groupByUser()
+  .reduce(function(prev, events) {
+    return {
+      distinct_id: events[0].properties.distinct_id,
+      count: events.length
+    };
+  });
+}
+  `.trim();
 
-  // Count unique users for DAU
-  const uniqueDauUsers = new Set((dauData || []).map(row => row.user_id_text));
-  const dau = uniqueDauUsers.size;
+  // Query Mixpanel for WAU (Weekly Active Users - last 7 days)
+  const wauScript = `
+function main() {
+  return Events({
+    from_date: "${sevenDaysAgo}",
+    to_date: "${today}"
+  })
+  .groupByUser()
+  .reduce(function(prev, events) {
+    return {
+      distinct_id: events[0].properties.distinct_id,
+      count: events.length
+    };
+  });
+}
+  `.trim();
 
-  // Fetch distinct users in last 7 days (WAU)
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  const { data: wauData } = await supabase
-    .from('recent_events')
-    .select('user_id_text')
-    .gte('created_at', sevenDaysAgo)
-    .not('user_id_text', 'is', null);
+  // Query for reservations in last 7 days
+  const reservationsScript = `
+function main() {
+  return Events({
+    from_date: "${sevenDaysAgo}",
+    to_date: "${today}",
+    event_selectors: [{event: "reserve_success"}]
+  })
+  .reduce(function(prev, events) {
+    return events.length;
+  });
+}
+  `.trim();
 
-  // Count unique users for WAU
-  const uniqueWauUsers = new Set((wauData || []).map(row => row.user_id_text));
-  const wau = uniqueWauUsers.size;
+  try {
+    // Execute all queries in parallel
+    const [dauResult, wauResult, reservationsResult] = await Promise.all([
+      queryMixpanelJQL(dauScript),
+      queryMixpanelJQL(wauScript),
+      queryMixpanelJQL(reservationsScript),
+    ]);
 
-  // Count reserve_success events in last 7 days
-  const { count: reservationsCount } = await supabase
-    .from('recent_events')
-    .select('*', { count: 'exact', head: true })
-    .eq('event_name', 'reserve_success')
-    .gte('created_at', sevenDaysAgo);
+    // Count unique users from results
+    const dau = Array.isArray(dauResult) ? dauResult.length : 0;
+    const wau = Array.isArray(wauResult) ? wauResult.length : 0;
+    const totalReservations = typeof reservationsResult === "number"
+      ? reservationsResult
+      : (Array.isArray(reservationsResult) ? reservationsResult[0] || 0 : 0);
 
-  const metrics = {
-    dau,
-    wau,
-    totalReservations: reservationsCount || 0,
-    ttsCostBurnRate: 4.25, // TODO: Connect to TTS cost tracking
-  };
+    const metrics = {
+      dau,
+      wau,
+      totalReservations,
+      ttsCostBurnRate: 4.25, // TODO: Connect to TTS cost tracking
+    };
 
-  // Cache for 5 minutes
-  cache.set(cacheKey, { data: metrics, expires: Date.now() + 5 * 60 * 1000 });
+    // Cache for 5 minutes
+    cache.set(cacheKey, { data: metrics, expires: Date.now() + 5 * 60 * 1000 });
 
-  return metrics;
+    return metrics;
+  } catch (error) {
+    console.error("[fetchKPIMetrics] Error querying Mixpanel:", error);
+
+    // Fallback to DB if Mixpanel fails
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { data: dauData } = await supabase
+      .from("recent_events")
+      .select("user_id_text")
+      .gte("created_at", oneDayAgo)
+      .not("user_id_text", "is", null);
+
+    const uniqueDauUsers = new Set(
+      (dauData || []).map((row) => row.user_id_text),
+    );
+    const dau = uniqueDauUsers.size;
+
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+      .toISOString();
+    const { data: wauData } = await supabase
+      .from("recent_events")
+      .select("user_id_text")
+      .gte("created_at", sevenDaysAgo)
+      .not("user_id_text", "is", null);
+
+    const uniqueWauUsers = new Set(
+      (wauData || []).map((row) => row.user_id_text),
+    );
+    const wau = uniqueWauUsers.size;
+
+    const { count: reservationsCount } = await supabase
+      .from("recent_events")
+      .select("*", { count: "exact", head: true })
+      .eq("event_name", "reserve_success")
+      .gte("created_at", sevenDaysAgo);
+
+    return {
+      dau,
+      wau,
+      totalReservations: reservationsCount || 0,
+      ttsCostBurnRate: 4.25,
+    };
+  }
 }
 
 /**
  * Fetch funnel data
  */
 async function fetchFunnelData(params: any): Promise<any> {
-  const dateRange = params?.dateRange || '7d';
+  const dateRange = params?.dateRange || "7d";
   const cacheKey = `funnel_${dateRange}`;
   const cached = cache.get(cacheKey);
 
@@ -193,29 +272,32 @@ async function fetchFunnelData(params: any): Promise<any> {
   // For now, count events from recent_events table
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-  const daysMap: Record<string, number> = { '7d': 7, '30d': 30, '90d': 90 };
+  const daysMap: Record<string, number> = { "7d": 7, "30d": 30, "90d": 90 };
   const days = daysMap[dateRange] || 7;
-  const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+  const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+    .toISOString();
 
   // Get all unique event types to build a dynamic funnel
   const { data: eventTypes } = await supabase
-    .from('recent_events')
-    .select('event_name')
-    .gte('created_at', startDate);
+    .from("recent_events")
+    .select("event_name")
+    .gte("created_at", startDate);
 
-  const uniqueEvents = [...new Set((eventTypes || []).map(e => e.event_name))];
+  const uniqueEvents = [
+    ...new Set((eventTypes || []).map((e) => e.event_name)),
+  ];
 
   // Define funnel steps in order (only use events that exist)
   const allSteps = [
-    { event: 'page_view', label: 'Page View' },
-    { event: 'view_activity_list', label: 'View Activities' },
-    { event: 'activity_view', label: 'View Activity' },
-    { event: 'reserve_start', label: 'Start Reservation' },
-    { event: 'reserve_success', label: 'Complete Reservation' },
+    { event: "page_view", label: "Page View" },
+    { event: "view_activity_list", label: "View Activities" },
+    { event: "activity_view", label: "View Activity" },
+    { event: "reserve_start", label: "Start Reservation" },
+    { event: "reserve_success", label: "Complete Reservation" },
   ];
 
   // Filter to only steps that have data
-  const availableSteps = allSteps.filter(s => uniqueEvents.includes(s.event));
+  const availableSteps = allSteps.filter((s) => uniqueEvents.includes(s.event));
 
   if (availableSteps.length === 0) {
     // No funnel data available
@@ -232,12 +314,12 @@ async function fetchFunnelData(params: any): Promise<any> {
   const stepCounts = await Promise.all(
     availableSteps.map(async (step) => {
       const { count } = await supabase
-        .from('recent_events')
-        .select('*', { count: 'exact', head: true })
-        .eq('event_name', step.event)
-        .gte('created_at', startDate);
+        .from("recent_events")
+        .select("*", { count: "exact", head: true })
+        .eq("event_name", step.event)
+        .gte("created_at", startDate);
       return { step: step.label, count: count || 0 };
-    })
+    }),
   );
 
   const maxCount = Math.max(...stepCounts.map((s) => s.count), 1);
@@ -248,10 +330,9 @@ async function fetchFunnelData(params: any): Promise<any> {
     conversionRate: (s.count / maxCount) * 100,
   }));
 
-  const totalConversion =
-    maxCount > 0 && stepCounts.length > 0
-      ? (stepCounts[stepCounts.length - 1].count / stepCounts[0].count) * 100
-      : 0;
+  const totalConversion = maxCount > 0 && stepCounts.length > 0
+    ? (stepCounts[stepCounts.length - 1].count / stepCounts[0].count) * 100
+    : 0;
 
   const data = {
     steps: funnelSteps,
@@ -269,7 +350,7 @@ async function fetchFunnelData(params: any): Promise<any> {
  * Fetch assistant metrics
  */
 async function fetchAssistantMetrics(): Promise<any> {
-  const cacheKey = 'assistant_metrics';
+  const cacheKey = "assistant_metrics";
   const cached = cache.get(cacheKey);
 
   if (cached && cached.expires > Date.now()) {
@@ -288,24 +369,24 @@ async function fetchAssistantMetrics(): Promise<any> {
     const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
 
     const { count } = await supabase
-      .from('recent_events')
-      .select('*', { count: 'exact', head: true })
-      .eq('event_name', 'assistant_invoked')
-      .gte('created_at', dayStart.toISOString())
-      .lt('created_at', dayEnd.toISOString());
+      .from("recent_events")
+      .select("*", { count: "exact", head: true })
+      .eq("event_name", "assistant_invoked")
+      .gte("created_at", dayStart.toISOString())
+      .lt("created_at", dayEnd.toISOString());
 
     invocationsPerDay.push({
-      date: dayStart.toISOString().split('T')[0],
+      date: dayStart.toISOString().split("T")[0],
       count: count || 0,
     });
   }
 
   // Get top tools
   const { data: toolEvents } = await supabase
-    .from('recent_events')
-    .select('properties')
-    .eq('event_name', 'assistant_used_tool')
-    .gte('created_at', sevenDaysAgo.toISOString());
+    .from("recent_events")
+    .select("properties")
+    .eq("event_name", "assistant_used_tool")
+    .gte("created_at", sevenDaysAgo.toISOString());
 
   const toolCounts: Record<string, number> = {};
   (toolEvents || []).forEach((event) => {
@@ -325,23 +406,23 @@ async function fetchAssistantMetrics(): Promise<any> {
   let durationCount = 0;
   (toolEvents || []).forEach((event) => {
     const duration = event.properties?.duration_ms;
-    if (typeof duration === 'number') {
+    if (typeof duration === "number") {
       totalDuration += duration;
       durationCount++;
     }
   });
 
   const { count: invocations } = await supabase
-    .from('recent_events')
-    .select('*', { count: 'exact', head: true })
-    .eq('event_name', 'assistant_invoked')
-    .gte('created_at', sevenDaysAgo.toISOString());
+    .from("recent_events")
+    .select("*", { count: "exact", head: true })
+    .eq("event_name", "assistant_invoked")
+    .gte("created_at", sevenDaysAgo.toISOString());
 
   const { count: failures } = await supabase
-    .from('recent_events')
-    .select('*', { count: 'exact', head: true })
-    .eq('event_name', 'assistant_failure')
-    .gte('created_at', sevenDaysAgo.toISOString());
+    .from("recent_events")
+    .select("*", { count: "exact", head: true })
+    .eq("event_name", "assistant_failure")
+    .gte("created_at", sevenDaysAgo.toISOString());
 
   const errorRate = invocations && invocations > 0
     ? ((failures || 0) / invocations) * 100
@@ -364,7 +445,7 @@ async function fetchAssistantMetrics(): Promise<any> {
  * Fetch retention data from Mixpanel
  */
 async function fetchRetentionData(): Promise<any> {
-  const cacheKey = 'retention_data';
+  const cacheKey = "retention_data";
   const cached = cache.get(cacheKey);
 
   if (cached && cached.expires > Date.now()) {
@@ -372,7 +453,7 @@ async function fetchRetentionData(): Promise<any> {
   }
 
   if (!MIXPANEL_API_SECRET) {
-    console.warn('[fetchRetentionData] MIXPANEL_API_SECRET not configured');
+    console.warn("[fetchRetentionData] MIXPANEL_API_SECRET not configured");
     return [];
   }
 
@@ -391,8 +472,8 @@ async function fetchRetentionData(): Promise<any> {
       cohortStart.setHours(0, 0, 0, 0);
 
       // Format dates for Mixpanel (YYYY-MM-DD)
-      const startDate = cohortStart.toISOString().split('T')[0];
-      const endDate = cohortEnd.toISOString().split('T')[0];
+      const startDate = cohortStart.toISOString().split("T")[0];
+      const endDate = cohortEnd.toISOString().split("T")[0];
 
       // JQL script to calculate retention
       const script = `
@@ -461,7 +542,12 @@ async function fetchRetentionData(): Promise<any> {
       const result = await queryMixpanelJQL(script);
 
       // Format cohort label
-      const cohortLabel = `${cohortStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}-${cohortEnd.getDate()}`;
+      const cohortLabel = `${
+        cohortStart.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        })
+      }-${cohortEnd.getDate()}`;
 
       const cohortSize = result[0]?.cohortSize || 0;
 
@@ -475,11 +561,14 @@ async function fetchRetentionData(): Promise<any> {
     }
 
     // Cache for 15 minutes
-    cache.set(cacheKey, { data: cohorts, expires: Date.now() + 15 * 60 * 1000 });
+    cache.set(cacheKey, {
+      data: cohorts,
+      expires: Date.now() + 15 * 60 * 1000,
+    });
 
     return cohorts;
   } catch (error) {
-    console.error('[fetchRetentionData] Error fetching from Mixpanel:', error);
+    console.error("[fetchRetentionData] Error fetching from Mixpanel:", error);
     // Return empty array instead of mock data
     return [];
   }
@@ -490,38 +579,50 @@ async function fetchRetentionData(): Promise<any> {
  */
 serve(async (req) => {
   // CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", {
       headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'authorization, content-type, x-client-info, apikey',
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers":
+          "authorization, content-type, x-client-info, apikey",
       },
     });
   }
 
   try {
     // Get current user
-    const authHeader = req.headers.get('Authorization');
-    console.log('[admin-mixpanel-query] Auth header present:', !!authHeader, 'Length:', authHeader?.length);
+    const authHeader = req.headers.get("Authorization");
+    console.log(
+      "[admin-mixpanel-query] Auth header present:",
+      !!authHeader,
+      "Length:",
+      authHeader?.length,
+    );
 
     if (!authHeader) {
-      console.log('[admin-mixpanel-query] Missing authorization header');
+      console.log("[admin-mixpanel-query] Missing authorization header");
       return new Response(
-        JSON.stringify({ error: 'Missing authorization header' }),
-        { status: 401, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+        JSON.stringify({ error: "Missing authorization header" }),
+        {
+          status: 401,
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          },
+        },
       );
     }
 
     // Extract the token from the Authorization header
-    const token = authHeader.replace('Bearer ', '');
+    const token = authHeader.replace("Bearer ", "");
 
     // Create a Supabase client with the user's token
     const supabase = createClient(SUPABASE_URL, ANON_KEY, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,
-        detectSessionInUrl: false
+        detectSessionInUrl: false,
       },
       global: {
         headers: { Authorization: authHeader },
@@ -529,20 +630,25 @@ serve(async (req) => {
     });
 
     // Pass the token directly to getUser() as per Supabase docs
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const { data: { user }, error: authError } = await supabase.auth.getUser(
+      token,
+    );
 
-    console.log('[admin-mixpanel-query] getUser result:', {
+    console.log("[admin-mixpanel-query] getUser result:", {
       hasUser: !!user,
       userId: user?.id,
-      error: authError?.message
+      error: authError?.message,
     });
 
     if (authError || !user) {
-      console.log('[admin-mixpanel-query] Auth failed:', authError?.message || 'No user found');
+      console.log(
+        "[admin-mixpanel-query] Auth failed:",
+        authError?.message || "No user found",
+      );
       return new Response(
         JSON.stringify({
-          error: 'Unauthorized',
-          details: authError?.message || 'Invalid token',
+          error: "Unauthorized",
+          details: authError?.message || "Invalid token",
           debug: {
             authHeaderPresent: !!authHeader,
             authHeaderLength: authHeader?.length,
@@ -551,22 +657,37 @@ serve(async (req) => {
               hasAnonKey: !!ANON_KEY,
             },
             userError: authError?.message,
-            hasUser: !!user
-          }
+            hasUser: !!user,
+          },
         }),
-        { status: 401, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+        {
+          status: 401,
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          },
+        },
       );
     }
 
     // Check if user is admin
     const userIsAdmin = await isAdmin(user.id);
-    console.log('[admin-mixpanel-query] isAdmin check:', { userId: user.id, isAdmin: userIsAdmin });
+    console.log("[admin-mixpanel-query] isAdmin check:", {
+      userId: user.id,
+      isAdmin: userIsAdmin,
+    });
 
     if (!userIsAdmin) {
-      console.log('[admin-mixpanel-query] User is not admin');
+      console.log("[admin-mixpanel-query] User is not admin");
       return new Response(
-        JSON.stringify({ error: 'Forbidden: Admin access required' }),
-        { status: 403, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+        JSON.stringify({ error: "Forbidden: Admin access required" }),
+        {
+          status: 403,
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          },
+        },
       );
     }
 
@@ -577,23 +698,23 @@ serve(async (req) => {
     let data: any;
 
     switch (type) {
-      case 'kpi':
+      case "kpi":
         data = await fetchKPIMetrics();
         break;
 
-      case 'funnel':
+      case "funnel":
         data = await fetchFunnelData(params);
         break;
 
-      case 'assistant_metrics':
+      case "assistant_metrics":
         data = await fetchAssistantMetrics();
         break;
 
-      case 'retention':
+      case "retention":
         data = await fetchRetentionData();
         break;
 
-      case 'events_tail':
+      case "events_tail":
         const limit = params?.limit || 100;
         data = await fetchRecentEvents(limit);
         break;
@@ -601,30 +722,36 @@ serve(async (req) => {
       default:
         return new Response(
           JSON.stringify({ error: `Unknown query type: ${type}` }),
-          { status: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+          {
+            status: 400,
+            headers: {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
+            },
+          },
         );
     }
 
     return new Response(JSON.stringify({ data, cached: false }), {
       status: 200,
       headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
       },
     });
   } catch (error) {
-    console.error('[admin-mixpanel-query] Error:', error);
+    console.error("[admin-mixpanel-query] Error:", error);
     return new Response(
       JSON.stringify({
-        error: error instanceof Error ? error.message : 'Internal server error',
+        error: error instanceof Error ? error.message : "Internal server error",
       }),
       {
         status: 500,
         headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
         },
-      }
+      },
     );
   }
 });

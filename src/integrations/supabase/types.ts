@@ -226,6 +226,54 @@ export type Database = {
         }
         Relationships: []
       }
+      conversations: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_message: string | null
+          last_message_at: string | null
+          unread_count_a: number | null
+          unread_count_b: number | null
+          user_a: string | null
+          user_b: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_message?: string | null
+          last_message_at?: string | null
+          unread_count_a?: number | null
+          unread_count_b?: number | null
+          user_a?: string | null
+          user_b?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_message?: string | null
+          last_message_at?: string | null
+          unread_count_a?: number | null
+          unread_count_b?: number | null
+          user_a?: string | null
+          user_b?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_user_a_fkey"
+            columns: ["user_a"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_user_b_fkey"
+            columns: ["user_b"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_templates: {
         Row: {
           created_at: string
@@ -259,6 +307,78 @@ export type Database = {
         }
         Relationships: []
       }
+      follows: {
+        Row: {
+          created_at: string | null
+          follower_id: string
+          following_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          follower_id: string
+          following_id: string
+        }
+        Update: {
+          created_at?: string | null
+          follower_id?: string
+          following_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follows_following_id_fkey"
+            columns: ["following_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      friends: {
+        Row: {
+          created_at: string | null
+          friend_id: string
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          friend_id: string
+          status: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          friend_id?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "friends_friend_id_fkey"
+            columns: ["friend_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "friends_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hero_banners: {
         Row: {
           created_at: string
@@ -278,6 +398,7 @@ export type Database = {
           description_it: string | null
           id: string
           image_url: string
+          image_url_mobile: string | null
           is_active: boolean | null
           order_index: number | null
           title_ca: string | null
@@ -306,6 +427,7 @@ export type Database = {
           description_it?: string | null
           id?: string
           image_url: string
+          image_url_mobile?: string | null
           is_active?: boolean | null
           order_index?: number | null
           title_ca?: string | null
@@ -334,6 +456,7 @@ export type Database = {
           description_it?: string | null
           id?: string
           image_url?: string
+          image_url_mobile?: string | null
           is_active?: boolean | null
           order_index?: number | null
           title_ca?: string | null
@@ -366,6 +489,67 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      messages: {
+        Row: {
+          ai_generated: boolean | null
+          audio_url: string | null
+          content: string | null
+          content_type: string | null
+          conversation_id: string | null
+          created_at: string | null
+          id: string
+          read_at: string | null
+          receiver_id: string | null
+          sender_id: string | null
+        }
+        Insert: {
+          ai_generated?: boolean | null
+          audio_url?: string | null
+          content?: string | null
+          content_type?: string | null
+          conversation_id?: string | null
+          created_at?: string | null
+          id?: string
+          read_at?: string | null
+          receiver_id?: string | null
+          sender_id?: string | null
+        }
+        Update: {
+          ai_generated?: boolean | null
+          audio_url?: string | null
+          content?: string | null
+          content_type?: string | null
+          conversation_id?: string | null
+          created_at?: string | null
+          id?: string
+          read_at?: string | null
+          receiver_id?: string | null
+          sender_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notification_settings: {
         Row: {
@@ -446,9 +630,17 @@ export type Database = {
           birth_date: string | null
           city: string | null
           created_at: string | null
+          followers_count: number | null
+          following_count: number | null
+          friends_count: number | null
           full_name: string | null
           id: string
+          is_online: boolean | null
+          last_seen_at: string | null
+          profile_visibility: string | null
           updated_at: string | null
+          username: string | null
+          voice_status: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -456,9 +648,17 @@ export type Database = {
           birth_date?: string | null
           city?: string | null
           created_at?: string | null
+          followers_count?: number | null
+          following_count?: number | null
+          friends_count?: number | null
           full_name?: string | null
           id: string
+          is_online?: boolean | null
+          last_seen_at?: string | null
+          profile_visibility?: string | null
           updated_at?: string | null
+          username?: string | null
+          voice_status?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -466,9 +666,17 @@ export type Database = {
           birth_date?: string | null
           city?: string | null
           created_at?: string | null
+          followers_count?: number | null
+          following_count?: number | null
+          friends_count?: number | null
           full_name?: string | null
           id?: string
+          is_online?: boolean | null
+          last_seen_at?: string | null
+          profile_visibility?: string | null
           updated_at?: string | null
+          username?: string | null
+          voice_status?: string | null
         }
         Relationships: []
       }

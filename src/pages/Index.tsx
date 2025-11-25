@@ -135,7 +135,9 @@ const Index = () => {
         ]);
       }
     } catch (error) {
-      console.error('Error loading hero banners:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error loading hero banners:', error);
+      }
       // Fallback to default
       setHeroSlides([
         {

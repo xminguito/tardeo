@@ -34,10 +34,14 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
     clientTools: {
       searchActivities: async (params: any) => {
         const startTime = Date.now();
-        console.log('[Voice Tool Wrapper] searchActivities called with:', params);
+        if (import.meta.env.DEV) {
+          console.log('[Voice Tool Wrapper] searchActivities called with:', params);
+        }
         try {
           const result = await clientTools.searchActivities(params);
-          console.log('[Voice Tool Wrapper] searchActivities result:', result);
+          if (import.meta.env.DEV) {
+            console.log('[Voice Tool Wrapper] searchActivities result:', result);
+          }
           
           // Analytics: Track assistant_used_tool { tool_name, success: true, duration_ms }
           track('assistant_used_tool', {
@@ -48,7 +52,9 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
           
           return result;
         } catch (error) {
-          console.error('[Voice Tool Wrapper] searchActivities error:', error);
+          if (import.meta.env.DEV) {
+            console.error('[Voice Tool Wrapper] searchActivities error:', error);
+          }
           
           // Analytics: Track assistant_used_tool { tool_name, success: false }
           track('assistant_used_tool', {
@@ -61,10 +67,14 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
       },
       reserveActivity: async (params: any) => {
         const startTime = Date.now();
-        console.log('[Voice Tool Wrapper] reserveActivity called with:', params);
+        if (import.meta.env.DEV) {
+          console.log('[Voice Tool Wrapper] reserveActivity called with:', params);
+        }
         try {
           const result = await clientTools.reserveActivity(params);
-          console.log('[Voice Tool Wrapper] reserveActivity result:', result);
+          if (import.meta.env.DEV) {
+            console.log('[Voice Tool Wrapper] reserveActivity result:', result);
+          }
           
           // Analytics: Track assistant_used_tool { tool_name, success: true, duration_ms }
           track('assistant_used_tool', {
@@ -75,7 +85,9 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
           
           return result;
         } catch (error) {
-          console.error('[Voice Tool Wrapper] reserveActivity error:', error);
+          if (import.meta.env.DEV) {
+            console.error('[Voice Tool Wrapper] reserveActivity error:', error);
+          }
           
           // Analytics: Track assistant_used_tool { tool_name, success: false }
           track('assistant_used_tool', {
@@ -87,33 +99,49 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
         }
       },
       getActivityDetails: async (params: any) => {
-        console.log('[Voice Tool Wrapper] getActivityDetails called with:', params);
+        if (import.meta.env.DEV) {
+          console.log('[Voice Tool Wrapper] getActivityDetails called with:', params);
+        }
         try {
           const result = await clientTools.getActivityDetails(params);
-          console.log('[Voice Tool Wrapper] getActivityDetails result:', result);
+          if (import.meta.env.DEV) {
+            console.log('[Voice Tool Wrapper] getActivityDetails result:', result);
+          }
           return result;
         } catch (error) {
-          console.error('[Voice Tool Wrapper] getActivityDetails error:', error);
+          if (import.meta.env.DEV) {
+            console.error('[Voice Tool Wrapper] getActivityDetails error:', error);
+          }
           return t('voice.errors.getDetails');
         }
       },
       suggestActivities: async (params: any) => {
-        console.log('[Voice Tool Wrapper] suggestActivities called with:', params);
+        if (import.meta.env.DEV) {
+          console.log('[Voice Tool Wrapper] suggestActivities called with:', params);
+        }
         try {
           const result = await clientTools.suggestActivities(params);
-          console.log('[Voice Tool Wrapper] suggestActivities result:', result);
+          if (import.meta.env.DEV) {
+            console.log('[Voice Tool Wrapper] suggestActivities result:', result);
+          }
           return result;
         } catch (error) {
-          console.error('[Voice Tool Wrapper] suggestActivities error:', error);
+          if (import.meta.env.DEV) {
+            console.error('[Voice Tool Wrapper] suggestActivities error:', error);
+          }
           return t('voice.errors.suggestActivities');
         }
       },
       navigateToActivities: async (params: any) => {
         const startTime = Date.now();
-        console.log('[Voice Tool Wrapper] navigateToActivities called with:', params);
+        if (import.meta.env.DEV) {
+          console.log('[Voice Tool Wrapper] navigateToActivities called with:', params);
+        }
         try {
           const result = await clientTools.navigateToActivities(params);
-          console.log('[Voice Tool Wrapper] navigateToActivities result:', result);
+          if (import.meta.env.DEV) {
+            console.log('[Voice Tool Wrapper] navigateToActivities result:', result);
+          }
           
           // Analytics: Track assistant_used_tool { tool_name, success: true, duration_ms }
           track('assistant_used_tool', {
@@ -130,7 +158,9 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
           
           return result;
         } catch (error) {
-          console.error('[Voice Tool Wrapper] navigateToActivities error:', error);
+          if (import.meta.env.DEV) {
+            console.error('[Voice Tool Wrapper] navigateToActivities error:', error);
+          }
           
           // Analytics: Track assistant_used_tool { tool_name, success: false }
           track('assistant_used_tool', {
@@ -142,57 +172,87 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
         }
       },
       setFilter: async (params: any) => {
-        console.log('[Voice Tool Wrapper] setFilter called with:', params);
+        if (import.meta.env.DEV) {
+          console.log('[Voice Tool Wrapper] setFilter called with:', params);
+        }
         try {
           const result = await clientTools.setFilter(params);
-          console.log('[Voice Tool Wrapper] setFilter result:', result);
+          if (import.meta.env.DEV) {
+            console.log('[Voice Tool Wrapper] setFilter result:', result);
+          }
           return result;
         } catch (error) {
-          console.error('[Voice Tool Wrapper] setFilter error:', error);
+          if (import.meta.env.DEV) {
+            console.error('[Voice Tool Wrapper] setFilter error:', error);
+          }
           return t('voice.errors.applyFilter');
         }
       },
       clearFilters: async () => {
-        console.log('[Voice Tool Wrapper] clearFilters called');
+        if (import.meta.env.DEV) {
+          console.log('[Voice Tool Wrapper] clearFilters called');
+        }
         try {
           const result = await clientTools.clearFilters();
-          console.log('[Voice Tool Wrapper] clearFilters result:', result);
+          if (import.meta.env.DEV) {
+            console.log('[Voice Tool Wrapper] clearFilters result:', result);
+          }
           return result;
         } catch (error) {
-          console.error('[Voice Tool Wrapper] clearFilters error:', error);
+          if (import.meta.env.DEV) {
+            console.error('[Voice Tool Wrapper] clearFilters error:', error);
+          }
           return t('voice.errors.clearFilters');
         }
       },
       getMyReservations: async () => {
-        console.log('[Voice Tool Wrapper] getMyReservations called');
+        if (import.meta.env.DEV) {
+          console.log('[Voice Tool Wrapper] getMyReservations called');
+        }
         try {
           const result = await clientTools.getMyReservations();
-          console.log('[Voice Tool Wrapper] getMyReservations result:', result);
+          if (import.meta.env.DEV) {
+            console.log('[Voice Tool Wrapper] getMyReservations result:', result);
+          }
           return result;
         } catch (error) {
-          console.error('[Voice Tool Wrapper] getMyReservations error:', error);
+          if (import.meta.env.DEV) {
+            console.error('[Voice Tool Wrapper] getMyReservations error:', error);
+          }
           return t('voice.errors.getReservations');
         }
       },
       submitRating: async (params: any) => {
-        console.log('[Voice Tool Wrapper] submitRating called with:', params);
+        if (import.meta.env.DEV) {
+          console.log('[Voice Tool Wrapper] submitRating called with:', params);
+        }
         try {
           const result = await clientTools.submitRating(params);
-          console.log('[Voice Tool Wrapper] submitRating result:', result);
+          if (import.meta.env.DEV) {
+            console.log('[Voice Tool Wrapper] submitRating result:', result);
+          }
           return result;
         } catch (error) {
-          console.error('[Voice Tool Wrapper] submitRating error:', error);
+          if (import.meta.env.DEV) {
+            console.error('[Voice Tool Wrapper] submitRating error:', error);
+          }
           return t('voice.errors.submitRating');
         }
       },
       getRatings: async (params: any) => {
-        console.log('[Voice Tool Wrapper] getRatings called with:', params);
+        if (import.meta.env.DEV) {
+          console.log('[Voice Tool Wrapper] getRatings called with:', params);
+        }
         try {
           const result = await clientTools.getRatings(params);
-          console.log('[Voice Tool Wrapper] getRatings result:', result);
+          if (import.meta.env.DEV) {
+            console.log('[Voice Tool Wrapper] getRatings result:', result);
+          }
           return result;
         } catch (error) {
-          console.error('[Voice Tool Wrapper] getRatings error:', error);
+          if (import.meta.env.DEV) {
+            console.error('[Voice Tool Wrapper] getRatings error:', error);
+          }
           return t('voice.errors.getRatings');
         }
       },
@@ -216,7 +276,9 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
       const newSessionId = VoiceMetricsTracker.getSessionId();
       setSessionId(newSessionId);
       
-      console.log('[VoiceAssistant] New session started:', newSessionId);
+      if (import.meta.env.DEV) {
+        console.log('[VoiceAssistant] New session started:', newSessionId);
+      }
       
       // Analytics: Track assistant_invoked { mode: 'voice' }
       track('assistant_invoked', {
@@ -235,7 +297,9 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
       });
     },
     onMessage: (message) => {
-      console.log('Mensaje recibido:', message);
+      if (import.meta.env.DEV) {
+        console.log('Mensaje recibido:', message);
+      }
       
       // Capturar transcripciones del usuario y respuestas del asistente
       if (message.source === 'user' && message.message) {
@@ -273,13 +337,17 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
             language: i18n.language,
             ttsProvider: 'elevenlabs',
           }).catch(err => {
-            console.error('[VoiceAssistant] Failed to track metrics:', err);
+            if (import.meta.env.DEV) {
+              console.error('[VoiceAssistant] Failed to track metrics:', err);
+            }
           });
         }
       }
     },
     onError: (error) => {
-      console.error("Error en conversación:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error en conversación:", error);
+      }
       setIsConnecting(false);
       
       // Analytics: Track assistant_failure { error_code }
@@ -320,8 +388,10 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
         throw new Error('No se pudo obtener la URL de conexión');
       }
 
-      console.log('Iniciando conversación con ElevenLabs...');
-      await conversation.startSession({ 
+      if (import.meta.env.DEV) {
+        console.log('Iniciando conversación con ElevenLabs...');
+      }
+      await conversation.startSession({
         signedUrl: data.signedUrl,
         overrides: {
           agent: {
@@ -330,7 +400,9 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
         },
       });
     } catch (error) {
-      console.error('Error al iniciar conversación:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error al iniciar conversación:', error);
+      }
       setIsConnecting(false);
       toast({
         title: "Error",
@@ -344,7 +416,9 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
     try {
       await conversation.endSession();
     } catch (error) {
-      console.error('Error al terminar conversación:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error al terminar conversación:', error);
+      }
     }
   };
 
@@ -368,7 +442,9 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
     if (wasConnected) {
       try {
         await conversation.endSession();
-        console.log('[VoiceAssistant] Disconnected voice for text-only response');
+        if (import.meta.env.DEV) {
+          console.log('[VoiceAssistant] Disconnected voice for text-only response');
+        }
         
         // Show a subtle toast that voice was disconnected
         toast({
@@ -377,7 +453,9 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
           duration: 2000,
         });
       } catch (error) {
-        console.error('[VoiceAssistant] Error disconnecting voice:', error);
+        if (import.meta.env.DEV) {
+          console.error('[VoiceAssistant] Error disconnecting voice:', error);
+        }
       }
     }
 
@@ -452,7 +530,9 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
         }
       }
     } catch (error) {
-      console.error('Error sending text message:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error sending text message:', error);
+      }
       
       // Analytics: Track assistant_failure { error_code }
       track('assistant_failure', {

@@ -27,11 +27,24 @@ const ChatMessage = ({ message, isOwnMessage }: ChatMessageProps) => {
           </div>
         )}
 
+        {/* Image attachment */}
+        {message.attachment_url && (
+          <div className="mb-2">
+            <img 
+              src={message.attachment_url} 
+              alt="Attachment" 
+              className="max-w-full rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+              onClick={() => window.open(message.attachment_url, '_blank')}
+            />
+          </div>
+        )}
+
+        {/* Audio message */}
         {message.content_type === 'audio' && message.audio_url ? (
           <VoiceMessagePlayer src={message.audio_url} />
-        ) : (
+        ) : message.content_type !== 'image' || message.content !== "📷 Image" ? (
           <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-        )}
+        ) : null}
 
         <div className={cn("text-[10px] mt-1 text-right opacity-70", isOwnMessage ? "text-primary-foreground" : "text-muted-foreground")}>
           {format(new Date(message.created_at), 'HH:mm')}

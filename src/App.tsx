@@ -41,6 +41,7 @@ const Chat = lazy(() => import("./features/social/pages/Chat"));
 const Friends = lazy(() => import("./features/social/pages/Friends"));
 const UserProfile = lazy(() => import("./features/social/pages/UserProfile"));
 const ExploreProfiles = lazy(() => import("./features/social/pages/ExploreProfiles"));
+const FileManager = lazy(() => import("./pages/admin/FileManager"));
 
  
 const queryClient = new QueryClient();
@@ -113,6 +114,11 @@ const AppContent = () => {
             <Route path="usuarios" element={
               <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><p className="text-lg text-muted-foreground">Loading...</p></div>}>
                 <UserManagement />
+              </Suspense>
+            } />
+            <Route path="archivos" element={
+              <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><p className="text-lg text-muted-foreground">Loading...</p></div>}>
+                <FileManager />
               </Suspense>
             } />
             <Route path="notificaciones" element={<NotificationSettings />} />

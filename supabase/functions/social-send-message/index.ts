@@ -31,10 +31,13 @@ serve(async (req) => {
       receiver_id,
       content,
       content_type,
+      attachment_url,
       reply_with_ai,
     } = await req.json();
 
-    if (!content) throw new Error("Message content is required");
+    if (!content && !attachment_url) {
+      throw new Error("Message content or attachment is required");
+    }
 
     let finalConversationId = conversation_id;
     let finalReceiverId = receiver_id;
@@ -137,6 +140,7 @@ serve(async (req) => {
       content,
       content_type: content_type || "text",
       audio_url: audioUrl,
+      attachment_url: attachment_url || null,
       ai_generated: false,
     });
 

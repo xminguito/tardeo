@@ -1,4 +1,4 @@
-import { Languages, Mic, Settings, Bell, DollarSign, BarChart3, Activity, Mail, LayoutDashboard, TrendingUp, Image, Users } from 'lucide-react';
+import { Languages, Mic, Settings, Bell, DollarSign, BarChart3, Activity, Mail, LayoutDashboard, TrendingUp, Image, Users, Folder } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -33,6 +33,11 @@ const adminTools = [
     title: 'Gestión de Usuarios',
     icon: Users,
     path: '/admin/usuarios',
+  },
+  {
+    title: 'Gestión de Archivos',
+    icon: Folder,
+    path: '/admin/archivos',
   },
   {
     title: 'Actualizar Agente de Voz',

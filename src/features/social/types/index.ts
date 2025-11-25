@@ -36,6 +36,7 @@ export interface Message {
   content: string;
   content_type: "text" | "audio" | "image";
   audio_url?: string | null;
+  attachment_url?: string | null;
   ai_generated: boolean;
   read_at: string | null;
   created_at: string;
@@ -46,5 +47,6 @@ export interface SendMessageParams {
   receiver_id?: string;
   content: string;
   content_type?: "text" | "audio" | "image";
+  attachment_url?: string;
   reply_with_ai?: boolean;
 }

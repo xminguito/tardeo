@@ -27,7 +27,13 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!; //
 const cache = new Map<string, { data: any; expires: number }>();
 
 interface QueryRequest {
-  type: "funnel" | "retention" | "assistant_metrics" | "events_tail" | "kpi";
+  type:
+    | "funnel"
+    | "retention"
+    | "assistant_metrics"
+    | "events_tail"
+    | "kpi"
+    | "debug_mixpanel";
   params?: Record<string, any>;
 }
 
@@ -119,122 +125,155 @@ async function fetchRecentEvents(limit = 100): Promise<any[]> {
 }
 
 /**
+ * Query Mixpanel Segmentation API
+ * This is the main API for getting event counts and unique users
+ */
+async function queryMixpanelSegmentation(
+  params: Record<string, string>,
+): Promise<any> {
+  if (!MIXPANEL_API_SECRET) {
+    throw new Error("MIXPANEL_API_SECRET not configured");
+  }
+
+  const queryParams = new URLSearchParams(params);
+  const url = `${MIXPANEL_API_HOST}/api/2.0/segmentation?${queryParams}`;
+
+  console.log(
+    "[Mixpanel Segmentation] Request URL:",
+    url.replace(MIXPANEL_API_SECRET, "REDACTED"),
+  );
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Authorization": `Basic ${btoa(MIXPANEL_API_SECRET + ":")}`,
+      "Accept": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("[Mixpanel Segmentation] Error response:", errorText);
+    throw new Error(`Mixpanel Segmentation API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  console.log(
+    "[Mixpanel Segmentation] Response data:",
+    JSON.stringify(data).substring(0, 200),
+  );
+  return data;
+}
+
+/**
  * Fetch KPI metrics from Mixpanel
  */
 async function fetchKPIMetrics(): Promise<any> {
   const cacheKey = "kpi_metrics";
-  const cached = cache.get(cacheKey);
+  const _cached = cache.get(cacheKey);
 
   // Temporarily disable cache for debugging
-  // if (cached && cached.expires > Date.now()) {
-  //   console.log('[fetchKPIMetrics] Returning cached data:', cached.data);
-  //   return cached.data;
+  // if (_cached && _cached.expires > Date.now()) {
+  //   console.log('[fetchKPIMetrics] Returning cached data:', _cached.data);
+  //   return _cached.data;
   // }
 
-  console.log("[fetchKPIMetrics] Cache miss or disabled, querying Mixpanel...");
+  console.log("[fetchKPIMetrics] Querying Mixpanel Segmentation API...");
 
-  // Calculate dates outside of JQL (in Deno/TypeScript context)
-  const today = new Date().toISOString().split("T")[0];
-  const yesterday =
+  // Calculate dates
+  const today = new Date();
+  const todayStr = today.toISOString().split("T")[0];
+  const yesterdayStr =
     new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-  const sevenDaysAgo =
+  const sevenDaysAgoStr =
     new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
   console.log("[fetchKPIMetrics] Date range:", {
-    today,
-    yesterday,
-    sevenDaysAgo,
+    today: todayStr,
+    yesterday: yesterdayStr,
+    sevenDaysAgo: sevenDaysAgoStr,
   });
-
-  // Query Mixpanel for DAU (Daily Active Users - last 24 hours)
-  // Simpler JQL: just group by user and count
-  const dauScript = `
-function main() {
-  return Events({
-    from_date: "${yesterday}",
-    to_date: "${today}"
-  })
-  .groupByUser(function(state, events) {
-    return events.length > 0 ? 1 : 0;
-  });
-}
-  `.trim();
-
-  // Query Mixpanel for WAU (Weekly Active Users - last 7 days)
-  const wauScript = `
-function main() {
-  return Events({
-    from_date: "${sevenDaysAgo}",
-    to_date: "${today}"
-  })
-  .groupByUser(function(state, events) {
-    return events.length > 0 ? 1 : 0;
-  });
-}
-  `.trim();
-
-  // Query for reservations in last 7 days
-  const reservationsScript = `
-function main() {
-  return Events({
-    from_date: "${sevenDaysAgo}",
-    to_date: "${today}",
-    event_selectors: [{event: "reserve_success"}]
-  })
-  .groupBy([], function(state, events) {
-    return events.length;
-  });
-}
-  `.trim();
 
   try {
-    console.log("[fetchKPIMetrics] Executing Mixpanel JQL queries...");
-    // Execute all queries in parallel
+    // DAU: unique users yesterday to today (last 24h)
+    const dauParams = {
+      event: '["$all"]', // All events
+      type: "unique",
+      unit: "day",
+      from_date: yesterdayStr,
+      to_date: todayStr,
+    };
+
+    // WAU: unique users in last 7 days
+    const wauParams = {
+      event: '["$all"]',
+      type: "unique",
+      unit: "day",
+      from_date: sevenDaysAgoStr,
+      to_date: todayStr,
+    };
+
+    // Reservations count
+    const reservationsParams = {
+      event: '["reserve_success"]',
+      type: "general",
+      unit: "day",
+      from_date: sevenDaysAgoStr,
+      to_date: todayStr,
+    };
+
     const [dauResult, wauResult, reservationsResult] = await Promise.all([
-      queryMixpanelJQL(dauScript),
-      queryMixpanelJQL(wauScript),
-      queryMixpanelJQL(reservationsScript),
+      queryMixpanelSegmentation(dauParams),
+      queryMixpanelSegmentation(wauParams),
+      queryMixpanelSegmentation(reservationsParams),
     ]);
 
-    console.log("[fetchKPIMetrics] Mixpanel results:", {
-      dauResult: Array.isArray(dauResult)
-        ? `Array(${dauResult.length})`
-        : dauResult,
-      wauResult: Array.isArray(wauResult)
-        ? `Array(${wauResult.length})`
-        : wauResult,
-      reservationsResult,
-    });
+    // Segmentation API returns: { data: { series: [...], values: { "event_name": { "YYYY-MM-DD": value } } } }
+    const extractTotal = (result: any): number => {
+      if (!result?.data?.values) return 0;
+      const eventData = Object.values(result.data.values)[0] as any;
+      if (!eventData) return 0;
+      const values = Object.values(eventData) as number[];
+      // For unique counts, take the last (most recent) value
+      return values[values.length - 1] || 0;
+    };
 
-    // Count unique users from results
-    const dau = Array.isArray(dauResult) ? dauResult.length : 0;
-    const wau = Array.isArray(wauResult) ? wauResult.length : 0;
-    const totalReservations = typeof reservationsResult === "number"
-      ? reservationsResult
-      : (Array.isArray(reservationsResult) ? reservationsResult[0] || 0 : 0);
+    const extractSum = (result: any): number => {
+      if (!result?.data?.values) return 0;
+      const eventData = Object.values(result.data.values)[0] as any;
+      if (!eventData) return 0;
+      const values = Object.values(eventData) as number[];
+      return values.reduce((sum, val) => sum + (val || 0), 0);
+    };
+
+    const dau = extractTotal(dauResult);
+    const wau = extractTotal(wauResult);
+    const totalReservations = extractSum(reservationsResult);
 
     const metrics = {
       dau,
       wau,
       totalReservations,
-      ttsCostBurnRate: 4.25, // TODO: Connect to TTS cost tracking
+      ttsCostBurnRate: 4.25,
+      _dataSource: "mixpanel", // Indicate source
     };
 
-    console.log("[fetchKPIMetrics] Final metrics:", metrics);
+    console.log("[fetchKPIMetrics] Final metrics from Mixpanel:", metrics);
 
     // Cache for 5 minutes
     cache.set(cacheKey, { data: metrics, expires: Date.now() + 5 * 60 * 1000 });
 
     return metrics;
   } catch (error) {
-    console.error("[fetchKPIMetrics] Error querying Mixpanel:", error);
+    console.error("[fetchKPIMetrics] ERROR querying Mixpanel:", error);
     console.error(
-      "[fetchKPIMetrics] Error details:",
-      error instanceof Error ? error.message : String(error),
+      "[fetchKPIMetrics] Error stack:",
+      error instanceof Error ? error.stack : "No stack",
     );
 
-    // Fallback to DB if Mixpanel fails
-    console.log("[fetchKPIMetrics] Falling back to local DB...");
+    // Fallback to Supabase
+    console.log("[fetchKPIMetrics] Using Supabase fallback...");
+
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -273,9 +312,14 @@ function main() {
       wau,
       totalReservations: reservationsCount || 0,
       ttsCostBurnRate: 4.25,
+      _dataSource: "supabase_fallback", // Indicate using fallback
+      _error: error instanceof Error ? error.message : "Unknown error",
     };
 
-    console.log("[fetchKPIMetrics] Fallback metrics:", fallbackMetrics);
+    console.log(
+      "[fetchKPIMetrics] Fallback metrics from Supabase:",
+      fallbackMetrics,
+    );
 
     return fallbackMetrics;
   }
@@ -723,6 +767,56 @@ serve(async (req) => {
     let data: any;
 
     switch (type) {
+      case "debug_mixpanel": {
+        // Debug endpoint to test Mixpanel API directly
+        console.log("[admin-mixpanel-query] Debug endpoint called");
+
+        try {
+          const testParams = {
+            event: '["$all"]',
+            type: "unique",
+            unit: "day",
+            from_date:
+              new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split(
+                "T",
+              )[0],
+            to_date: new Date().toISOString().split("T")[0],
+          };
+
+          const result = await queryMixpanelSegmentation(testParams);
+
+          return new Response(
+            JSON.stringify({
+              success: true,
+              mixpanel_response: result,
+              test_params: testParams,
+            }),
+            {
+              status: 200,
+              headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+              },
+            },
+          );
+        } catch (error) {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: error instanceof Error ? error.message : String(error),
+              stack: error instanceof Error ? error.stack : undefined,
+            }),
+            {
+              status: 200, // Return 200 even on error so we can see the error message
+              headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+              },
+            },
+          );
+        }
+      }
+
       case "kpi":
         data = await fetchKPIMetrics();
         break;

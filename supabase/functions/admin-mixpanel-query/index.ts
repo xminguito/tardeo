@@ -147,18 +147,15 @@ async function fetchKPIMetrics(): Promise<any> {
   });
 
   // Query Mixpanel for DAU (Daily Active Users - last 24 hours)
+  // Simpler JQL: just group by user and count
   const dauScript = `
 function main() {
   return Events({
     from_date: "${yesterday}",
     to_date: "${today}"
   })
-  .groupByUser()
-  .reduce(function(prev, events) {
-    return {
-      distinct_id: events[0].properties.distinct_id,
-      count: events.length
-    };
+  .groupByUser(function(state, events) {
+    return events.length > 0 ? 1 : 0;
   });
 }
   `.trim();
@@ -170,12 +167,8 @@ function main() {
     from_date: "${sevenDaysAgo}",
     to_date: "${today}"
   })
-  .groupByUser()
-  .reduce(function(prev, events) {
-    return {
-      distinct_id: events[0].properties.distinct_id,
-      count: events.length
-    };
+  .groupByUser(function(state, events) {
+    return events.length > 0 ? 1 : 0;
   });
 }
   `.trim();
@@ -188,7 +181,7 @@ function main() {
     to_date: "${today}",
     event_selectors: [{event: "reserve_success"}]
   })
-  .reduce(function(prev, events) {
+  .groupBy([], function(state, events) {
     return events.length;
   });
 }

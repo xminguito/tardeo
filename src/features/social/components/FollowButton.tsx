@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useFollow } from "../hooks/useSocialActions";
 import { UserPlus, UserMinus, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface FollowButtonProps {
   userId: string;
@@ -10,6 +11,7 @@ interface FollowButtonProps {
 
 const FollowButton = ({ userId, isFollowing, className }: FollowButtonProps) => {
   const { mutate: follow, isPending } = useFollow();
+  const { t } = useTranslation();
 
   const handleFollow = () => {
     follow({ target_user_id: userId, action: isFollowing ? 'unfollow' : 'follow' });
@@ -28,12 +30,12 @@ const FollowButton = ({ userId, isFollowing, className }: FollowButtonProps) => 
       ) : isFollowing ? (
         <>
           <UserMinus className="mr-2 h-4 w-4" />
-          Unfollow
+          {t('social.unfollow')}
         </>
       ) : (
         <>
           <UserPlus className="mr-2 h-4 w-4" />
-          Follow
+          {t('social.follow')}
         </>
       )}
     </Button>

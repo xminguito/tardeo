@@ -10,8 +10,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
 import Header from "@/components/Header";
+import { useTranslation } from "react-i18next";
 
 const Chat = () => {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const userIdParam = searchParams.get("userId");
   
@@ -133,7 +135,7 @@ const Chat = () => {
     });
   };
 
-  if (!currentUserId) return <div>Loading...</div>;
+  if (!currentUserId) return <div>{t('social.loading')}</div>;
 
   return (
     <PageTransition>
@@ -141,7 +143,7 @@ const Chat = () => {
       <div className="flex h-[calc(100vh-12rem)] border-t">
         {/* Sidebar */}
         <div className="w-1/3 border-r bg-muted/10 hidden md:block">
-          <div className="p-4 font-bold border-b">Messages</div>
+          <div className="p-4 font-bold border-b">{t('social.messages')}</div>
           <ConversationList 
             selectedId={selectedConversationId} 
             onSelect={setSelectedConversationId} 
@@ -165,7 +167,7 @@ const Chat = () => {
                   ))
                 ) : (
                   <div className="text-center text-muted-foreground mt-10">
-                    No messages yet. Say hello!
+                    {t('social.noConversations')}
                   </div>
                 )}
               </div>
@@ -173,7 +175,7 @@ const Chat = () => {
             </>
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground">
-              Select a conversation to start chatting
+              {t('social.noConversations')}
             </div>
           )}
         </div>

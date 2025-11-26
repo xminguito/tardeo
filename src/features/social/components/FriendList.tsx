@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import FriendRequestButton from "./FriendRequestButton";
+import { useTranslation } from "react-i18next";
 
 interface FriendListProps {
   userId: string;
@@ -10,19 +11,26 @@ interface FriendListProps {
 }
 
 const FriendList = ({ userId, type }: FriendListProps) => {
+  const { t } = useTranslation();
   const statusMap = {
     friends: 'accepted',
     requests: 'pending',
     blocked: 'blocked'
   } as const;
 
+  const emptyMessages = {
+    friends: t('social.noFriendsFound'),
+    requests: t('social.noRequestsFound'),
+    blocked: t('social.noBlockedFound')
+  };
+
   const { data: friends, isLoading } = useFriends(userId, statusMap[type]);
   const navigate = useNavigate();
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <div>{t('social.loading')}</div>;
 
   if (!friends?.length) {
-    return <div className="text-muted-foreground p-4">No {type} found.</div>;
+    return <div className="text-muted-foreground p-4">{emptyMessages[type]}</div>;
   }
 
   return (
@@ -53,7 +61,7 @@ const FriendList = ({ userId, type }: FriendListProps) => {
             )}
             {type === 'friends' && (
                <Button variant="outline" size="sm" onClick={() => navigate(`/chat?userId=${item.profile.id}`)}>
-                 Message
+                 {t('social.message')}
                </Button>
             )}
             {type === 'blocked' && (

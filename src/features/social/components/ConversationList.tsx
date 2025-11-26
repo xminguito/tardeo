@@ -2,6 +2,7 @@ import { useConversations } from "../hooks/useSocialData";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
+import { useTranslation } from "react-i18next";
 
 interface ConversationListProps {
   selectedId: string | null;
@@ -9,12 +10,13 @@ interface ConversationListProps {
 }
 
 const ConversationList = ({ selectedId, onSelect }: ConversationListProps) => {
+  const { t } = useTranslation();
   const { data: conversations, isLoading } = useConversations();
 
-  if (isLoading) return <div className="p-4">Loading...</div>;
+  if (isLoading) return <div className="p-4">{t('social.loading')}</div>;
 
   if (!conversations?.length) {
-    return <div className="p-4 text-muted-foreground">No conversations yet.</div>;
+    return <div className="p-4 text-muted-foreground">{t('social.noConversations')}</div>;
   }
 
   return (

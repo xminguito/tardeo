@@ -610,7 +610,7 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
         isTextMessageLoading={isTextMessageLoading}
       />
       
-      <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-2 items-end">
+      <div className="fixed bottom-8 right-8 z-50 flex items-center gap-2 items-end">
         {/* Botón para activar voz cuando el chat está abierto */}
         {showHistory && !isConnected && !isConnecting && (
           <Button

@@ -15,14 +15,12 @@ import { es } from "date-fns/locale";
 import { useFavorites } from "@/features/activities/hooks/useFavorites";
 import FollowButton from "@/features/social/components/FollowButton";
 import { useSocialProfile } from "@/features/social/hooks/useSocialData";
+import { useTranslation } from "react-i18next";
 
-const UserCard = ({ profile, formatDate }: { profile: any, formatDate: (d?: string | null) => string | null }) => {
+const UserCard = ({ profile, formatDate, t }: { profile: any, formatDate: (d?: string | null) => string | null, t: any }) => {
   const navigate = useNavigate();
   const { data: socialProfile } = useSocialProfile(profile.id);
 
-  // Prevent hydration/layout shift issues or just show basic if loading
-  // But we need socialProfile for FollowButton
-  
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardContent className="p-6">
@@ -38,7 +36,7 @@ const UserCard = ({ profile, formatDate }: { profile: any, formatDate: (d?: stri
           </Avatar>
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold truncate">
-              {profile.full_name || "Usuario"}
+              {profile.full_name || t('common.loading')}
             </h3>
             {profile.username && (
               <p className="text-sm text-muted-foreground truncate">
@@ -90,7 +88,7 @@ const UserCard = ({ profile, formatDate }: { profile: any, formatDate: (d?: stri
                 onClick={() => navigate(`/chat?userId=${profile.id}`)}
             >
                 <MessageCircle className="mr-2 h-4 w-4" />
-                Message
+                {t('social.message')}
             </Button>
         </div>
       </CardContent>
@@ -100,6 +98,7 @@ const UserCard = ({ profile, formatDate }: { profile: any, formatDate: (d?: stri
 
 export default function ExploreProfiles() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [user, setUser] = useState<any>(null);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
@@ -166,10 +165,10 @@ export default function ExploreProfiles() {
       <PageTransition>
         <div className="container mx-auto px-4 py-8 max-w-6xl">
           <PageHeader 
-            title="Explorar Perfiles"
+            title={t('social.exploreProfiles')}
             breadcrumbs={[
-              { label: 'Inicio', href: '/' },
-              { label: 'Explorar Perfiles' }
+              { label: t('activities.home'), href: '/' },
+              { label: t('social.exploreProfiles') }
             ]}
           />
 
@@ -178,7 +177,7 @@ export default function ExploreProfiles() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por nombre, usuario, ciudad o biografía..."
+              placeholder={t('social.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -191,7 +190,7 @@ export default function ExploreProfiles() {
           <div className="mb-6 flex items-center gap-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4" />
-              <span>{profiles.length} perfiles públicos encontrados</span>
+              <span>{profiles.length} {t('social.publicProfiles')}</span>
             </div>
           </div>
         )}
@@ -219,15 +218,15 @@ export default function ExploreProfiles() {
               <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground">
                 {searchQuery
-                  ? "No se encontraron perfiles con esa búsqueda"
-                  : "No hay perfiles públicos disponibles"}
+                  ? t('social.noProfilesFound')
+                  : t('social.noPublicProfiles')}
               </p>
             </CardContent>
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {profiles.map((profile: any) => (
-              <UserCard key={profile.id} profile={profile} formatDate={formatDate} />
+              <UserCard key={profile.id} profile={profile} formatDate={formatDate} t={t} />
             ))}
           </div>
         )}

@@ -7,20 +7,22 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTranslation } from "react-i18next";
 
 interface FriendRequestButtonProps {
   userId: string;
   status: 'pending' | 'accepted' | 'blocked' | null;
-  isIncomingRequest?: boolean; // If true, status 'pending' means user received request
+  isIncomingRequest?: boolean;
 }
 
 const FriendRequestButton = ({ userId, status, isIncomingRequest }: FriendRequestButtonProps) => {
+  const { t } = useTranslation();
   const { mutate: updateFriend, isPending } = useFriendRequest();
 
   if (status === 'blocked') {
     return (
       <Button variant="destructive" size="sm" disabled>
-        Blocked
+        {t('social.blocked')}
       </Button>
     );
   }
@@ -31,21 +33,21 @@ const FriendRequestButton = ({ userId, status, isIncomingRequest }: FriendReques
         <DropdownMenuTrigger asChild>
           <Button variant="secondary" size="sm">
             <UserCheck className="mr-2 h-4 w-4" />
-            Friends
+            {t('social.friends')}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
           <DropdownMenuItem 
             className="text-destructive"
-            onClick={() => updateFriend({ target_user_id: userId, action: 'reject' })} // Reject acts as unfriend
+            onClick={() => updateFriend({ target_user_id: userId, action: 'reject' })}
           >
-            Unfriend
+            {t('social.removeFriend')}
           </DropdownMenuItem>
           <DropdownMenuItem 
             className="text-destructive"
             onClick={() => updateFriend({ target_user_id: userId, action: 'block' })}
           >
-            Block
+            {t('social.block')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -61,7 +63,7 @@ const FriendRequestButton = ({ userId, status, isIncomingRequest }: FriendReques
             onClick={() => updateFriend({ target_user_id: userId, action: 'accept' })}
             disabled={isPending}
           >
-            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Accept"}
+            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : t('social.accept')}
           </Button>
           <Button 
             variant="outline" 
@@ -69,14 +71,14 @@ const FriendRequestButton = ({ userId, status, isIncomingRequest }: FriendReques
             onClick={() => updateFriend({ target_user_id: userId, action: 'reject' })}
             disabled={isPending}
           >
-            Reject
+            {t('social.reject')}
           </Button>
         </div>
       );
     } else {
       return (
         <Button variant="secondary" size="sm" disabled>
-          Request Sent
+          {t('social.pending')}
         </Button>
       );
     }
@@ -93,7 +95,7 @@ const FriendRequestButton = ({ userId, status, isIncomingRequest }: FriendReques
       ) : (
         <>
           <UserPlus className="mr-2 h-4 w-4" />
-          Add Friend
+          {t('social.addFriend')}
         </>
       )}
     </Button>

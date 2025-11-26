@@ -10,6 +10,7 @@ import CreateActivityDialog from "@/components/CreateActivityDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useFavorites } from "@/features/activities/hooks/useFavorites";
 import { useUserLocation } from "@/hooks/useUserLocation";
+import { useSliderByPage } from "@/hooks/useSliderByPage";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
 import HeroSlider from "@/components/HeroSlider";
@@ -38,18 +39,18 @@ const Index = () => {
   const [user, setUser] = useState<any>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
-  const [heroSlides, setHeroSlides] = useState<any[]>([]);
-  const [bannersLoading, setBannersLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
   const { isFavorite, toggleFavorite, favorites } = useFavorites(user?.id);
   const { location } = useUserLocation();
+  
+  // Load slider for home page
+  const { slides: heroSlides, loading: bannersLoading } = useSliderByPage('/');
 
   useEffect(() => {
     checkUser();
     loadActivities();
-    loadHeroBanners();
   }, []);
 
   // Recargar actividades cuando cambie la ubicación
@@ -89,71 +90,6 @@ const Index = () => {
       .maybeSingle();
     
     setIsUserAdmin(!!data);
-  };
-
-  const loadHeroBanners = async () => {
-    try {
-      setBannersLoading(true);
-      const { data, error } = await supabase
-        .from('hero_banners')
-        .select('*')
-        .eq('is_active', true)
-        .order('order_index', { ascending: true });
-
-      if (error) throw error;
-
-      const bannerData = data as any[] || [];
-
-      if (bannerData && bannerData.length > 0) {
-        // Map banners to slider format with i18n
-        const currentLang = i18n.language || 'es';
-        const mappedSlides = bannerData.map((banner) => ({
-          id: banner.id,
-          image: banner.image_url,
-          mobileImage: banner.image_url_mobile,
-          title: (banner as any)[`title_${currentLang}`] || banner.title_es,
-          description: (banner as any)[`description_${currentLang}`] || banner.description_es,
-          cta: banner.cta_text_es ? {
-            text: (banner as any)[`cta_text_${currentLang}`] || banner.cta_text_es,
-            link: banner.cta_link || '/actividades',
-          } : undefined,
-        }));
-        setHeroSlides(mappedSlides);
-      } else {
-        // Fallback to default slides if no banners in DB
-        setHeroSlides([
-          {
-            id: '1',
-            image: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=1600&h=900&fit=crop',
-            title: t('home.heroSlide1Title') || 'Descubre actividades increíbles',
-            description: t('home.heroSlide1Desc') || 'Conecta con personas que comparten tus intereses',
-            cta: {
-              text: t('home.exploreActivities') || 'Explorar Actividades',
-              link: '/actividades',
-            },
-          },
-        ]);
-      }
-    } catch (error) {
-      if (import.meta.env.DEV) {
-        console.error('Error loading hero banners:', error);
-      }
-      // Fallback to default
-      setHeroSlides([
-        {
-          id: '1',
-          image: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=1600&h=900&fit=crop',
-          title: t('home.heroSlide1Title') || 'Descubre actividades increíbles',
-          description: t('home.heroSlide1Desc') || 'Conecta con personas que comparten tus intereses',
-          cta: {
-            text: t('home.exploreActivities') || 'Explorar Actividades',
-            link: '/actividades',
-          },
-        },
-      ]);
-    } finally {
-      setBannersLoading(false);
-    }
   };
 
   const loadActivities = async () => {

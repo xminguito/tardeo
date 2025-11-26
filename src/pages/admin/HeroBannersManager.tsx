@@ -1,10 +1,9 @@
 /**
  * Hero Banners Manager - Admin Panel
- * Manage home page slider banners with multi-language support
+ * Manage multiple sliders with banners and page assignments
  */
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -15,6 +14,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -31,12 +38,36 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Plus, Edit, Trash2, Image as ImageIcon, MoveUp, MoveDown, Eye, EyeOff } from 'lucide-react';
+import { 
+  Plus, Edit, Trash2, Image as ImageIcon, MoveUp, MoveDown, 
+  Eye, EyeOff, Layers, Settings2, Globe 
+} from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import PageTransition from '@/components/PageTransition';
 
+// Available pages for slider placement
+const AVAILABLE_PAGES = [
+  { path: '/', label: 'Página Principal (Home)' },
+  { path: '/actividades', label: 'Actividades' },
+  { path: '/explorar-perfiles', label: 'Explorar Perfiles' },
+  { path: '/favoritos', label: 'Favoritos' },
+  { path: '/mi-cuenta', label: 'Mi Cuenta' },
+];
+
+interface Slider {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  page_path: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 interface HeroBanner {
   id: string;
+  slider_id?: string;
   title_es: string;
   title_en?: string;
   title_ca?: string;
@@ -65,19 +96,29 @@ interface HeroBanner {
 }
 
 type BannerFormData = Omit<HeroBanner, 'id' | 'created_at' | 'updated_at'>;
+type SliderFormData = Omit<Slider, 'id' | 'created_at' | 'updated_at'>;
 
 export default function HeroBannersManager() {
   const { isAdmin, loading: adminLoading } = useAdminCheck(true);
-  const navigate = useNavigate();
   const { toast } = useToast();
 
+  // State
+  const [sliders, setSliders] = useState<Slider[]>([]);
+  const [selectedSlider, setSelectedSlider] = useState<Slider | null>(null);
   const [banners, setBanners] = useState<HeroBanner[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  
+  // Banner dialog
+  const [bannerDialogOpen, setBannerDialogOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState<HeroBanner | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  
+  // Slider dialog
+  const [sliderDialogOpen, setSliderDialogOpen] = useState(false);
+  const [editingSlider, setEditingSlider] = useState<Slider | null>(null);
 
-  const [formData, setFormData] = useState<BannerFormData>({
+  const [bannerFormData, setBannerFormData] = useState<BannerFormData>({
+    slider_id: '',
     title_es: '',
     title_en: '',
     title_ca: '',
@@ -103,70 +144,210 @@ export default function HeroBannersManager() {
     is_active: true,
   });
 
+  const [sliderFormData, setSliderFormData] = useState<SliderFormData>({
+    name: '',
+    slug: '',
+    description: '',
+    page_path: '/',
+    is_active: true,
+  });
+
   useEffect(() => {
     if (isAdmin) {
-      loadBanners();
+      loadSliders();
     }
   }, [isAdmin]);
 
-  const loadBanners = async () => {
+  useEffect(() => {
+    if (selectedSlider) {
+      loadBanners(selectedSlider.id);
+    }
+  }, [selectedSlider]);
+
+  const loadSliders = async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('hero_banners')
+        .from('sliders')
         .select('*')
-        .order('order_index', { ascending: true });
+        .order('name', { ascending: true });
 
       if (error) throw error;
-      setBanners((data || []) as any);
-    } catch (error) {
-      console.error('Error loading banners:', error);
-      toast({
-        title: 'Error',
-        description: 'No se pudieron cargar los banners',
-        variant: 'destructive',
-      });
+      
+      const slidersData = (data || []) as Slider[];
+      setSliders(slidersData);
+      
+      // Auto-select first slider
+      if (slidersData.length > 0 && !selectedSlider) {
+        setSelectedSlider(slidersData[0]);
+      }
+    } catch (error: any) {
+      console.error('Error loading sliders:', error);
+      // If sliders table doesn't exist, show migration message
+      if (error.message?.includes('relation') || error.code === '42P01') {
+        toast({
+          title: 'Migración necesaria',
+          description: 'Ejecuta el script MIGRATION_SLIDERS.sql en Supabase SQL Editor',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'No se pudieron cargar los sliders',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleImageUpload = async (file: File) => {
+  const loadBanners = async (sliderId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('hero_banners')
+        .select('*')
+        .eq('slider_id', sliderId)
+        .order('order_index', { ascending: true });
+
+      if (error) throw error;
+      setBanners((data || []) as any);
+    } catch (error: any) {
+      console.error('Error loading banners:', error);
+      // Fallback: load all banners if slider_id column doesn't exist
+      if (error.message?.includes('slider_id')) {
+        const { data } = await supabase
+          .from('hero_banners')
+          .select('*')
+          .order('order_index', { ascending: true });
+        setBanners((data || []) as any);
+      }
+    }
+  };
+
+  // ===== SLIDER CRUD =====
+  const handleSliderSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      if (!sliderFormData.name || !sliderFormData.slug) {
+        toast({
+          title: 'Error',
+          description: 'Nombre y slug son obligatorios',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (editingSlider) {
+        const { error } = await supabase
+          .from('sliders')
+          .update(sliderFormData)
+          .eq('id', editingSlider.id);
+
+        if (error) throw error;
+
+        toast({ title: 'Éxito', description: 'Slider actualizado correctamente' });
+      } else {
+        const { error } = await supabase
+          .from('sliders')
+          .insert([sliderFormData]);
+
+        if (error) throw error;
+
+        toast({ title: 'Éxito', description: 'Slider creado correctamente' });
+      }
+
+      setSliderDialogOpen(false);
+      resetSliderForm();
+      loadSliders();
+    } catch (error: any) {
+      console.error('Error saving slider:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'No se pudo guardar el slider',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeleteSlider = async (slider: Slider) => {
+    if (!confirm(`¿Eliminar el slider "${slider.name}" y todos sus banners?`)) return;
+
+    try {
+      // First delete all banners in this slider
+      await supabase.from('hero_banners').delete().eq('slider_id', slider.id);
+      
+      // Then delete the slider
+      const { error } = await supabase.from('sliders').delete().eq('id', slider.id);
+
+      if (error) throw error;
+
+      toast({ title: 'Éxito', description: 'Slider eliminado correctamente' });
+      
+      if (selectedSlider?.id === slider.id) {
+        setSelectedSlider(null);
+        setBanners([]);
+      }
+      
+      loadSliders();
+    } catch (error: any) {
+      console.error('Error deleting slider:', error);
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const resetSliderForm = () => {
+    setEditingSlider(null);
+    setSliderFormData({
+      name: '',
+      slug: '',
+      description: '',
+      page_path: '/',
+      is_active: true,
+    });
+  };
+
+  // ===== BANNER CRUD =====
+  const handleImageUpload = async (file: File, isMobile = false) => {
     try {
       setUploadingImage(true);
 
-      // Validar tamaño (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         throw new Error('La imagen debe ser menor a 5MB');
       }
 
-      // Validar tipo
       if (!file.type.startsWith('image/')) {
         throw new Error('El archivo debe ser una imagen');
       }
 
-      // Generar nombre único
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const prefix = isMobile ? 'mobile-' : '';
+      const fileName = `${prefix}${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
 
-      // Subir a Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from('hero-banners')
-        .upload(filePath, file);
+        .upload(fileName, file);
 
       if (uploadError) throw uploadError;
 
-      // Obtener URL pública
       const { data } = supabase.storage
         .from('hero-banners')
-        .getPublicUrl(filePath);
+        .getPublicUrl(fileName);
 
-      setFormData((prev) => ({ ...prev, image_url: data.publicUrl }));
+      if (isMobile) {
+        setBannerFormData((prev) => ({ ...prev, image_url_mobile: data.publicUrl }));
+      } else {
+        setBannerFormData((prev) => ({ ...prev, image_url: data.publicUrl }));
+      }
 
       toast({
         title: 'Éxito',
-        description: 'Imagen de escritorio subida correctamente',
+        description: `Imagen ${isMobile ? 'móvil ' : ''}subida correctamente`,
       });
     } catch (error: any) {
       console.error('Error uploading image:', error);
@@ -180,60 +361,11 @@ export default function HeroBannersManager() {
     }
   };
 
-  const handleMobileImageUpload = async (file: File) => {
-    try {
-      setUploadingImage(true);
-
-      // Validar tamaño (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        throw new Error('La imagen debe ser menor a 5MB');
-      }
-
-      // Validar tipo
-      if (!file.type.startsWith('image/')) {
-        throw new Error('El archivo debe ser una imagen');
-      }
-
-      // Generar nombre único con prefijo mobile
-      const fileExt = file.name.split('.').pop();
-      const fileName = `mobile-${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      // Subir a Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from('hero-banners')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      // Obtener URL pública
-      const { data } = supabase.storage
-        .from('hero-banners')
-        .getPublicUrl(filePath);
-
-      setFormData((prev) => ({ ...prev, image_url_mobile: data.publicUrl }));
-
-      toast({
-        title: 'Éxito',
-        description: 'Imagen móvil subida correctamente',
-      });
-    } catch (error: any) {
-      console.error('Error uploading mobile image:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'No se pudo subir la imagen móvil',
-        variant: 'destructive',
-      });
-    } finally {
-      setUploadingImage(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleBannerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
-      if (!formData.title_es || !formData.description_es || !formData.image_url) {
+      if (!bannerFormData.title_es || !bannerFormData.description_es || !bannerFormData.image_url) {
         toast({
           title: 'Error',
           description: 'Los campos en español son obligatorios',
@@ -242,36 +374,31 @@ export default function HeroBannersManager() {
         return;
       }
 
+      const dataToSave = {
+        ...bannerFormData,
+        slider_id: selectedSlider?.id,
+      };
+
       if (editingBanner) {
-        // Update
-        const { error } = await (supabase
-          .from('hero_banners') as any)
-          .update(formData)
+        const { error } = await (supabase.from('hero_banners') as any)
+          .update(dataToSave)
           .eq('id', editingBanner.id);
 
         if (error) throw error;
 
-        toast({
-          title: 'Éxito',
-          description: 'Banner actualizado correctamente',
-        });
+        toast({ title: 'Éxito', description: 'Banner actualizado correctamente' });
       } else {
-        // Create
-        const { error } = await (supabase
-          .from('hero_banners') as any)
-          .insert([{ ...formData, created_by: (await supabase.auth.getUser()).data.user?.id }]);
+        const { error } = await (supabase.from('hero_banners') as any)
+          .insert([{ ...dataToSave, created_by: (await supabase.auth.getUser()).data.user?.id }]);
 
         if (error) throw error;
 
-        toast({
-          title: 'Éxito',
-          description: 'Banner creado correctamente',
-        });
+        toast({ title: 'Éxito', description: 'Banner creado correctamente' });
       }
 
-      setDialogOpen(false);
-      resetForm();
-      loadBanners();
+      setBannerDialogOpen(false);
+      resetBannerForm();
+      if (selectedSlider) loadBanners(selectedSlider.id);
     } catch (error: any) {
       console.error('Error saving banner:', error);
       toast({
@@ -282,9 +409,10 @@ export default function HeroBannersManager() {
     }
   };
 
-  const handleEdit = (banner: HeroBanner) => {
+  const handleEditBanner = (banner: HeroBanner) => {
     setEditingBanner(banner);
-    setFormData({
+    setBannerFormData({
+      slider_id: banner.slider_id,
       title_es: banner.title_es,
       title_en: banner.title_en || '',
       title_ca: banner.title_ca || '',
@@ -309,10 +437,10 @@ export default function HeroBannersManager() {
       order_index: banner.order_index,
       is_active: banner.is_active,
     });
-    setDialogOpen(true);
+    setBannerDialogOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDeleteBanner = async (id: string) => {
     if (!confirm('¿Estás seguro de eliminar este banner?')) return;
 
     try {
@@ -320,17 +448,14 @@ export default function HeroBannersManager() {
 
       if (error) throw error;
 
-      toast({
-        title: 'Éxito',
-        description: 'Banner eliminado correctamente',
-      });
+      toast({ title: 'Éxito', description: 'Banner eliminado correctamente' });
 
-      loadBanners();
+      if (selectedSlider) loadBanners(selectedSlider.id);
     } catch (error: any) {
       console.error('Error deleting banner:', error);
       toast({
         title: 'Error',
-        description: error.message || 'No se pudo eliminar el banner',
+        description: error.message,
         variant: 'destructive',
       });
     }
@@ -338,8 +463,7 @@ export default function HeroBannersManager() {
 
   const handleToggleActive = async (banner: HeroBanner) => {
     try {
-      const { error } = await (supabase
-        .from('hero_banners') as any)
+      const { error } = await (supabase.from('hero_banners') as any)
         .update({ is_active: !banner.is_active })
         .eq('id', banner.id);
 
@@ -350,14 +474,9 @@ export default function HeroBannersManager() {
         description: `Banner ${!banner.is_active ? 'activado' : 'desactivado'}`,
       });
 
-      loadBanners();
+      if (selectedSlider) loadBanners(selectedSlider.id);
     } catch (error: any) {
-      console.error('Error toggling banner:', error);
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
     }
   };
 
@@ -369,7 +488,7 @@ export default function HeroBannersManager() {
       await (supabase.from('hero_banners') as any).update({ order_index: banner.order_index }).eq('id', prevBanner.id);
       await (supabase.from('hero_banners') as any).update({ order_index: prevBanner.order_index }).eq('id', banner.id);
 
-      loadBanners();
+      if (selectedSlider) loadBanners(selectedSlider.id);
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     }
@@ -383,15 +502,16 @@ export default function HeroBannersManager() {
       await (supabase.from('hero_banners') as any).update({ order_index: banner.order_index }).eq('id', nextBanner.id);
       await (supabase.from('hero_banners') as any).update({ order_index: nextBanner.order_index }).eq('id', banner.id);
 
-      loadBanners();
+      if (selectedSlider) loadBanners(selectedSlider.id);
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     }
   };
 
-  const resetForm = () => {
+  const resetBannerForm = () => {
     setEditingBanner(null);
-    setFormData({
+    setBannerFormData({
+      slider_id: selectedSlider?.id,
       title_es: '',
       title_en: '',
       title_ca: '',
@@ -436,235 +556,124 @@ export default function HeroBannersManager() {
 
   return (
     <PageTransition>
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
         <PageHeader
-          title="Gestión de Banners"
-          icon={<ImageIcon className="h-8 w-8 text-primary" />}
+          title="Gestión de Sliders"
+          icon={<Layers className="h-8 w-8 text-primary" />}
           breadcrumbs={[
             { label: 'Admin', href: '/admin' },
-            { label: 'Banners' },
+            { label: 'Sliders' },
           ]}
         />
 
+        {/* Sliders Section */}
         <Card className="mb-6">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Banners del Slider Principal</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings2 className="h-5 w-5" />
+                  Sliders Disponibles
+                </CardTitle>
                 <CardDescription>
-                  Gestiona los banners que aparecen en la página principal
+                  Crea y gestiona sliders para diferentes páginas
                 </CardDescription>
               </div>
-              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <Dialog open={sliderDialogOpen} onOpenChange={setSliderDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button onClick={() => resetForm()}>
+                  <Button onClick={resetSliderForm}>
                     <Plus className="h-4 w-4 mr-2" />
-                    Nuevo Banner
+                    Nuevo Slider
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogContent>
                   <DialogHeader>
                     <DialogTitle>
-                      {editingBanner ? 'Editar Banner' : 'Crear Nuevo Banner'}
+                      {editingSlider ? 'Editar Slider' : 'Crear Nuevo Slider'}
                     </DialogTitle>
                     <DialogDescription>
-                      Completa los campos en español (obligatorio) y opcionalmente en otros idiomas
+                      Define un slider y asígnalo a una página
                     </DialogDescription>
                   </DialogHeader>
 
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Image Uploads - Desktop and Mobile */}
-                    <div className="space-y-4">
-                      <Label>Imágenes del Banner *</Label>
-                      
-                      {/* Desktop Image */}
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium">Imagen de Escritorio *</Label>
-                        <div className="flex gap-4 items-start">
-                          <div className="flex-1">
-                            <Input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) handleImageUpload(file);
-                              }}
-                              disabled={uploadingImage}
-                            />
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Recomendado: 1600x900px (landscape), máx 5MB
-                            </p>
-                          </div>
-                          {formData.image_url && (
-                            <div className="flex flex-col items-center gap-1">
-                              <img
-                                src={formData.image_url}
-                                alt="Desktop Preview"
-                                className="w-32 h-18 object-cover rounded border"
-                              />
-                              <span className="text-xs text-muted-foreground">Desktop</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Mobile Image */}
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium">Imagen Móvil (Opcional)</Label>
-                        <div className="flex gap-4 items-start">
-                          <div className="flex-1">
-                            <Input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) handleMobileImageUpload(file);
-                              }}
-                              disabled={uploadingImage}
-                            />
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Recomendado: 800x1200px (portrait), máx 5MB. Si no se sube, se usará la de escritorio.
-                            </p>
-                          </div>
-                          {formData.image_url_mobile && (
-                            <div className="flex flex-col items-center gap-1">
-                              <img
-                                src={formData.image_url_mobile}
-                                alt="Mobile Preview"
-                                className="w-20 h-30 object-cover rounded border"
-                              />
-                              <span className="text-xs text-muted-foreground">Mobile</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                  <form onSubmit={handleSliderSubmit} className="space-y-4">
+                    <div>
+                      <Label htmlFor="slider_name">Nombre *</Label>
+                      <Input
+                        id="slider_name"
+                        value={sliderFormData.name}
+                        onChange={(e) => setSliderFormData((prev) => ({ 
+                          ...prev, 
+                          name: e.target.value,
+                          slug: e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+                        }))}
+                        placeholder="Slider Promociones"
+                        required
+                      />
                     </div>
 
-                    {/* Multi-language tabs */}
-                    <Tabs defaultValue="es" className="w-full">
-                      <TabsList className="grid w-full grid-cols-6">
-                        <TabsTrigger value="es">🇪🇸 ES *</TabsTrigger>
-                        <TabsTrigger value="en">🇬🇧 EN</TabsTrigger>
-                        <TabsTrigger value="ca">Ⓒ CA</TabsTrigger>
-                        <TabsTrigger value="fr">🇫🇷 FR</TabsTrigger>
-                        <TabsTrigger value="de">🇩🇪 DE</TabsTrigger>
-                        <TabsTrigger value="it">🇮🇹 IT</TabsTrigger>
-                      </TabsList>
-
-                      {(['es', 'en', 'ca', 'fr', 'de', 'it'] as const).map((lang) => (
-                        <TabsContent key={lang} value={lang} className="space-y-4">
-                          <div>
-                            <Label htmlFor={`title_${lang}`}>
-                              Título {lang === 'es' && '*'}
-                            </Label>
-                            <Input
-                              id={`title_${lang}`}
-                              value={formData[`title_${lang}` as keyof BannerFormData] as string}
-                              onChange={(e) =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  [`title_${lang}`]: e.target.value,
-                                }))
-                              }
-                              required={lang === 'es'}
-                              placeholder={`Título en ${lang.toUpperCase()}`}
-                            />
-                          </div>
-
-                          <div>
-                            <Label htmlFor={`description_${lang}`}>
-                              Descripción {lang === 'es' && '*'}
-                            </Label>
-                            <Textarea
-                              id={`description_${lang}`}
-                              value={formData[`description_${lang}` as keyof BannerFormData] as string}
-                              onChange={(e) =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  [`description_${lang}`]: e.target.value,
-                                }))
-                              }
-                              required={lang === 'es'}
-                              placeholder={`Descripción en ${lang.toUpperCase()}`}
-                              rows={3}
-                            />
-                          </div>
-
-                          <div>
-                            <Label htmlFor={`cta_text_${lang}`}>
-                              Texto del Botón (opcional)
-                            </Label>
-                            <Input
-                              id={`cta_text_${lang}`}
-                              value={formData[`cta_text_${lang}` as keyof BannerFormData] as string}
-                              onChange={(e) =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  [`cta_text_${lang}`]: e.target.value,
-                                }))
-                              }
-                              placeholder={`Texto del botón en ${lang.toUpperCase()}`}
-                            />
-                          </div>
-                        </TabsContent>
-                      ))}
-                    </Tabs>
-
-                    {/* CTA Link */}
                     <div>
-                      <Label htmlFor="cta_link">Enlace del Botón (opcional)</Label>
+                      <Label htmlFor="slider_slug">Slug *</Label>
                       <Input
-                        id="cta_link"
-                        value={formData.cta_link}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, cta_link: e.target.value }))}
-                        placeholder="/actividades"
+                        id="slider_slug"
+                        value={sliderFormData.slug}
+                        onChange={(e) => setSliderFormData((prev) => ({ ...prev, slug: e.target.value }))}
+                        placeholder="promociones"
+                        required
                       />
                       <p className="text-xs text-muted-foreground mt-1">
-                        Ruta relativa (e.g. /actividades) o URL completa
+                        Identificador único (solo letras, números y guiones)
                       </p>
                     </div>
 
-                    {/* Settings */}
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id="is_active"
-                          checked={formData.is_active}
-                          onCheckedChange={(checked) =>
-                            setFormData((prev) => ({ ...prev, is_active: checked }))
-                          }
-                        />
-                        <Label htmlFor="is_active">Banner activo</Label>
-                      </div>
-
-                      <div className="flex-1">
-                        <Label htmlFor="order_index">Orden</Label>
-                        <Input
-                          id="order_index"
-                          type="number"
-                          value={formData.order_index}
-                          onChange={(e) =>
-                            setFormData((prev) => ({ ...prev, order_index: parseInt(e.target.value) }))
-                          }
-                          min={1}
-                        />
-                      </div>
+                    <div>
+                      <Label htmlFor="slider_page">Página donde mostrar *</Label>
+                      <Select
+                        value={sliderFormData.page_path}
+                        onValueChange={(value) => setSliderFormData((prev) => ({ ...prev, page_path: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona una página" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {AVAILABLE_PAGES.map((page) => (
+                            <SelectItem key={page.path} value={page.path}>
+                              <div className="flex items-center gap-2">
+                                <Globe className="h-4 w-4" />
+                                {page.label}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
 
-                    {/* Actions */}
+                    <div>
+                      <Label htmlFor="slider_description">Descripción</Label>
+                      <Textarea
+                        id="slider_description"
+                        value={sliderFormData.description || ''}
+                        onChange={(e) => setSliderFormData((prev) => ({ ...prev, description: e.target.value }))}
+                        placeholder="Descripción del slider..."
+                        rows={2}
+                      />
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="slider_active"
+                        checked={sliderFormData.is_active}
+                        onCheckedChange={(checked) => setSliderFormData((prev) => ({ ...prev, is_active: checked }))}
+                      />
+                      <Label htmlFor="slider_active">Slider activo</Label>
+                    </div>
+
                     <div className="flex justify-end gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => {
-                          setDialogOpen(false);
-                          resetForm();
-                        }}
-                      >
+                      <Button type="button" variant="outline" onClick={() => setSliderDialogOpen(false)}>
                         Cancelar
                       </Button>
-                      <Button type="submit" disabled={uploadingImage}>
-                        {editingBanner ? 'Actualizar' : 'Crear'} Banner
+                      <Button type="submit">
+                        {editingSlider ? 'Actualizar' : 'Crear'} Slider
                       </Button>
                     </div>
                   </form>
@@ -675,107 +684,387 @@ export default function HeroBannersManager() {
 
           <CardContent>
             {loading ? (
-              <p className="text-center py-8 text-muted-foreground">Cargando banners...</p>
-            ) : banners.length === 0 ? (
-              <p className="text-center py-8 text-muted-foreground">
-                No hay banners creados. Crea el primero arriba.
-              </p>
+              <p className="text-center py-4 text-muted-foreground">Cargando sliders...</p>
+            ) : sliders.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground mb-4">
+                  No hay sliders creados. Ejecuta la migración SQL primero.
+                </p>
+                <Button variant="outline" onClick={() => window.open('/admin/archivos', '_blank')}>
+                  Ver archivos de migración
+                </Button>
+              </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-20">Orden</TableHead>
-                    <TableHead>Vista Previa</TableHead>
-                    <TableHead>Título</TableHead>
-                    <TableHead>Descripción</TableHead>
-                    <TableHead className="text-center">Estado</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {banners.map((banner, index) => (
-                    <TableRow key={banner.id}>
-                      <TableCell className="font-mono">
-                        <div className="flex flex-col gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleMoveUp(banner)}
-                            disabled={index === 0}
-                          >
-                            <MoveUp className="h-3 w-3" />
-                          </Button>
-                          <span className="text-xs text-center">{banner.order_index}</span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleMoveDown(banner)}
-                            disabled={index === banners.length - 1}
-                          >
-                            <MoveDown className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <img
-                          src={banner.image_url}
-                          alt={banner.title_es}
-                          className="w-32 h-18 object-cover rounded"
-                        />
-                      </TableCell>
-                      <TableCell className="max-w-xs">
-                        <div className="font-medium truncate">{banner.title_es}</div>
-                        {banner.cta_text_es && (
-                          <div className="text-xs text-muted-foreground">
-                            CTA: {banner.cta_text_es}
-                          </div>
+              <div className="flex flex-wrap gap-2">
+                {sliders.map((slider) => (
+                  <div
+                    key={slider.id}
+                    className={`
+                      flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-colors
+                      ${selectedSlider?.id === slider.id 
+                        ? 'bg-primary/10 border-primary' 
+                        : 'hover:bg-muted/50'
+                      }
+                    `}
+                    onClick={() => setSelectedSlider(slider)}
+                  >
+                    <div className="flex-1">
+                      <div className="font-medium flex items-center gap-2">
+                        {slider.name}
+                        {!slider.is_active && (
+                          <Badge variant="secondary" className="text-xs">Inactivo</Badge>
                         )}
-                      </TableCell>
-                      <TableCell className="max-w-sm">
-                        <div className="text-sm text-muted-foreground truncate">
-                          {banner.description_es}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleToggleActive(banner)}
-                        >
-                          {banner.is_active ? (
-                            <Eye className="h-4 w-4 text-green-600" />
-                          ) : (
-                            <EyeOff className="h-4 w-4 text-gray-400" />
-                          )}
-                        </Button>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex gap-2 justify-end">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(banner)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDelete(banner.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                      </div>
+                      <div className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Globe className="h-3 w-3" />
+                        {slider.page_path}
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingSlider(slider);
+                          setSliderFormData({
+                            name: slider.name,
+                            slug: slider.slug,
+                            description: slider.description || '',
+                            page_path: slider.page_path,
+                            is_active: slider.is_active,
+                          });
+                          setSliderDialogOpen(true);
+                        }}
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteSlider(slider);
+                        }}
+                      >
+                        <Trash2 className="h-3 w-3 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </CardContent>
         </Card>
+
+        {/* Banners Section */}
+        {selectedSlider && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <ImageIcon className="h-5 w-5" />
+                    Banners de "{selectedSlider.name}"
+                  </CardTitle>
+                  <CardDescription>
+                    Página: {AVAILABLE_PAGES.find(p => p.path === selectedSlider.page_path)?.label || selectedSlider.page_path}
+                  </CardDescription>
+                </div>
+                <Dialog open={bannerDialogOpen} onOpenChange={setBannerDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button onClick={resetBannerForm}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Nuevo Banner
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editingBanner ? 'Editar Banner' : 'Crear Nuevo Banner'}
+                      </DialogTitle>
+                      <DialogDescription>
+                        Completa los campos en español (obligatorio) y opcionalmente en otros idiomas
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    <form onSubmit={handleBannerSubmit} className="space-y-6">
+                      {/* Image Uploads */}
+                      <div className="space-y-4">
+                        <Label>Imágenes del Banner *</Label>
+                        
+                        {/* Desktop Image */}
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">Imagen de Escritorio *</Label>
+                          <div className="flex gap-4 items-start">
+                            <div className="flex-1">
+                              <Input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handleImageUpload(file, false);
+                                }}
+                                disabled={uploadingImage}
+                              />
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Recomendado: 1600x900px, máx 5MB
+                              </p>
+                            </div>
+                            {bannerFormData.image_url && (
+                              <img
+                                src={bannerFormData.image_url}
+                                alt="Desktop Preview"
+                                className="w-32 h-18 object-cover rounded border"
+                              />
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Mobile Image */}
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">Imagen Móvil (Opcional)</Label>
+                          <div className="flex gap-4 items-start">
+                            <div className="flex-1">
+                              <Input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handleImageUpload(file, true);
+                                }}
+                                disabled={uploadingImage}
+                              />
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Recomendado: 800x1200px, máx 5MB
+                              </p>
+                            </div>
+                            {bannerFormData.image_url_mobile && (
+                              <img
+                                src={bannerFormData.image_url_mobile}
+                                alt="Mobile Preview"
+                                className="w-20 h-30 object-cover rounded border"
+                              />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Multi-language tabs */}
+                      <Tabs defaultValue="es" className="w-full">
+                        <TabsList className="grid w-full grid-cols-6">
+                          <TabsTrigger value="es">🇪🇸 ES *</TabsTrigger>
+                          <TabsTrigger value="en">🇬🇧 EN</TabsTrigger>
+                          <TabsTrigger value="ca">Ⓒ CA</TabsTrigger>
+                          <TabsTrigger value="fr">🇫🇷 FR</TabsTrigger>
+                          <TabsTrigger value="de">🇩🇪 DE</TabsTrigger>
+                          <TabsTrigger value="it">🇮🇹 IT</TabsTrigger>
+                        </TabsList>
+
+                        {(['es', 'en', 'ca', 'fr', 'de', 'it'] as const).map((lang) => (
+                          <TabsContent key={lang} value={lang} className="space-y-4">
+                            <div>
+                              <Label>Título {lang === 'es' && '*'}</Label>
+                              <Input
+                                value={bannerFormData[`title_${lang}` as keyof BannerFormData] as string}
+                                onChange={(e) =>
+                                  setBannerFormData((prev) => ({
+                                    ...prev,
+                                    [`title_${lang}`]: e.target.value,
+                                  }))
+                                }
+                                required={lang === 'es'}
+                                placeholder={`Título en ${lang.toUpperCase()}`}
+                              />
+                            </div>
+
+                            <div>
+                              <Label>Descripción {lang === 'es' && '*'}</Label>
+                              <Textarea
+                                value={bannerFormData[`description_${lang}` as keyof BannerFormData] as string}
+                                onChange={(e) =>
+                                  setBannerFormData((prev) => ({
+                                    ...prev,
+                                    [`description_${lang}`]: e.target.value,
+                                  }))
+                                }
+                                required={lang === 'es'}
+                                placeholder={`Descripción en ${lang.toUpperCase()}`}
+                                rows={3}
+                              />
+                            </div>
+
+                            <div>
+                              <Label>Texto del Botón</Label>
+                              <Input
+                                value={bannerFormData[`cta_text_${lang}` as keyof BannerFormData] as string}
+                                onChange={(e) =>
+                                  setBannerFormData((prev) => ({
+                                    ...prev,
+                                    [`cta_text_${lang}`]: e.target.value,
+                                  }))
+                                }
+                                placeholder={`Texto del botón en ${lang.toUpperCase()}`}
+                              />
+                            </div>
+                          </TabsContent>
+                        ))}
+                      </Tabs>
+
+                      {/* CTA Link */}
+                      <div>
+                        <Label htmlFor="cta_link">Enlace del Botón</Label>
+                        <Input
+                          id="cta_link"
+                          value={bannerFormData.cta_link}
+                          onChange={(e) => setBannerFormData((prev) => ({ ...prev, cta_link: e.target.value }))}
+                          placeholder="/actividades"
+                        />
+                      </div>
+
+                      {/* Settings */}
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            id="is_active"
+                            checked={bannerFormData.is_active}
+                            onCheckedChange={(checked) =>
+                              setBannerFormData((prev) => ({ ...prev, is_active: checked }))
+                            }
+                          />
+                          <Label htmlFor="is_active">Banner activo</Label>
+                        </div>
+
+                        <div className="flex-1">
+                          <Label htmlFor="order_index">Orden</Label>
+                          <Input
+                            id="order_index"
+                            type="number"
+                            value={bannerFormData.order_index}
+                            onChange={(e) =>
+                              setBannerFormData((prev) => ({ ...prev, order_index: parseInt(e.target.value) }))
+                            }
+                            min={1}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex justify-end gap-2">
+                        <Button type="button" variant="outline" onClick={() => setBannerDialogOpen(false)}>
+                          Cancelar
+                        </Button>
+                        <Button type="submit" disabled={uploadingImage}>
+                          {editingBanner ? 'Actualizar' : 'Crear'} Banner
+                        </Button>
+                      </div>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </CardHeader>
+
+            <CardContent>
+              {banners.length === 0 ? (
+                <p className="text-center py-8 text-muted-foreground">
+                  No hay banners en este slider. Crea el primero arriba.
+                </p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-20">Orden</TableHead>
+                      <TableHead>Vista Previa</TableHead>
+                      <TableHead>Título</TableHead>
+                      <TableHead>Descripción</TableHead>
+                      <TableHead className="text-center">Estado</TableHead>
+                      <TableHead className="text-right">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {banners.map((banner, index) => (
+                      <TableRow key={banner.id}>
+                        <TableCell className="font-mono">
+                          <div className="flex flex-col gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleMoveUp(banner)}
+                              disabled={index === 0}
+                            >
+                              <MoveUp className="h-3 w-3" />
+                            </Button>
+                            <span className="text-xs text-center">{banner.order_index}</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleMoveDown(banner)}
+                              disabled={index === banners.length - 1}
+                            >
+                              <MoveDown className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <img
+                            src={banner.image_url}
+                            alt={banner.title_es}
+                            className="w-32 h-18 object-cover rounded"
+                          />
+                        </TableCell>
+                        <TableCell className="max-w-xs">
+                          <div className="font-medium truncate">{banner.title_es}</div>
+                          {banner.cta_text_es && (
+                            <div className="text-xs text-muted-foreground">
+                              CTA: {banner.cta_text_es}
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="max-w-sm">
+                          <div className="text-sm text-muted-foreground truncate">
+                            {banner.description_es}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleToggleActive(banner)}
+                          >
+                            {banner.is_active ? (
+                              <Eye className="h-4 w-4 text-green-600" />
+                            ) : (
+                              <EyeOff className="h-4 w-4 text-gray-400" />
+                            )}
+                          </Button>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex gap-2 justify-end">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditBanner(banner)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDeleteBanner(banner.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
     </PageTransition>
   );
 }
-

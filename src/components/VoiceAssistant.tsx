@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Loader2, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -28,6 +29,7 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
   const [isTextMessageLoading, setIsTextMessageLoading] = useState(false);
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const { track } = useAnalytics();
   
   const conversation = useConversation({
@@ -506,21 +508,38 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
                 
                 if (content) {
                   assistantMessage += content;
+                  
+                  // Extract navigation command if present (don't show it to user)
+                  const navMatch = assistantMessage.match(/\[NAVIGATE:([^\]]+)\]/);
+                  const displayMessage = assistantMessage.replace(/\[NAVIGATE:[^\]]+\]/, '').trim();
+                  
                   setMessages(prev => {
                     const lastMsg = prev[prev.length - 1];
                     if (lastMsg?.role === 'assistant') {
                       return prev.slice(0, -1).concat({
                         ...lastMsg,
-                        content: assistantMessage
+                        content: displayMessage
                       });
                     } else {
                       return [...prev, {
                         role: 'assistant',
-                        content: assistantMessage,
+                        content: displayMessage,
                         timestamp: Date.now()
                       }];
                     }
                   });
+                  
+                  // If navigation command found, navigate after a short delay
+                  if (navMatch) {
+                    const targetPath = navMatch[1];
+                    setTimeout(() => {
+                      navigate(targetPath);
+                      toast({
+                        title: t('voice.toast.navigating', 'Navegando...'),
+                        description: t('voice.toast.navigatingDesc', 'Te llevo a la actividad'),
+                      });
+                    }, 1500);
+                  }
                 }
               } catch (e) {
                 // Ignore parse errors for partial chunks

@@ -100,7 +100,33 @@ async function executeToolCall(
         return "No encontré actividades que coincidan con tu búsqueda. ¿Te gustaría buscar algo diferente?";
       }
 
-      // Format results for the assistant
+      // Helper to generate slug
+      const generateSlug = (title: string, id: string) => {
+        const slug = title
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)/g, '');
+        return `${slug}-${id}`;
+      };
+
+      // If only 1 activity found, include navigation command
+      if (activities.length === 1) {
+        const a = activities[0];
+        const date = new Date(a.date).toLocaleDateString('es-ES', { 
+          weekday: 'long', 
+          day: 'numeric', 
+          month: 'long' 
+        });
+        const spots = (a.max_participants || 0) - (a.current_participants || 0);
+        const cost = a.cost === 0 ? 'Gratis' : `${a.cost}€`;
+        const slug = generateSlug(a.title, a.id);
+        
+        return `Encontré la actividad "${a.title}" (${a.category}): ${date} a las ${a.time} en ${a.city || a.location}. ${cost}. ${spots} plazas disponibles. Te llevo a verla.[NAVIGATE:/actividades/${slug}]`;
+      }
+
+      // Format results for multiple activities
       const results = activities.map((a: any) => {
         const date = new Date(a.date).toLocaleDateString('es-ES', { 
           weekday: 'long', 
@@ -113,7 +139,7 @@ async function executeToolCall(
         return `- "${a.title}" (${a.category}): ${date} a las ${a.time} en ${a.city || a.location}. ${cost}. ${spots} plazas disponibles.`;
       }).join('\n');
 
-      return `Encontré ${activities.length} actividad${activities.length > 1 ? 'es' : ''}:\n${results}`;
+      return `Encontré ${activities.length} actividades:\n${results}\n¿Sobre cuál te gustaría más información?`;
     }
     
     if (toolName === "getActivityDetails") {

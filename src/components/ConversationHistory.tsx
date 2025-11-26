@@ -3,7 +3,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { User, Bot, X, Send } from "lucide-react";
+import { User, Bot, X, Send, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 interface Message {
@@ -87,6 +87,20 @@ const ConversationHistory = ({ messages, isVisible, onClose, onSendTextMessage, 
               )}
             </div>
           ))}
+          
+          {/* Loader mientras el asistente está pensando */}
+          {isTextMessageLoading && (
+            <div className="flex gap-3 justify-start">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <Bot className="h-4 w-4" />
+              </div>
+              <div className="rounded-lg px-4 py-3 bg-muted flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">{t('voice.thinking', 'Pensando...')}</p>
+              </div>
+            </div>
+          )}
+          
           <div ref={scrollRef} />
         </div>
       </ScrollArea>

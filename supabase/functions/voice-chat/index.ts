@@ -100,14 +100,16 @@ async function executeToolCall(
         return "No encontré actividades que coincidan con tu búsqueda. ¿Te gustaría buscar algo diferente?";
       }
 
-      // Helper to generate slug
+      // Helper to generate slug (must match src/lib/utils.ts generateActivitySlug)
       const generateSlug = (title: string, id: string) => {
         const slug = title
           .toLowerCase()
           .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/(^-|-$)/g, '');
+          .replace(/[\u0300-\u036f]/g, '') // Remove accents
+          .replace(/[^\w\s-]/g, '') // Remove special chars except word chars, spaces, hyphens
+          .replace(/\s+/g, '-') // Replace spaces with hyphens
+          .replace(/-+/g, '-') // Replace multiple hyphens
+          .trim();
         return `${slug}-${id}`;
       };
 

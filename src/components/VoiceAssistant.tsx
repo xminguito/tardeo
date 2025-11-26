@@ -488,6 +488,7 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let assistantMessage = '';
+      let navigationPath: string | null = null;
 
       if (reader) {
         while (true) {
@@ -509,9 +510,11 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
                 if (content) {
                   assistantMessage += content;
                   
-                  // Extract navigation command if present (don't show it to user)
-                  const navMatch = assistantMessage.match(/\[NAVIGATE:([^\]]+)\]/);
-                  const displayMessage = assistantMessage.replace(/\[NAVIGATE:[^\]]+\]/, '').trim();
+                  // Clean the message for display (remove any NAVIGATE commands)
+                  const displayMessage = assistantMessage
+                    .replace(/\[NAVIGATE:[^\]]+\]/g, '')
+                    .replace(/\s*\.\s*$/, '.')  // Clean up trailing dots/spaces
+                    .trim();
                   
                   setMessages(prev => {
                     const lastMsg = prev[prev.length - 1];
@@ -528,18 +531,6 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
                       }];
                     }
                   });
-                  
-                  // If navigation command found, navigate after a short delay
-                  if (navMatch) {
-                    const targetPath = navMatch[1];
-                    setTimeout(() => {
-                      navigate(targetPath);
-                      toast({
-                        title: t('voice.toast.navigating', 'Navegando...'),
-                        description: t('voice.toast.navigatingDesc', 'Te llevo a la actividad'),
-                      });
-                    }, 1500);
-                  }
                 }
               } catch (e) {
                 // Ignore parse errors for partial chunks
@@ -547,6 +538,23 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
             }
           }
         }
+        
+        // After stream ends, check for navigation command in complete message
+        const navMatch = assistantMessage.match(/\[NAVIGATE:([^\]]+)\]/);
+        if (navMatch) {
+          navigationPath = navMatch[1];
+        }
+      }
+      
+      // Navigate after message is fully displayed
+      if (navigationPath) {
+        setTimeout(() => {
+          navigate(navigationPath!);
+          toast({
+            title: t('voice.toast.navigating', 'Navegando...'),
+            description: t('voice.toast.navigatingDesc', 'Te llevo a la actividad'),
+          });
+        }, 1500);
       }
     } catch (error) {
       if (import.meta.env.DEV) {

@@ -124,8 +124,10 @@ async function executeToolCall(
         const spots = (a.max_participants || 0) - (a.current_participants || 0);
         const cost = a.cost === 0 ? 'Gratis' : `${a.cost}€`;
         const slug = generateSlug(a.title, a.id);
+        const navPath = `/actividades/${slug}`;
         
-        return `Encontré la actividad "${a.title}" (${a.category}): ${date} a las ${a.time} en ${a.city || a.location}. ${cost}. ${spots} plazas disponibles. Te llevo a verla.[NAVIGATE:/actividades/${slug}]`;
+        // IMPORTANT: Navigation command must be on its own line with exact format
+        return `Encontré la actividad "${a.title}" (${a.category}): ${date} a las ${a.time} en ${a.city || a.location}. ${cost}. ${spots} plazas disponibles.\n[NAVIGATE:${navPath}]`;
       }
 
       // Format results for multiple activities
@@ -292,16 +294,17 @@ IMPORTANTE: SIEMPRE usa searchActivities primero antes de responder sobre activi
           const args = JSON.parse(toolCall.function.arguments);
           const result = await executeToolCall(toolCall.function.name, args, supabaseClient);
           
-          // Extract navigation command from tool result
-          const navMatch = result.match(/\[NAVIGATE:([^\]]+)\]/);
+          // Extract navigation command from tool result - must be a valid path starting with /
+          const navMatch = result.match(/\[NAVIGATE:(\/[a-zA-Z0-9\-\/_]+)\]/);
           if (navMatch) {
             navigationCommand = navMatch[1];
+            console.log("Extracted navigation path:", navigationCommand);
           }
           
           return {
             tool_call_id: toolCall.id,
             role: "tool" as const,
-            content: result.replace(/\[NAVIGATE:[^\]]+\]/, ''), // Remove from content passed to model
+            content: result.replace(/\n?\[NAVIGATE:[^\]]+\]/, '').trim(), // Remove from content passed to model
           };
         })
       );

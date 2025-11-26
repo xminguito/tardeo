@@ -512,8 +512,8 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
                   
                   // Clean the message for display (remove any NAVIGATE commands)
                   const displayMessage = assistantMessage
-                    .replace(/\[NAVIGATE:[^\]]+\]/g, '')
-                    .replace(/\s*\.\s*$/, '.')  // Clean up trailing dots/spaces
+                    .replace(/\n?\[NAVIGATE:[^\]]+\]/g, '')  // Remove navigation commands
+                    .replace(/\s+$/, '')  // Remove trailing whitespace
                     .trim();
                   
                   setMessages(prev => {
@@ -540,9 +540,11 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
         }
         
         // After stream ends, check for navigation command in complete message
-        const navMatch = assistantMessage.match(/\[NAVIGATE:([^\]]+)\]/);
+        // Path must start with / and contain only valid URL characters
+        const navMatch = assistantMessage.match(/\[NAVIGATE:(\/[a-zA-Z0-9\-\/_]+)\]/);
         if (navMatch) {
           navigationPath = navMatch[1];
+          console.log("Navigation path detected:", navigationPath);
         }
       }
       

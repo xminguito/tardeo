@@ -113,37 +113,38 @@ async function executeToolCall(
         return `${slug}-${id}`;
       };
 
+      // Helper to format date compactly
+      const formatDate = (dateStr: string) => {
+        const d = new Date(dateStr);
+        const days = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+        const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+        return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+      };
+
+      // TOON format: compact token-efficient serialization
       // If only 1 activity found, include navigation command
       if (activities.length === 1) {
         const a = activities[0];
-        const date = new Date(a.date).toLocaleDateString('es-ES', { 
-          weekday: 'long', 
-          day: 'numeric', 
-          month: 'long' 
-        });
         const spots = (a.max_participants || 0) - (a.current_participants || 0);
         const cost = a.cost === 0 ? 'Gratis' : `${a.cost}€`;
         const slug = generateSlug(a.title, a.id);
         const navPath = `/actividades/${slug}`;
         
-        // IMPORTANT: Navigation command must be on its own line with exact format
-        return `Encontré la actividad "${a.title}" (${a.category}): ${date} a las ${a.time} en ${a.city || a.location}. ${cost}. ${spots} plazas disponibles.\n[NAVIGATE:${navPath}]`;
+        // TOON format for single activity with navigation
+        return `act{titulo,cat,fecha,hora,lugar,precio,plazas}:
+${a.title},${a.category},${formatDate(a.date)},${a.time},${a.city || a.location},${cost},${spots}
+[NAVIGATE:${navPath}]`;
       }
 
-      // Format results for multiple activities
-      const results = activities.map((a: any) => {
-        const date = new Date(a.date).toLocaleDateString('es-ES', { 
-          weekday: 'long', 
-          day: 'numeric', 
-          month: 'long' 
-        });
+      // TOON format for multiple activities
+      const toonRows = activities.map((a: any) => {
         const spots = (a.max_participants || 0) - (a.current_participants || 0);
         const cost = a.cost === 0 ? 'Gratis' : `${a.cost}€`;
-        
-        return `- "${a.title}" (${a.category}): ${date} a las ${a.time} en ${a.city || a.location}. ${cost}. ${spots} plazas disponibles.`;
+        return `${a.title},${a.category},${formatDate(a.date)},${a.time},${a.city || a.location},${cost},${spots}`;
       }).join('\n');
 
-      return `Encontré ${activities.length} actividades:\n${results}\n¿Sobre cuál te gustaría más información?`;
+      return `acts[${activities.length}]{titulo,cat,fecha,hora,lugar,precio,plazas}:
+${toonRows}`;
     }
     
     if (toolName === "getActivityDetails") {
@@ -154,27 +155,29 @@ async function executeToolCall(
         .single();
 
       if (error || !activity) {
-        return `No encontré la actividad "${args.activityTitle}". ¿Puedes darme más detalles?`;
+        return `No encontré "${args.activityTitle}".`;
       }
 
-      const date = new Date(activity.date).toLocaleDateString('es-ES', { 
-        weekday: 'long', 
-        day: 'numeric', 
-        month: 'long',
-        year: 'numeric'
-      });
       const spots = (activity.max_participants || 0) - (activity.current_participants || 0);
       const cost = activity.cost === 0 ? 'Gratis' : `${activity.cost}€`;
+      
+      // Helper to format date compactly
+      const formatDate = (dateStr: string) => {
+        const d = new Date(dateStr);
+        const days = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+        const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+        return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+      };
+      
+      const generateSlug = (title: string, id: string) => {
+        return title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim() + '-' + id;
+      };
 
-      return `Detalles de "${activity.title}":
-- Categoría: ${activity.category}
-- Fecha: ${date} a las ${activity.time}
-- Lugar: ${activity.location}, ${activity.city}
-- Precio: ${cost}
-- Plazas disponibles: ${spots} de ${activity.max_participants}
-- Descripción: ${activity.description}
-
-¿Te gustaría reservar plaza en esta actividad?`;
+      // TOON format for activity details
+      return `detail{titulo,cat,fecha,hora,lugar,precio,plazas,max,desc}:
+${activity.title},${activity.category},${formatDate(activity.date)},${activity.time},${activity.city},${cost},${spots},${activity.max_participants},${activity.description?.slice(0, 100) || 'Sin descripción'}
+[NAVIGATE:${`/actividades/${generateSlug(activity.title, activity.id)}`}]`;
     }
 
     return "Herramienta no reconocida.";
@@ -230,22 +233,28 @@ serve(async (req) => {
       throw new Error("OPENAI_API_KEY is not configured");
     }
 
-    const systemPrompt = `Eres un asistente amigable para la plataforma Tardeo, que ayuda a personas mayores a encontrar actividades.
+    const systemPrompt = `Eres un asistente amigable para Tardeo, ayudando a personas mayores a encontrar actividades.
 
-REGLAS ESTRICTAS:
-1. NO uses emojis, solo texto plano
-2. Respuestas cortas (2-3 frases máximo)
-3. OBLIGATORIO: Cuando el usuario mencione CUALQUIER tipo de actividad (yoga, pintura, café, taller, clase, evento, etc.), DEBES usar la herramienta searchActivities INMEDIATAMENTE
-4. NUNCA inventes información sobre actividades. SOLO muestra datos devueltos por searchActivities
-5. Si el resultado de searchActivities incluye "[NAVIGATE:...]", el sistema navegará automáticamente
+REGLAS:
+1. Sin emojis, solo texto
+2. Respuestas cortas (2-3 frases)
+3. OBLIGATORIO: Usa searchActivities para CUALQUIER consulta de actividades
+4. NO inventes datos. Solo usa resultados de searchActivities
+5. [NAVIGATE:...] activa navegación automática
 
-EJEMPLOS DE CUÁNDO USAR searchActivities:
-- "yoga suave" → searchActivities con query="yoga suave"
-- "actividades de pintura" → searchActivities con query="pintura"
-- "qué hay para hacer" → searchActivities sin filtros
-- "talleres" → searchActivities con query="taller"
+FORMATO TOON:
+Los resultados vienen en TOON (Token-Oriented Object Notation):
+- act{campos}: fila → 1 actividad
+- acts[N]{campos}: filas → N actividades
+Campos: titulo,cat,fecha,hora,lugar,precio,plazas
 
-IMPORTANTE: SIEMPRE usa searchActivities primero antes de responder sobre actividades.`;
+EJEMPLO de interpretación TOON:
+Input: act{titulo,cat,fecha,hora,lugar,precio,plazas}:
+Yoga Suave,Deporte,lun 27 oct,18:00,Barcelona,Gratis,20
+
+Output: He encontrado "Yoga Suave", una actividad de Deporte el lunes 27 de octubre a las 18:00 en Barcelona. Es gratis y hay 20 plazas.
+
+USA searchActivities SIEMPRE para consultas de actividades.`;
 
     // First API call - may include tool calls
     const initialResponse = await fetch("https://api.openai.com/v1/chat/completions", {

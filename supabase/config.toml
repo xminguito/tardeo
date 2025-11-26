@@ -1,7 +1,7 @@
 project_id = "kzcowengsnnuglyrjuto"
 
 [functions.voice-chat]
-verify_jwt = false
+verify_jwt = true
 
 [functions.text-to-speech]
 verify_jwt = false
@@ -25,7 +25,7 @@ verify_jwt = false
 verify_jwt = true
 
 [functions.tts]
-verify_jwt = false
+verify_jwt = true
 
 [functions.check-tts-alerts]
 verify_jwt = false
@@ -40,7 +40,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.admin-mixpanel-query]
-verify_jwt = false
+verify_jwt = true
 
 [functions.check-upcoming-favorites]
 verify_jwt = false

@@ -6,13 +6,16 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Folder, 
+  FolderOpen,
   Image, 
   File, 
   Trash2, 
   Download, 
   Upload, 
   RefreshCw,
-  X
+  X,
+  ChevronLeft,
+  Eye
 } from "lucide-react";
 import {
   Dialog,
@@ -40,6 +43,7 @@ interface Bucket {
 export default function FileManager() {
   const [buckets, setBuckets] = useState<Bucket[]>([]);
   const [selectedBucket, setSelectedBucket] = useState<string | null>(null);
+  const [currentPath, setCurrentPath] = useState<string>("");
   const [files, setFiles] = useState<StorageFile[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -52,9 +56,9 @@ export default function FileManager() {
 
   useEffect(() => {
     if (selectedBucket) {
-      loadFiles(selectedBucket);
+      loadFiles(selectedBucket, currentPath);
     }
-  }, [selectedBucket]);
+  }, [selectedBucket, currentPath]);
 
   const loadBuckets = async () => {
     try {
@@ -144,10 +148,11 @@ export default function FileManager() {
     try {
       setUploading(true);
       const fileName = `${Date.now()}_${file.name}`;
+      const fullPath = currentPath ? `${currentPath}/${fileName}` : fileName;
       
       const { error } = await supabase.storage
         .from(selectedBucket)
-        .upload(fileName, file, {
+        .upload(fullPath, file, {
           cacheControl: "3600",
           upsert: false,
         });
@@ -160,7 +165,7 @@ export default function FileManager() {
       });
 
       // Reload files
-      loadFiles(selectedBucket);
+      loadFiles(selectedBucket, currentPath);
     } catch (error: any) {
       toast({
         title: "Upload error",
@@ -177,12 +182,13 @@ export default function FileManager() {
   const handleDelete = async (fileName: string) => {
     if (!selectedBucket) return;
 
+    const fullPath = getFullPath(fileName);
     if (!confirm(`Delete ${fileName}?`)) return;
 
     try {
       const { error } = await supabase.storage
         .from(selectedBucket)
-        .remove([fileName]);
+        .remove([fullPath]);
 
       if (error) throw error;
 
@@ -191,7 +197,7 @@ export default function FileManager() {
         description: `${fileName} deleted successfully`,
       });
 
-      loadFiles(selectedBucket);
+      loadFiles(selectedBucket, currentPath);
     } catch (error: any) {
       toast({
         title: "Delete error",
@@ -204,10 +210,12 @@ export default function FileManager() {
   const handleDownload = async (fileName: string) => {
     if (!selectedBucket) return;
 
+    const fullPath = getFullPath(fileName);
+
     try {
       const { data, error } = await supabase.storage
         .from(selectedBucket)
-        .download(fileName);
+        .download(fullPath);
 
       if (error) throw error;
 
@@ -232,9 +240,11 @@ export default function FileManager() {
   const handlePreview = (fileName: string) => {
     if (!selectedBucket) return;
 
+    const fullPath = getFullPath(fileName);
+
     const { data } = supabase.storage
       .from(selectedBucket)
-      .getPublicUrl(fileName);
+      .getPublicUrl(fullPath);
 
     setPreviewFile({ url: data.publicUrl, name: fileName });
   };
@@ -249,6 +259,26 @@ export default function FileManager() {
 
   const isImage = (fileName: string) => {
     return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(fileName);
+  };
+
+  const isFolder = (file: StorageFile) => {
+    // Folders have no metadata or size is null/undefined
+    return !file.metadata?.size && file.metadata?.size !== 0;
+  };
+
+  const navigateToFolder = (folderName: string) => {
+    const newPath = currentPath ? `${currentPath}/${folderName}` : folderName;
+    setCurrentPath(newPath);
+  };
+
+  const navigateUp = () => {
+    const parts = currentPath.split("/");
+    parts.pop();
+    setCurrentPath(parts.join("/"));
+  };
+
+  const getFullPath = (fileName: string) => {
+    return currentPath ? `${currentPath}/${fileName}` : fileName;
   };
 
   return (
@@ -280,7 +310,10 @@ export default function FileManager() {
                 key={bucket.id}
                 variant={selectedBucket === bucket.id ? "default" : "ghost"}
                 className="w-full justify-start"
-                onClick={() => setSelectedBucket(bucket.id)}
+                onClick={() => {
+                  setSelectedBucket(bucket.id);
+                  setCurrentPath("");
+                }}
               >
                 <Folder className="mr-2 h-4 w-4" />
                 {bucket.name}
@@ -296,9 +329,24 @@ export default function FileManager() {
         <Card className="md:col-span-3">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm">
-                {selectedBucket ? `Files in ${selectedBucket}` : "Select a bucket"}
-              </CardTitle>
+              <div className="flex items-center gap-2">
+                {currentPath && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={navigateUp}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                )}
+                <CardTitle className="text-sm">
+                  {selectedBucket 
+                    ? currentPath 
+                      ? `${selectedBucket}/${currentPath}` 
+                      : `Files in ${selectedBucket}`
+                    : "Select a bucket"}
+                </CardTitle>
+              </div>
               {selectedBucket && (
                 <div className="flex gap-2">
                   <Input
@@ -336,10 +384,15 @@ export default function FileManager() {
                   {files.map((file) => (
                     <div
                       key={file.id}
-                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                      className={`flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors ${
+                        isFolder(file) ? "cursor-pointer" : ""
+                      }`}
+                      onClick={() => isFolder(file) && navigateToFolder(file.name)}
                     >
                       <div className="flex items-center gap-3 flex-1 min-w-0">
-                        {isImage(file.name) ? (
+                        {isFolder(file) ? (
+                          <FolderOpen className="h-5 w-5 text-amber-500 flex-shrink-0" />
+                        ) : isImage(file.name) ? (
                           <Image className="h-5 w-5 text-blue-500 flex-shrink-0" />
                         ) : (
                           <File className="h-5 w-5 text-gray-500 flex-shrink-0" />
@@ -347,36 +400,43 @@ export default function FileManager() {
                         <div className="flex-1 min-w-0">
                           <p className="font-medium truncate">{file.name}</p>
                           <p className="text-xs text-muted-foreground">
-                            {formatFileSize(file.metadata?.size || 0)} •{" "}
-                            {new Date(file.created_at).toLocaleDateString()}
+                            {isFolder(file) 
+                              ? "Folder" 
+                              : `${formatFileSize(file.metadata?.size || 0)} • ${new Date(file.created_at).toLocaleDateString()}`
+                            }
                           </p>
                         </div>
                       </div>
-                      <div className="flex gap-1 flex-shrink-0">
-                        {isImage(file.name) && (
+                      {!isFolder(file) && (
+                        <div className="flex gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                          {isImage(file.name) && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handlePreview(file.name)}
+                              title="Preview"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handlePreview(file.name)}
+                            onClick={() => handleDownload(file.name)}
+                            title="Download"
                           >
-                            <Image className="h-4 w-4" />
+                            <Download className="h-4 w-4" />
                           </Button>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDownload(file.name)}
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(file.name)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(file.name)}
+                            title="Delete"
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

@@ -63,6 +63,7 @@ export default function FileManager() {
       // List of known buckets - listBuckets() requires admin privileges
       const knownBuckets: Bucket[] = [
         { id: "hero-banners", name: "hero-banners", public: true },
+        { id: "profile-images", name: "profile-images", public: true },
         { id: "chat-attachments", name: "chat-attachments", public: true },
         { id: "activity-images", name: "activity-images", public: true },
       ];

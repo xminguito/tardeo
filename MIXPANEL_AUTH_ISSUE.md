@@ -1,73 +1,53 @@
-# Mixpanel Analytics Dashboard - Known Issues
+# Mixpanel Analytics Dashboard - RESUELTO ✅
 
-## Issue: Mixpanel API Authentication Failing
+## Solución Implementada
 
-### Problem
+El Analytics Dashboard (`/admin/analytics`) ahora muestra datos reales de Mixpanel
+utilizando la **Export API** (`data-eu.mixpanel.com`).
 
-The Analytics Dashboard (`/admin/analytics`) is currently showing data from
-Supabase `recent_events` table instead of Mixpanel's full historical data
-because Mixpanel API authentication is failing.
+### Problema Original
 
-### Symptoms
+Las APIs de Query (Segmentation, JQL, Insights) en `api-eu.mixpanel.com` fallaban
+con `AuthenticationRequired` usando cualquier credencial:
 
-- Dashboard shows "2 DAU / 2 WAU" from local `recent_events` table
-- Mixpanel dashboard shows "7 DAU / 22 WAU" (correct full historical data)
-- Edge Function logs show: `Authentication required` errors from Mixpanel API
+- Project Token ❌
+- Project Secret ❌
+- Service Account Secret ❌
 
-### Credentials Tested
+### Solución
 
-All of the following configurations were tested and failed with
-`AuthenticationRequired`:
+Se descubrió que la **Export API** (`data-eu.mixpanel.com/api/2.0/export`)
+funciona correctamente con el **Project Secret** como password en Basic Auth.
 
-1. Project Token: `984ef6d1b18b5a90a107e8bdc1352d77` ❌
-2. Project Secret: `841e185fec7dea687d746e23b00e6abf` ❌
-3. Service Account Secret: `W5eLK6t1Tpn00nIkvnSaiMjfMtnQAd6g` ❌
-4. Service Account Full:
-   `Tardeo.44e6eb.mp-service-account:W5eLK6t1Tpn00nIkvnSaiMjfMtnQAd6g` ❌
+El Edge Function `admin-mixpanel-query` fue reescrito para:
 
-### APIs Attempted
+1. Usar la Export API en lugar de Segmentation API
+2. Descargar eventos en bruto (formato newline-delimited JSON)
+3. Procesar los eventos localmente para calcular métricas:
+   - DAU (Daily Active Users)
+   - WAU (Weekly Active Users)
+   - Reservations count
+   - Funnel conversion
+   - Retention cohorts
+   - Assistant metrics
 
-- Mixpanel JQL API (`/api/2.0/jql`) ❌
-- Mixpanel Insights API (`/api/2.0/insights`) ❌
-- Mixpanel Segmentation API (`/api/2.0/segmentation`) ❌
+### Ventajas de esta solución
 
-All return XML error: `<Error><Code>AuthenticationRequired</Code></Error>`
+- ✅ Acceso a TODOS los eventos históricos de Mixpanel
+- ✅ No requiere Service Account (solo Project Secret)
+- ✅ Compatible con EU data residency
+- ✅ Cache de 5 minutos para optimizar rendimiento
 
-### Current Workaround
+### Configuración
 
-The system falls back to querying the `recent_events` table in Supabase, which
-contains events from the last few days. This provides partial analytics but not
-full historical data from Mixpanel.
+El secret `MIXPANEL_API_SECRET` en Supabase debe contener el **Project Secret**:
+`841e185fec7dea687d746e23b00e6abf`
 
-### Next Steps
+### Archivos Modificados
 
-1. **Contact Mixpanel Support** to verify:
-   - Correct authentication method for EU region (`api-eu.mixpanel.com`)
-   - Required permissions for Service Account
-   - Whether Query API access is enabled for the project
+- `/supabase/functions/admin-mixpanel-query/index.ts` - Reescrito para usar Export
+  API
 
-2. **Verify Access** in Mixpanel Dashboard:
-   - Go to Project Settings → Access Keys
-   - Confirm the Service Account has "Read" permissions
-   - Check if there are any IP restrictions
+### Fecha de Resolución
 
-3. **Alternative**: Consider using Mixpanel's **Data Pipelines** or **Warehouse
-   Connectors** to sync data to Supabase for querying
-
-### Files Modified
-
-- `/supabase/functions/admin-mixpanel-query/index.ts` - Added fallback logic
-  with `_dataSource` indicator
-- Metrics now include `_dataSource: 'supabase_fallback'` when Mixpanel fails
-
-### Impact
-
-- ✅ Events are being sent to Mixpanel correctly (via `/track` endpoint)
-- ✅ Dashboard shows accurate data for recent events (from Supabase)
-- ❌ Dashboard cannot show full historical analytics from Mixpanel
-- ❌ Some advanced Mixpanel features (funnels, retention) unavailable
-
-### Priority
-
-**Medium** - Analytics are working but with limited historical data. Not
-blocking core functionality.
+26 de Noviembre de 2025

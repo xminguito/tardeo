@@ -1215,12 +1215,20 @@ export type Database = {
       }
       cleanup_expired_tts_cache: { Args: never; Returns: undefined }
       cleanup_old_recent_events: { Args: never; Returns: undefined }
+      decrement_counter: {
+        Args: { column_name: string; row_id: string; table_name: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_counter: {
+        Args: { column_name: string; row_id: string; table_name: string }
+        Returns: undefined
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       refresh_tts_monitoring_stats: { Args: never; Returns: undefined }

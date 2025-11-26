@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { User, LogOut, Shield, Heart, Lock, Globe } from "lucide-react";
+import { User, LogOut, Shield, Heart, Lock, Globe, Camera, X, ImagePlus, Loader2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { z } from "zod";
 import { useFavorites } from "@/features/activities/hooks/useFavorites";
@@ -16,15 +16,25 @@ import PageHeader from "@/components/PageHeader";
 import { useTranslation } from "react-i18next";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+const MAX_GALLERY_IMAGES = 5;
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [interests, setInterests] = useState<any[]>([]);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -57,6 +67,17 @@ const Profile = () => {
           profile_visibility: profileData.profile_visibility || 'public',
         });
         setSelectedInterests(profileData.user_interests?.map((ui: any) => ui.interest_id) || []);
+        // Load gallery images from profile (stored as JSON array)
+        if (profileData.gallery_images) {
+          try {
+            const images = typeof profileData.gallery_images === 'string' 
+              ? JSON.parse(profileData.gallery_images) 
+              : profileData.gallery_images;
+            setGalleryImages(Array.isArray(images) ? images : []);
+          } catch {
+            setGalleryImages([]);
+          }
+        }
       }
 
       // Check if user is admin
@@ -82,6 +103,162 @@ const Profile = () => {
   const loadInterests = async () => {
     const { data } = await supabase.from("interests").select("*");
     if (data) setInterests(data);
+  };
+
+  const uploadImage = async (file: File, folder: string): Promise<string | null> => {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      toast({
+        title: t('common.error'),
+        description: "Formato no válido. Usa JPG, PNG o WEBP",
+        variant: "destructive",
+      });
+      return null;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      toast({
+        title: t('common.error'),
+        description: "La imagen es demasiado grande. Máximo 5MB",
+        variant: "destructive",
+      });
+      return null;
+    }
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${userId}/${folder}/${Date.now()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('profile-images')
+      .upload(fileName, file, { upsert: true });
+
+    if (uploadError) {
+      console.error('Upload error:', uploadError);
+      toast({
+        title: t('common.error'),
+        description: "Error al subir la imagen",
+        variant: "destructive",
+      });
+      return null;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('profile-images')
+      .getPublicUrl(fileName);
+
+    return publicUrl;
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !userId) return;
+
+    setUploadingAvatar(true);
+    try {
+      const url = await uploadImage(file, 'avatar');
+      if (url) {
+        // Update profile with new avatar URL
+        const { error } = await supabase
+          .from('profiles')
+          .update({ avatar_url: url })
+          .eq('id', userId);
+
+        if (error) throw error;
+
+        setProfile({ ...profile, avatar_url: url });
+        toast({
+          title: t('common.success'),
+          description: "Foto de perfil actualizada",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: t('common.error'),
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingAvatar(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = '';
+    }
+  };
+
+  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length || !userId) return;
+
+    const remainingSlots = MAX_GALLERY_IMAGES - galleryImages.length;
+    if (files.length > remainingSlots) {
+      toast({
+        title: t('common.error'),
+        description: `Solo puedes añadir ${remainingSlots} imagen(es) más`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploadingGallery(true);
+    try {
+      const uploadedUrls: string[] = [];
+      
+      for (const file of files) {
+        const url = await uploadImage(file, 'gallery');
+        if (url) uploadedUrls.push(url);
+      }
+
+      if (uploadedUrls.length > 0) {
+        const newGallery = [...galleryImages, ...uploadedUrls];
+        
+        // Update profile with new gallery
+        const { error } = await supabase
+          .from('profiles')
+          .update({ gallery_images: newGallery })
+          .eq('id', userId);
+
+        if (error) throw error;
+
+        setGalleryImages(newGallery);
+        toast({
+          title: t('common.success'),
+          description: `${uploadedUrls.length} imagen(es) añadida(s) a la galería`,
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: t('common.error'),
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingGallery(false);
+      if (galleryInputRef.current) galleryInputRef.current.value = '';
+    }
+  };
+
+  const removeGalleryImage = async (index: number) => {
+    if (!userId) return;
+    
+    const newGallery = galleryImages.filter((_, i) => i !== index);
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ gallery_images: newGallery })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      setGalleryImages(newGallery);
+      toast({
+        title: t('common.success'),
+        description: "Imagen eliminada de la galería",
+      });
+    } catch (error: any) {
+      toast({
+        title: t('common.error'),
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const profileSchema = z.object({
@@ -220,6 +397,39 @@ const Profile = () => {
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* Avatar Upload */}
+            <div className="flex flex-col items-center gap-4">
+              <div className="relative group">
+                <Avatar className="w-32 h-32 border-4 border-background shadow-lg">
+                  <AvatarImage src={profile?.avatar_url || ""} />
+                  <AvatarFallback className="text-4xl bg-primary/10">
+                    {profile?.full_name?.charAt(0) || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <button
+                  onClick={() => avatarInputRef.current?.click()}
+                  disabled={uploadingAvatar}
+                  className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                >
+                  {uploadingAvatar ? (
+                    <Loader2 className="h-8 w-8 text-white animate-spin" />
+                  ) : (
+                    <Camera className="h-8 w-8 text-white" />
+                  )}
+                </button>
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleAvatarUpload}
+                  className="hidden"
+                />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Haz clic para cambiar tu foto de perfil
+              </p>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="fullName">{t('profile.fullName')}</Label>
               <Input
@@ -264,6 +474,63 @@ const Profile = () => {
                   </Badge>
                 ))}
               </div>
+            </div>
+
+            {/* Gallery Section */}
+            <div className="space-y-3 pt-4 border-t">
+              <div className="flex items-center justify-between">
+                <Label className="text-base font-semibold">Mi Galería</Label>
+                <span className="text-sm text-muted-foreground">
+                  {galleryImages.length}/{MAX_GALLERY_IMAGES} imágenes
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Añade hasta {MAX_GALLERY_IMAGES} fotos para mostrar en tu perfil público
+              </p>
+              
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+                {galleryImages.map((url, index) => (
+                  <div key={index} className="relative aspect-square group">
+                    <img
+                      src={url}
+                      alt={`Galería ${index + 1}`}
+                      className="w-full h-full object-cover rounded-lg"
+                    />
+                    <button
+                      onClick={() => removeGalleryImage(index)}
+                      className="absolute top-1 right-1 p-1 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+                
+                {galleryImages.length < MAX_GALLERY_IMAGES && (
+                  <button
+                    onClick={() => galleryInputRef.current?.click()}
+                    disabled={uploadingGallery}
+                    className="aspect-square border-2 border-dashed border-muted-foreground/30 rounded-lg flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer"
+                  >
+                    {uploadingGallery ? (
+                      <Loader2 className="h-6 w-6 text-muted-foreground animate-spin" />
+                    ) : (
+                      <>
+                        <ImagePlus className="h-6 w-6 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">Añadir</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+              
+              <input
+                ref={galleryInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                onChange={handleGalleryUpload}
+                className="hidden"
+              />
             </div>
 
             {/* Privacy Settings */}

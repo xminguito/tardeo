@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Mic, MicOff, Loader2, MessageSquare } from "lucide-react";
+import { Mic, MicOff, Loader2, Bot } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useConversation } from "@11labs/react";
@@ -611,29 +611,16 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
       />
       
       <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-2 items-end">
-        {messages.length > 0 && (
-          <div className="flex flex-col gap-2 items-end">
-            <Button
-              onClick={() => setShowHistory(!showHistory)}
-              size="sm"
-              variant="secondary"
-              className="rounded-full shadow-lg"
-            >
-              <MessageSquare className="h-4 w-4 mr-2" />
-              {showHistory ? t('voice.hideChat', 'Ocultar') : t('voice.showChat', 'Ver chat')}
-            </Button>
-            
-            {showHistory && !isConnected && !isConnecting && (
-              <Button
-                onClick={startConversation}
-                size="sm"
-                variant="outline"
-                className="text-xs bg-background/90 px-3 py-2 rounded-full shadow-lg border hover:bg-primary hover:text-primary-foreground transition-colors"
-              >
-                💬 Modo texto · Presiona 🎙️ para voz
-              </Button>
-            )}
-          </div>
+        {/* Botón para activar voz cuando el chat está abierto */}
+        {showHistory && !isConnected && !isConnecting && (
+          <Button
+            onClick={startConversation}
+            size="sm"
+            variant="outline"
+            className="text-xs bg-background/90 px-3 py-2 rounded-full shadow-lg border hover:bg-primary hover:text-primary-foreground transition-colors"
+          >
+            💬 Modo texto · Presiona 🎙️ para voz
+          </Button>
         )}
         
         {!isConnected && !isConnecting ? (
@@ -641,8 +628,9 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
             onClick={openTextChat}
             size="lg"
             className="rounded-full w-20 h-20 shadow-2xl bg-primary hover:bg-primary/90"
+            title="Asistente virtual"
           >
-            <MessageSquare className="h-10 w-10" />
+            <Bot className="h-10 w-10" />
           </Button>
         ) : isConnecting ? (
           <Button

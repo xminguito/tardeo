@@ -1,11 +1,22 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.1'
 import { selectTTSProvider, checkUserTTSThrottle } from '../_shared/ttsProviderSelector.ts'
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
+
+// Validation schema for TTS requests
+const ttsSchema = z.object({
+  text: z.string()
+    .min(1, "Text cannot be empty")
+    .max(5000, "Text too long (max 5000 characters)"),
+  voice: z.string().optional(),
+  bitrate: z.number().int().positive().optional(),
+  provider_preference: z.enum(['elevenlabs', 'openai']).optional()
+});
 
 // Simple rate limiter: max 10 requests per IP per minute
 const rateLimiter = new Map<string, { count: number; resetAt: number }>()
@@ -202,15 +213,22 @@ serve(async (req) => {
       )
     }
 
-    // Parse request
-    const { text, voice, bitrate, provider_preference } = await req.json()
+    // Parse and validate request
+    const body = await req.json()
+    const validationResult = ttsSchema.safeParse(body)
 
-    if (!text || typeof text !== 'string') {
+    if (!validationResult.success) {
+      console.error('Validation error:', validationResult.error)
       return new Response(
-        JSON.stringify({ error: 'Invalid input: text is required' }),
+        JSON.stringify({ 
+          error: 'Invalid request', 
+          details: validationResult.error.errors 
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
+
+    const { text, voice, bitrate, provider_preference } = validationResult.data
 
     // Sanitize input
     const sanitizedText = sanitizeText(text)

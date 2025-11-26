@@ -1,11 +1,18 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
+
+// Validation schema for follow requests
+const followSchema = z.object({
+  target_user_id: z.string().uuid("Invalid user ID format"),
+  action: z.enum(['follow', 'unfollow'])
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -24,18 +31,29 @@ serve(async (req) => {
       throw new Error("Missing Authorization header");
     }
 
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
+    const { data: { user }, error: userError } = await supabase.auth.getUser(
+      authHeader.replace("Bearer ", ""),
+    );
+    if (userError || !user) throw new Error("Invalid user token");
 
-    if (userError || !user) {
-      throw new Error("Invalid user token");
+    // Parse and validate request body
+    const body = await req.json();
+    const validationResult = followSchema.safeParse(body);
+
+    if (!validationResult.success) {
+      console.error('Validation error:', validationResult.error);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid request', 
+          details: validationResult.error.errors 
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    const { target_user_id, action } = await req.json();
+    const { target_user_id, action } = validationResult.data;
 
-    if (!target_user_id || !["follow", "unfollow"].includes(action)) {
+    if (!["follow", "unfollow"].includes(action)) {
       throw new Error("Invalid request parameters");
     }
 

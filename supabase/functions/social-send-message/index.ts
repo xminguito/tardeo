@@ -1,11 +1,28 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
+
+// Validation schema for send message requests
+const sendMessageSchema = z.object({
+  conversation_id: z.string().uuid("Invalid conversation ID format").optional(),
+  receiver_id: z.string().uuid("Invalid receiver ID format").optional(),
+  content: z.string().max(5000, "Message too long (max 5000 chars)").optional(),
+  content_type: z.enum(['text', 'audio', 'image']).optional().default('text'),
+  attachment_url: z.string().url("Invalid attachment URL").optional(),
+  reply_with_ai: z.boolean().optional().default(false)
+}).refine(
+  (data) => data.content || data.attachment_url,
+  { message: "Either content or attachment_url must be provided" }
+).refine(
+  (data) => data.conversation_id || data.receiver_id,
+  { message: "Either conversation_id or receiver_id must be provided" }
+);
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -26,6 +43,21 @@ serve(async (req) => {
     );
     if (userError || !user) throw new Error("Invalid user token");
 
+    // Parse and validate request body
+    const body = await req.json();
+    const validationResult = sendMessageSchema.safeParse(body);
+
+    if (!validationResult.success) {
+      console.error('Validation error:', validationResult.error);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid request', 
+          details: validationResult.error.errors 
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const {
       conversation_id,
       receiver_id,
@@ -33,7 +65,7 @@ serve(async (req) => {
       content_type,
       attachment_url,
       reply_with_ai,
-    } = await req.json();
+    } = validationResult.data;
 
     if (!content && !attachment_url) {
       throw new Error("Message content or attachment is required");

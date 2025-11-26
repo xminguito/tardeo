@@ -125,7 +125,8 @@ const Profile = () => {
     }
 
     const fileExt = file.name.split('.').pop();
-    const fileName = `${userId}/${folder}/${Date.now()}.${fileExt}`;
+    // Flat structure like hero-banners: avatar-{userId}-{timestamp}.ext
+    const fileName = `${folder}-${userId}-${Date.now()}.${fileExt}`;
 
     const { error: uploadError } = await supabase.storage
       .from('profile-images')

@@ -552,6 +552,25 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
   const isConnected = conversation.status === 'connected';
   const isSpeaking = conversation.isSpeaking;
 
+  // Abre el chat en modo texto sin activar la voz
+  const openTextChat = () => {
+    if (messages.length === 0) {
+      // Añadir mensaje de bienvenida solo si es la primera vez
+      const welcomeMessage: Message = {
+        role: 'assistant',
+        content: t('voice.welcomeText', '¡Hola! ¿En qué puedo ayudarte hoy?'),
+        timestamp: Date.now()
+      };
+      setMessages([welcomeMessage]);
+    }
+    setShowHistory(true);
+    
+    // Analytics: Track assistant opened in text mode
+    track('assistant_invoked', {
+      mode: 'text_open',
+    });
+  };
+
   return (
     <>
       <ConversationHistory 
@@ -575,21 +594,26 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
               {showHistory ? t('voice.hideChat', 'Ocultar') : t('voice.showChat', 'Ver chat')}
             </Button>
             
-            {!isConnected && !isConnecting && (
-              <div className="text-xs text-muted-foreground bg-background/90 px-3 py-2 rounded-full shadow-lg border">
+            {showHistory && !isConnected && !isConnecting && (
+              <Button
+                onClick={startConversation}
+                size="sm"
+                variant="outline"
+                className="text-xs bg-background/90 px-3 py-2 rounded-full shadow-lg border hover:bg-primary hover:text-primary-foreground transition-colors"
+              >
                 💬 Modo texto · Presiona 🎙️ para voz
-              </div>
+              </Button>
             )}
           </div>
         )}
         
         {!isConnected && !isConnecting ? (
           <Button
-            onClick={startConversation}
+            onClick={openTextChat}
             size="lg"
             className="rounded-full w-20 h-20 shadow-2xl bg-primary hover:bg-primary/90"
           >
-            <Mic className="h-10 w-10" />
+            <MessageSquare className="h-10 w-10" />
           </Button>
         ) : isConnecting ? (
           <Button

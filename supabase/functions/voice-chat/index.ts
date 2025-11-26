@@ -283,15 +283,23 @@ IMPORTANTE: SIEMPRE usa searchActivities primero antes de responder sobre activi
     if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
       console.log("Tool calls requested:", assistantMessage.tool_calls);
       
-      // Execute all tool calls
+      // Execute all tool calls and track navigation commands
+      let navigationCommand = '';
       const toolResults = await Promise.all(
         assistantMessage.tool_calls.map(async (toolCall: any) => {
           const args = JSON.parse(toolCall.function.arguments);
           const result = await executeToolCall(toolCall.function.name, args, supabaseClient);
+          
+          // Extract navigation command from tool result
+          const navMatch = result.match(/\[NAVIGATE:([^\]]+)\]/);
+          if (navMatch) {
+            navigationCommand = navMatch[1];
+          }
+          
           return {
             tool_call_id: toolCall.id,
             role: "tool" as const,
-            content: result,
+            content: result.replace(/\[NAVIGATE:[^\]]+\]/, ''), // Remove from content passed to model
           };
         })
       );
@@ -322,7 +330,13 @@ IMPORTANTE: SIEMPRE usa searchActivities primero antes de responder sobre activi
       }
 
       const finalData = await finalResponse.json();
-      const finalContent = finalData.choices[0].message.content;
+      let finalContent = finalData.choices[0].message.content;
+      
+      // Append navigation command if present (so frontend can detect it)
+      if (navigationCommand) {
+        finalContent += `[NAVIGATE:${navigationCommand}]`;
+        console.log("Adding navigation command:", navigationCommand);
+      }
 
       // Return as SSE format for compatibility with existing client
       const sseResponse = `data: ${JSON.stringify({ choices: [{ delta: { content: finalContent } }] })}\n\ndata: [DONE]\n\n`;

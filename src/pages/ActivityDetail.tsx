@@ -13,6 +13,7 @@ import VoiceAssistant from '@/components/VoiceAssistant';
 import { useVoiceActivityTools } from '@/features/activities/hooks/useVoiceActivityTools';
 import { ActivityRatings } from '@/features/activities/components/ActivityRatings';
 import ActivityImageGallery from '@/components/ActivityImageGallery';
+import ActivityMap from '@/components/ActivityMap';
 import PageHeader from '@/components/PageHeader';
 import Header from '@/components/Header';
 import { useFavorites } from '@/features/activities/hooks/useFavorites';
@@ -27,6 +28,8 @@ interface Activity {
   description: string | null;
   category: string;
   location: string;
+  latitude?: number | null;
+  longitude?: number | null;
   date: string;
   time: string;
   cost: number;
@@ -348,6 +351,14 @@ export default function ActivityDetail() {
                 {getTranslatedDescription(activity)}
               </p>
             </div>
+
+            {/* Map Section */}
+            <ActivityMap
+              location={activity.location}
+              latitude={activity.latitude}
+              longitude={activity.longitude}
+              activityTitle={getTranslatedTitle(activity)}
+            />
           </div>
 
           <div className="lg:col-span-1">

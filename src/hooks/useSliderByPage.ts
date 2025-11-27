@@ -48,7 +48,9 @@ export function useSliderByPage(pagePath: string): UseSliderByPageResult {
 
         if (sliderError) {
           // If sliders table doesn't exist, fall back to loading all banners
-          console.warn('Sliders table not found, loading all banners');
+          if (import.meta.env.DEV) {
+            console.warn('Sliders table not found, loading all banners');
+          }
           await loadLegacyBanners();
           return;
         }
@@ -75,7 +77,9 @@ export function useSliderByPage(pagePath: string): UseSliderByPageResult {
         const formattedSlides = formatBanners(bannersData || [], i18n.language);
         setSlides(formattedSlides);
       } catch (err: any) {
-        console.error('Error loading slider:', err);
+        if (import.meta.env.DEV) {
+          console.error('Error loading slider:', err);
+        }
         setError(err.message);
         
         // Fallback to legacy loading
@@ -100,7 +104,9 @@ export function useSliderByPage(pagePath: string): UseSliderByPageResult {
         setSlides(formattedSlides);
         setSliderName('Default');
       } catch (err: any) {
-        console.error('Error loading legacy banners:', err);
+        if (import.meta.env.DEV) {
+          console.error('Error loading legacy banners:', err);
+        }
         setSlides([]);
       }
     };
@@ -183,7 +189,9 @@ export function useSliderBySlug(slug: string): UseSliderByPageResult {
         const formattedSlides = formatBanners(bannersData || [], i18n.language);
         setSlides(formattedSlides);
       } catch (err: any) {
-        console.error('Error loading slider by slug:', err);
+        if (import.meta.env.DEV) {
+          console.error('Error loading slider by slug:', err);
+        }
         setError(err.message);
         setSlides([]);
       } finally {

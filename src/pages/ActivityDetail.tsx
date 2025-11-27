@@ -28,6 +28,7 @@ interface Activity {
   description: string | null;
   category: string;
   location: string;
+  city?: string | null;
   latitude?: number | null;
   longitude?: number | null;
   date: string;
@@ -355,6 +356,7 @@ export default function ActivityDetail() {
             {/* Map Section */}
             <ActivityMap
               location={activity.location}
+              city={activity.city}
               latitude={activity.latitude}
               longitude={activity.longitude}
               activityTitle={getTranslatedTitle(activity)}

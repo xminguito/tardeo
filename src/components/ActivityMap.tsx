@@ -1,29 +1,19 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
-import { GoogleMap, useLoadScript, Marker, DirectionsRenderer } from '@react-google-maps/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MapPin, Navigation, Route, X, Loader2 } from 'lucide-react';
+import { MapPin, Navigation, Route, X, Loader2, Calculator, Map } from 'lucide-react';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { calculateDistance, geocodeLocation } from '@/lib/distance';
 import { useToast } from '@/hooks/use-toast';
 
-const libraries: ("places" | "geometry" | "directions")[] = ["places", "geometry", "directions"];
-
-const mapContainerStyle = {
-  width: '100%',
-  height: '300px',
-  borderRadius: '0.5rem',
-};
-
-const defaultCenter = {
-  lat: 41.3851,
-  lng: 2.1734,
-};
+// Lazy load the map component to avoid loading Google Maps when not needed
+const GoogleMapView = lazy(() => import('./GoogleMapView'));
 
 interface ActivityMapProps {
   location: string;
+  city?: string | null;
   latitude?: number | null;
   longitude?: number | null;
   activityTitle?: string;
@@ -31,6 +21,7 @@ interface ActivityMapProps {
 
 export default function ActivityMap({ 
   location, 
+  city,
   latitude, 
   longitude,
   activityTitle 
@@ -44,27 +35,33 @@ export default function ActivityMap({
   );
   const [showDistanceCalculator, setShowDistanceCalculator] = useState(false);
   const [customOrigin, setCustomOrigin] = useState('');
-  const [customOriginCoords, setCustomOriginCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
-  const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
-  const [calculatingRoute, setCalculatingRoute] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
+  const [calculatedDistanceFromInput, setCalculatedDistanceFromInput] = useState<number | null>(null);
+  const [showMap, setShowMap] = useState(false);
 
-  const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
-    libraries,
-  });
+  // Check if Google Maps API key is configured
+  const hasGoogleMapsKey = Boolean(import.meta.env.VITE_GOOGLE_MAPS_API_KEY);
 
   // Geocode activity location if no coords provided
   useEffect(() => {
     if (!activityCoords && location) {
-      geocodeLocation(location).then((coords) => {
+      // Try with full address + city first, then fallback to just city
+      const fullAddress = city ? `${location}, ${city}, Spain` : `${location}, Spain`;
+      geocodeLocation(fullAddress).then((coords) => {
         if (coords) {
           setActivityCoords(coords);
+        } else if (city) {
+          // Fallback to just the city
+          geocodeLocation(`${city}, Spain`).then((cityCoords) => {
+            if (cityCoords) {
+              setActivityCoords(cityCoords);
+            }
+          });
         }
       });
     }
-  }, [location, activityCoords]);
+  }, [location, city, activityCoords]);
 
   // Calculate distance from user location
   useEffect(() => {
@@ -81,9 +78,21 @@ export default function ActivityMap({
 
   const handleUseMyLocation = () => {
     if (userLocation?.coordinates) {
-      setCustomOriginCoords(userLocation.coordinates);
       setCustomOrigin(userLocation.city || t('map.myLocation'));
-      calculateRoute(userLocation.coordinates);
+      
+      if (activityCoords) {
+        const dist = calculateDistance(
+          userLocation.coordinates.lat,
+          userLocation.coordinates.lng,
+          activityCoords.lat,
+          activityCoords.lng
+        );
+        setCalculatedDistanceFromInput(dist);
+        toast({
+          title: t('map.distanceCalculated'),
+          description: `${dist.toFixed(1)} km (${t('map.straightLine')})`,
+        });
+      }
     } else {
       toast({
         title: t('map.noLocation'),
@@ -99,13 +108,28 @@ export default function ActivityMap({
     setGeocoding(true);
     try {
       const coords = await geocodeLocation(customOrigin);
-      if (coords) {
-        setCustomOriginCoords(coords);
-        calculateRoute(coords);
-      } else {
+      if (coords && activityCoords) {
+        const dist = calculateDistance(
+          coords.lat,
+          coords.lng,
+          activityCoords.lat,
+          activityCoords.lng
+        );
+        setCalculatedDistanceFromInput(dist);
+        toast({
+          title: t('map.distanceCalculated'),
+          description: `${dist.toFixed(1)} km (${t('map.straightLine')})`,
+        });
+      } else if (!coords) {
         toast({
           title: t('map.locationNotFound'),
           description: t('map.tryAgain'),
+          variant: 'destructive',
+        });
+      } else if (!activityCoords) {
+        toast({
+          title: t('map.locationNotFound'),
+          description: t('map.activityLocationNotFound'),
           variant: 'destructive',
         });
       }
@@ -114,71 +138,11 @@ export default function ActivityMap({
     }
   };
 
-  const calculateRoute = useCallback(async (origin: { lat: number; lng: number }) => {
-    if (!activityCoords || !isLoaded) return;
-
-    setCalculatingRoute(true);
-    setDirections(null);
-
-    try {
-      const directionsService = new google.maps.DirectionsService();
-      const result = await directionsService.route({
-        origin: new google.maps.LatLng(origin.lat, origin.lng),
-        destination: new google.maps.LatLng(activityCoords.lat, activityCoords.lng),
-        travelMode: google.maps.TravelMode.DRIVING,
-      });
-      
-      setDirections(result);
-      
-      // Get distance from route
-      if (result.routes[0]?.legs[0]) {
-        const leg = result.routes[0].legs[0];
-        toast({
-          title: t('map.routeCalculated'),
-          description: `${leg.distance?.text} - ${leg.duration?.text}`,
-        });
-      }
-    } catch (error) {
-      console.error('Error calculating route:', error);
-      toast({
-        title: t('map.routeError'),
-        description: t('map.routeErrorDesc'),
-        variant: 'destructive',
-      });
-    } finally {
-      setCalculatingRoute(false);
-    }
-  }, [activityCoords, isLoaded, t, toast]);
-
   const clearRoute = () => {
-    setDirections(null);
     setCustomOrigin('');
-    setCustomOriginCoords(null);
     setShowDistanceCalculator(false);
+    setCalculatedDistanceFromInput(null);
   };
-
-  if (loadError) {
-    return (
-      <Card>
-        <CardContent className="p-6 text-center text-muted-foreground">
-          <MapPin className="h-8 w-8 mx-auto mb-2 opacity-50" />
-          <p>{t('map.loadError')}</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!isLoaded) {
-    return (
-      <Card>
-        <CardContent className="p-6 flex items-center justify-center h-[300px]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const mapCenter = activityCoords || defaultCenter;
 
   return (
     <Card>
@@ -196,53 +160,39 @@ export default function ActivityMap({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Map */}
-        <GoogleMap
-          mapContainerStyle={mapContainerStyle}
-          center={mapCenter}
-          zoom={15}
-          options={{
-            streetViewControl: false,
-            mapTypeControl: false,
-            fullscreenControl: true,
-          }}
-        >
-          {activityCoords && !directions && (
-            <Marker
-              position={activityCoords}
-              title={activityTitle || location}
-            />
-          )}
-          
-          {customOriginCoords && !directions && (
-            <Marker
-              position={customOriginCoords}
-              title={t('map.origin')}
-              icon={{
-                url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
-              }}
-            />
-          )}
-          
-          {directions && (
-            <DirectionsRenderer
-              directions={directions}
-              options={{
-                suppressMarkers: false,
-                polylineOptions: {
-                  strokeColor: '#c9553d',
-                  strokeWeight: 4,
-                },
-              }}
-            />
-          )}
-        </GoogleMap>
-
         {/* Location text */}
         <p className="text-sm text-muted-foreground flex items-center gap-2">
           <MapPin className="h-4 w-4" />
           {location}
         </p>
+
+        {/* Show Map button if API key exists and map not yet shown */}
+        {hasGoogleMapsKey && !showMap && (
+          <Button 
+            variant="outline" 
+            className="w-full gap-2"
+            onClick={() => setShowMap(true)}
+          >
+            <Map className="h-4 w-4" />
+            {t('map.showMap')}
+          </Button>
+        )}
+
+        {/* Map - only loaded when explicitly requested */}
+        {showMap && hasGoogleMapsKey && (
+          <Suspense fallback={
+            <div className="h-[300px] flex items-center justify-center bg-muted rounded-lg">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          }>
+            <GoogleMapView
+              activityCoords={activityCoords}
+              activityTitle={activityTitle}
+              location={location}
+              onMapError={() => setShowMap(false)}
+            />
+          </Suspense>
+        )}
 
         {/* Distance Calculator Toggle */}
         {!showDistanceCalculator ? (
@@ -251,13 +201,13 @@ export default function ActivityMap({
             className="w-full gap-2"
             onClick={() => setShowDistanceCalculator(true)}
           >
-            <Route className="h-4 w-4" />
+            <Calculator className="h-4 w-4" />
             {t('map.calculateDistance')}
           </Button>
         ) : (
           <div className="space-y-3 p-4 bg-muted/50 rounded-lg">
             <div className="flex items-center justify-between">
-              <h4 className="font-medium text-sm">{t('map.calculateRoute')}</h4>
+              <h4 className="font-medium text-sm">{t('map.calculateDistanceTitle')}</h4>
               <Button variant="ghost" size="icon" onClick={clearRoute}>
                 <X className="h-4 w-4" />
               </Button>
@@ -272,9 +222,9 @@ export default function ActivityMap({
               />
               <Button 
                 onClick={handleSearchOrigin}
-                disabled={!customOrigin.trim() || geocoding || calculatingRoute}
+                disabled={!customOrigin.trim() || geocoding}
               >
-                {geocoding || calculatingRoute ? (
+                {geocoding ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Route className="h-4 w-4" />
@@ -286,19 +236,19 @@ export default function ActivityMap({
               variant="secondary" 
               className="w-full gap-2"
               onClick={handleUseMyLocation}
-              disabled={!userLocation?.coordinates || calculatingRoute}
+              disabled={!userLocation?.coordinates}
             >
               <Navigation className="h-4 w-4" />
               {t('map.useMyLocation')}
             </Button>
 
-            {directions?.routes[0]?.legs[0] && (
+            {calculatedDistanceFromInput !== null && (
               <div className="text-sm text-center p-3 bg-primary/10 rounded-lg">
                 <p className="font-semibold text-primary">
-                  {directions.routes[0].legs[0].distance?.text}
+                  {calculatedDistanceFromInput.toFixed(1)} km
                 </p>
-                <p className="text-muted-foreground">
-                  {directions.routes[0].legs[0].duration?.text} {t('map.byCar')}
+                <p className="text-muted-foreground text-xs">
+                  {t('map.straightLineDistance')}
                 </p>
               </div>
             )}
@@ -308,4 +258,3 @@ export default function ActivityMap({
     </Card>
   );
 }
-

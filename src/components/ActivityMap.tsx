@@ -14,6 +14,8 @@ const GoogleMapView = lazy(() => import('./GoogleMapView'));
 interface ActivityMapProps {
   location: string;
   city?: string | null;
+  province?: string | null;
+  country?: string | null;
   latitude?: number | null;
   longitude?: number | null;
   activityTitle?: string;
@@ -22,6 +24,8 @@ interface ActivityMapProps {
 export default function ActivityMap({ 
   location, 
   city,
+  province,
+  country,
   latitude, 
   longitude,
   activityTitle 
@@ -46,14 +50,18 @@ export default function ActivityMap({
   // Geocode activity location if no coords provided
   useEffect(() => {
     if (!activityCoords && location) {
-      // Try with full address + city first, then fallback to just city
-      const fullAddress = city ? `${location}, ${city}, Spain` : `${location}, Spain`;
+      // Build full address with all available location parts
+      const countryName = country || 'Spain';
+      const locationParts = [location, city, province, countryName].filter(Boolean);
+      const fullAddress = locationParts.join(', ');
+      
       geocodeLocation(fullAddress).then((coords) => {
         if (coords) {
           setActivityCoords(coords);
         } else if (city) {
-          // Fallback to just the city
-          geocodeLocation(`${city}, Spain`).then((cityCoords) => {
+          // Fallback to city + province + country
+          const fallbackParts = [city, province, countryName].filter(Boolean);
+          geocodeLocation(fallbackParts.join(', ')).then((cityCoords) => {
             if (cityCoords) {
               setActivityCoords(cityCoords);
             }
@@ -61,7 +69,7 @@ export default function ActivityMap({
         }
       });
     }
-  }, [location, city, activityCoords]);
+  }, [location, city, province, country, activityCoords]);
 
   // Calculate distance from user location
   useEffect(() => {
@@ -161,10 +169,18 @@ export default function ActivityMap({
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Location text */}
-        <p className="text-sm text-muted-foreground flex items-center gap-2">
-          <MapPin className="h-4 w-4" />
-          {location}
-        </p>
+        <div className="text-sm text-muted-foreground">
+          <p className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 flex-shrink-0" />
+            {location}
+          </p>
+          {(city || province) && (
+            <p className="ml-6 text-xs">
+              {[city, province].filter(Boolean).join(', ')}
+              {country && ` · ${country}`}
+            </p>
+          )}
+        </div>
 
         {/* Show Map button if API key exists and map not yet shown */}
         {hasGoogleMapsKey && !showMap && (

@@ -29,6 +29,8 @@ interface Activity {
   category: string;
   location: string;
   city?: string | null;
+  province?: string | null;
+  country?: string | null;
   latitude?: number | null;
   longitude?: number | null;
   date: string;
@@ -357,6 +359,8 @@ export default function ActivityDetail() {
             <ActivityMap
               location={activity.location}
               city={activity.city}
+              province={activity.province}
+              country={activity.country}
               latitude={activity.latitude}
               longitude={activity.longitude}
               activityTitle={getTranslatedTitle(activity)}
@@ -390,6 +394,12 @@ export default function ActivityDetail() {
                     <div>
                       <p className="font-semibold">{t('activityDetail.location')}</p>
                       <span>{activity.location}</span>
+                      {(activity.city || activity.province) && (
+                        <p className="text-sm text-muted-foreground">
+                          {[activity.city, activity.province].filter(Boolean).join(', ')}
+                          {activity.country && ` (${activity.country})`}
+                        </p>
+                      )}
                     </div>
                   </div>
 

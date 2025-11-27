@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { useVoiceActivityTools } from "@/features/activities/hooks/useVoiceActivityTools";
 import VoiceAssistant from "@/components/VoiceAssistant";
+import { CookieConsentComponent } from "@/components/CookieConsent";
 import type { ActivityFilters } from "@/features/activities/types/activity.types";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -144,20 +145,50 @@ const AppContent = () => {
 
 const App = () => {
   useEffect(() => {
-    // Initialize analytics (lazy-loaded after interaction or 2s idle)
-    initAnalytics()
-      .then(() => {
-        console.log('[Analytics] Initialized');
-        track('app_opened', {});
-      })
-      .catch((error) => {
-        console.error('[Analytics] Failed to initialize:', error);
-      });
+    // Listen for cookie consent events
+    const handleCookieConsent = (event: CustomEvent) => {
+      if (event.detail.analytics) {
+        // Initialize analytics when user accepts
+        initAnalytics()
+          .then(() => {
+            if (import.meta.env.DEV) {
+              console.log('[Analytics] Initialized after consent');
+            }
+            track('app_opened', {});
+          })
+          .catch((error) => {
+            if (import.meta.env.DEV) {
+              console.error('[Analytics] Failed to initialize:', error);
+            }
+          });
+      }
+    };
+
+    const handleCookieChange = (event: CustomEvent) => {
+      if (!event.detail.analytics) {
+        // User revoked analytics consent
+        const { optOut } = require('@/lib/analytics');
+        optOut();
+      } else {
+        // User granted analytics consent
+        const { optIn } = require('@/lib/analytics');
+        optIn();
+      }
+    };
+
+    window.addEventListener('cookieconsentAccepted', handleCookieConsent as EventListener);
+    window.addEventListener('cookieconsentChanged', handleCookieChange as EventListener);
+
+    return () => {
+      window.removeEventListener('cookieconsentAccepted', handleCookieConsent as EventListener);
+      window.removeEventListener('cookieconsentChanged', handleCookieChange as EventListener);
+    };
   }, []);
 
   return (
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
+          <CookieConsentComponent />
           <Toaster />
           <Sonner />
           <BrowserRouter>

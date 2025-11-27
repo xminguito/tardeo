@@ -15,6 +15,34 @@ export default {
     confirm: 'Confirmar',
     create: 'Crear',
   },
+  cookies: {
+    modal: {
+      title: "🍪 Utilitzem cookies",
+      description: "Utilitzem cookies per millorar la teva experiència. Les cookies necessàries són essencials per al funcionament. Les analítiques ens ajuden a millorar la plataforma.",
+      acceptAll: "Acceptar totes",
+      acceptNecessary: "Només necessàries",
+      showPreferences: "Configurar",
+    },
+    preferences: {
+      title: "Preferències de cookies",
+      acceptAll: "Acceptar totes",
+      acceptNecessary: "Només necessàries",
+      save: "Guardar preferències",
+      close: "Tancar",
+      usage: {
+        title: "Ús de cookies",
+        description: "Utilitzem cookies per assegurar el correcte funcionament de la plataforma i analitzar com la fas servir per poder millorar-la.",
+      },
+      necessary: {
+        title: "Cookies necessàries",
+        description: "Aquestes cookies són essencials per al funcionament bàsic de la plataforma. Inclouen cookies de sessió i preferències d'interfície.",
+      },
+      analytics: {
+        title: "Cookies analítiques",
+        description: "Ens ajuden a entendre com utilitzes Tardeo mitjançant Mixpanel. Tota la informació és anònima i ens permet millorar l'experiència.",
+      },
+    },
+  },
   location: {
     title: 'La teva ubicació',
     description: 'T\'ajudem a trobar activitats a prop teu',

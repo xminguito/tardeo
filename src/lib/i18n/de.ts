@@ -15,6 +15,34 @@ export default {
     confirm: 'Bestätigen',
     create: 'Erstellen',
   },
+  cookies: {
+    modal: {
+      title: "🍪 Wir verwenden Cookies",
+      description: "Wir verwenden Cookies, um Ihre Erfahrung zu verbessern. Notwendige Cookies sind für den Betrieb unerlässlich. Analyse-Cookies helfen uns, die Plattform zu verbessern.",
+      acceptAll: "Alle akzeptieren",
+      acceptNecessary: "Nur notwendige",
+      showPreferences: "Konfigurieren",
+    },
+    preferences: {
+      title: "Cookie-Einstellungen",
+      acceptAll: "Alle akzeptieren",
+      acceptNecessary: "Nur notwendige",
+      save: "Einstellungen speichern",
+      close: "Schließen",
+      usage: {
+        title: "Cookie-Nutzung",
+        description: "Wir verwenden Cookies, um den ordnungsgemäßen Betrieb der Plattform sicherzustellen und zu analysieren, wie Sie sie nutzen, um sie zu verbessern.",
+      },
+      necessary: {
+        title: "Notwendige Cookies",
+        description: "Diese Cookies sind für die Grundfunktionen der Plattform unerlässlich. Sie umfassen Sitzungs- und Benutzeroberflächeneinstellungs-Cookies.",
+      },
+      analytics: {
+        title: "Analyse-Cookies",
+        description: "Sie helfen uns zu verstehen, wie Sie Tardeo über Mixpanel nutzen. Alle Informationen sind anonym und ermöglichen es uns, das Erlebnis zu verbessern.",
+      },
+    },
+  },
   location: {
     title: 'Ihr Standort',
     description: 'Wir helfen Ihnen, Aktivitäten in Ihrer Nähe zu finden',

@@ -1,0 +1,170 @@
+/* Cookie Consent Custom Styles for Tardeo */
+
+/* Override default colors with Tardeo design system */
+:root {
+  --cc-bg: hsl(var(--background));
+  --cc-text: hsl(var(--foreground));
+  --cc-btn-primary-bg: hsl(var(--primary));
+  --cc-btn-primary-text: hsl(var(--primary-foreground));
+  --cc-btn-primary-hover-bg: hsl(var(--primary) / 0.9);
+  --cc-btn-secondary-bg: hsl(var(--secondary));
+  --cc-btn-secondary-text: hsl(var(--secondary-foreground));
+  --cc-btn-secondary-hover-bg: hsl(var(--secondary) / 0.9);
+  --cc-separator-border-color: hsl(var(--border));
+  --cc-cookie-category-block-bg: hsl(var(--muted));
+  --cc-cookie-category-block-bg-hover: hsl(var(--muted) / 0.8);
+  --cc-section-border: hsl(var(--border));
+  --cc-toggle-bg-off: hsl(var(--muted));
+  --cc-toggle-bg-on: hsl(var(--primary));
+  --cc-toggle-bg-readonly: hsl(var(--muted) / 0.5);
+  --cc-overlay-bg: rgba(0, 0, 0, 0.5);
+}
+
+/* Modal styling */
+#cc-main {
+  font-family: inherit;
+}
+
+#cc-main .cm {
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  border: 1px solid hsl(var(--border));
+}
+
+#cc-main .cm__title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+#cc-main .cm__desc {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: hsl(var(--muted-foreground));
+}
+
+/* Button styling */
+#cc-main .cm__btn {
+  border-radius: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: none;
+  font-size: 0.9375rem;
+}
+
+#cc-main .cm__btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+#cc-main .cm__btn--primary {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+#cc-main .cm__btn--primary:hover {
+  background: hsl(var(--primary) / 0.9);
+}
+
+#cc-main .cm__btn--secondary {
+  background: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+}
+
+#cc-main .cm__btn--secondary:hover {
+  background: hsl(var(--secondary) / 0.9);
+}
+
+/* Preferences modal */
+#cc-main .pm {
+  border-radius: 0.75rem;
+  max-width: 42rem;
+}
+
+#cc-main .pm__title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+#cc-main .pm__section {
+  border-radius: 0.5rem;
+  border: 1px solid hsl(var(--border));
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+
+#cc-main .pm__section-title {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+#cc-main .pm__section-desc {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: hsl(var(--muted-foreground));
+}
+
+/* Toggle switch */
+#cc-main .section__toggle {
+  width: 3rem;
+  height: 1.5rem;
+}
+
+#cc-main .section__toggle.toggle--readonly {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Responsive adjustments for seniors */
+@media (max-width: 640px) {
+  #cc-main .cm {
+    margin: 1rem;
+    max-width: calc(100vw - 2rem);
+  }
+
+  #cc-main .cm__title {
+    font-size: 1.125rem;
+  }
+
+  #cc-main .cm__desc,
+  #cc-main .pm__section-desc {
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  #cc-main .cm__btn {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    min-height: 44px; /* Touch-friendly minimum */
+  }
+
+  #cc-main .pm {
+    margin: 1rem;
+    max-width: calc(100vw - 2rem);
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  #cc-main .cm,
+  #cc-main .pm {
+    border-width: 2px;
+  }
+
+  #cc-main .cm__btn {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  #cc-main .cm__btn:hover {
+    transform: none;
+  }
+
+  #cc-main * {
+    transition: none !important;
+  }
+}

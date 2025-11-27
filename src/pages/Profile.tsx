@@ -133,7 +133,9 @@ const Profile = () => {
       .upload(fileName, file, { upsert: true });
 
     if (uploadError) {
-      console.error('Upload error:', uploadError);
+      if (import.meta.env.DEV) {
+        console.error('Upload error:', uploadError);
+      }
       toast({
         title: t('common.error'),
         description: "Error al subir la imagen",

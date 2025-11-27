@@ -401,6 +401,7 @@ export type Database = {
           image_url_mobile: string | null
           is_active: boolean | null
           order_index: number | null
+          slider_id: string | null
           title_ca: string | null
           title_de: string | null
           title_en: string | null
@@ -430,6 +431,7 @@ export type Database = {
           image_url_mobile?: string | null
           is_active?: boolean | null
           order_index?: number | null
+          slider_id?: string | null
           title_ca?: string | null
           title_de?: string | null
           title_en?: string | null
@@ -459,6 +461,7 @@ export type Database = {
           image_url_mobile?: string | null
           is_active?: boolean | null
           order_index?: number | null
+          slider_id?: string | null
           title_ca?: string | null
           title_de?: string | null
           title_en?: string | null
@@ -467,7 +470,15 @@ export type Database = {
           title_it?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "hero_banners_slider_id_fkey"
+            columns: ["slider_id"]
+            isOneToOne: false
+            referencedRelation: "sliders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       interests: {
         Row: {
@@ -637,6 +648,7 @@ export type Database = {
           following_count: number | null
           friends_count: number | null
           full_name: string | null
+          gallery_images: Json | null
           id: string
           is_online: boolean | null
           last_seen_at: string | null
@@ -655,6 +667,7 @@ export type Database = {
           following_count?: number | null
           friends_count?: number | null
           full_name?: string | null
+          gallery_images?: Json | null
           id: string
           is_online?: boolean | null
           last_seen_at?: string | null
@@ -673,6 +686,7 @@ export type Database = {
           following_count?: number | null
           friends_count?: number | null
           full_name?: string | null
+          gallery_images?: Json | null
           id?: string
           is_online?: boolean | null
           last_seen_at?: string | null
@@ -704,6 +718,39 @@ export type Database = {
           id?: string
           properties?: Json | null
           user_id_text?: string | null
+        }
+        Relationships: []
+      }
+      sliders: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          page_path: string
+          slug: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          page_path?: string
+          slug: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          page_path?: string
+          slug?: string
+          updated_at?: string | null
         }
         Relationships: []
       }

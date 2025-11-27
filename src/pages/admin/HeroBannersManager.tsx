@@ -182,7 +182,9 @@ export default function HeroBannersManager() {
         setSelectedSlider(slidersData[0]);
       }
     } catch (error: any) {
-      console.error('Error loading sliders:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error loading sliders:', error);
+      }
       // If sliders table doesn't exist, show migration message
       if (error.message?.includes('relation') || error.code === '42P01') {
         toast({
@@ -213,7 +215,9 @@ export default function HeroBannersManager() {
       if (error) throw error;
       setBanners((data || []) as any);
     } catch (error: any) {
-      console.error('Error loading banners:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error loading banners:', error);
+      }
       // Fallback: load all banners if slider_id column doesn't exist
       if (error.message?.includes('slider_id')) {
         const { data } = await supabase
@@ -262,7 +266,9 @@ export default function HeroBannersManager() {
       resetSliderForm();
       loadSliders();
     } catch (error: any) {
-      console.error('Error saving slider:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error saving slider:', error);
+      }
       toast({
         title: 'Error',
         description: error.message || 'No se pudo guardar el slider',
@@ -292,7 +298,9 @@ export default function HeroBannersManager() {
       
       loadSliders();
     } catch (error: any) {
-      console.error('Error deleting slider:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error deleting slider:', error);
+      }
       toast({
         title: 'Error',
         description: error.message,
@@ -350,7 +358,9 @@ export default function HeroBannersManager() {
         description: `Imagen ${isMobile ? 'móvil ' : ''}subida correctamente`,
       });
     } catch (error: any) {
-      console.error('Error uploading image:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error uploading image:', error);
+      }
       toast({
         title: 'Error',
         description: error.message || 'No se pudo subir la imagen',
@@ -400,7 +410,9 @@ export default function HeroBannersManager() {
       resetBannerForm();
       if (selectedSlider) loadBanners(selectedSlider.id);
     } catch (error: any) {
-      console.error('Error saving banner:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error saving banner:', error);
+      }
       toast({
         title: 'Error',
         description: error.message || 'No se pudo guardar el banner',
@@ -452,7 +464,9 @@ export default function HeroBannersManager() {
 
       if (selectedSlider) loadBanners(selectedSlider.id);
     } catch (error: any) {
-      console.error('Error deleting banner:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error deleting banner:', error);
+      }
       toast({
         title: 'Error',
         description: error.message,

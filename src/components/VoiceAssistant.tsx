@@ -596,7 +596,7 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
     
     // Analytics: Track assistant opened in text mode
     track('assistant_invoked', {
-      mode: 'text_open',
+      mode: 'text',
     });
   };
 

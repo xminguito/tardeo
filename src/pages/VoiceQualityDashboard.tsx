@@ -85,11 +85,9 @@ export default function VoiceQualityDashboard() {
       // Refresh materialized view first
       await supabase.rpc('refresh_voice_quality_stats');
 
-      // Fetch aggregated metrics by language
+      // Fetch aggregated metrics by language using secure wrapper function
       const { data: langData, error: langError } = await supabase
-        .from('voice_quality_stats')
-        .select('*')
-        .order('total_responses', { ascending: false });
+        .rpc('get_voice_quality_stats');
 
       if (langError) throw langError;
 

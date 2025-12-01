@@ -497,5 +497,12 @@ export default {
     leftActivity: "You have left",
     leftActivityDesc: "You have cancelled your participation in this activity",
     errorLeaving: "Could not complete the cancellation",
+    registered: "{{count}} Registered",
+    registered_plural: "{{count}} Registered",
+    anonymous: "Anonymous",
+    more: "more",
+    aboutOrganizer: "About the organizer",
+    organizer: "Organizer",
+    viewProfile: "View profile",
   },
 };

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Calendar, MapPin, Users, Clock, Euro, MessageCircle, Loader2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Calendar, MapPin, Users, Clock, Euro, MessageCircle, Loader2, User } from 'lucide-react';
 import { format } from 'date-fns';
 import { es, enUS, ca, fr, it, de } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -41,6 +42,7 @@ interface Activity {
   image_url?: string | null;
   secondary_images?: string[] | null;
   created_at?: string;
+  created_by?: string | null;
   title_es?: string | null;
   title_en?: string | null;
   title_ca?: string | null;
@@ -55,6 +57,21 @@ interface Activity {
   description_de?: string | null;
 }
 
+interface Participant {
+  id: string;
+  full_name: string | null;
+  username: string | null;
+  avatar_url: string | null;
+}
+
+interface Organizer {
+  id: string;
+  full_name: string | null;
+  username: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+}
+
 export default function ActivityDetail() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
@@ -67,6 +84,9 @@ export default function ActivityDetail() {
   const [userId, setUserId] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [organizer, setOrganizer] = useState<Organizer | null>(null);
+  const [realParticipantCount, setRealParticipantCount] = useState<number>(0);
   const { favorites } = useFavorites(userId);
   const { track, serverTrack } = useAnalytics();
 
@@ -140,6 +160,45 @@ export default function ActivityDetail() {
 
       if (error) throw error;
       setActivity(data);
+
+      // Load participants - first get user_ids, then fetch their profiles
+      const { data: participantsData, count: participantCount } = await supabase
+        .from('activity_participants')
+        .select('user_id', { count: 'exact' })
+        .eq('activity_id', activityId);
+
+      // Set the real participant count
+      setRealParticipantCount(participantCount || 0);
+
+      if (participantsData && participantsData.length > 0) {
+        const userIds = participantsData
+          .map((p: any) => p.user_id)
+          .filter(Boolean);
+        
+        if (userIds.length > 0) {
+          const { data: profilesData } = await supabase
+            .from('profiles')
+            .select('id, full_name, username, avatar_url')
+            .in('id', userIds);
+
+          if (profilesData) {
+            setParticipants(profilesData);
+          }
+        }
+      }
+
+      // Load organizer profile if created_by exists
+      if (data.created_by) {
+        const { data: organizerData } = await supabase
+          .from('profiles')
+          .select('id, full_name, username, avatar_url, bio')
+          .eq('id', data.created_by)
+          .single();
+
+        if (organizerData) {
+          setOrganizer(organizerData);
+        }
+      }
 
       // Analytics: Track activity_view { activity_id, category, source: 'activity_details', price }
       track('activity_view', {
@@ -304,8 +363,10 @@ export default function ActivityDetail() {
     );
   }
 
-  const isFull = activity.current_participants >= activity.max_participants;
-  const availableSlots = activity.max_participants - activity.current_participants;
+  // Use real participant count from activity_participants table
+  const actualParticipants = realParticipantCount;
+  const isFull = actualParticipants >= activity.max_participants;
+  const availableSlots = activity.max_participants - actualParticipants;
 
   return (
     <div className="min-h-screen bg-background">
@@ -365,6 +426,85 @@ export default function ActivityDetail() {
               longitude={activity.longitude}
               activityTitle={getTranslatedTitle(activity)}
             />
+
+            {/* Participants Section */}
+            {participants.length > 0 && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Users className="h-5 w-5 text-primary" />
+                    {t('activityDetail.registered', { count: participants.length })}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-3">
+                    {participants.slice(0, 10).map((participant) => (
+                      <Link
+                        key={participant.id}
+                        to={`/user/${participant.id}`}
+                        className="flex flex-col items-center gap-1 hover:opacity-80 transition-opacity"
+                      >
+                        <Avatar className="h-12 w-12 border-2 border-background shadow-sm">
+                          <AvatarImage src={participant.avatar_url || undefined} alt={participant.full_name || participant.username || ''} />
+                          <AvatarFallback className="bg-primary/10 text-primary">
+                            {(participant.full_name || participant.username || 'U').charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-xs text-muted-foreground max-w-[60px] truncate">
+                          {participant.full_name?.split(' ')[0] || participant.username || t('activityDetail.anonymous')}
+                        </span>
+                      </Link>
+                    ))}
+                    {participants.length > 10 && (
+                      <div className="flex flex-col items-center gap-1">
+                        <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center text-sm font-medium text-muted-foreground">
+                          +{participants.length - 10}
+                        </div>
+                        <span className="text-xs text-muted-foreground">{t('activityDetail.more')}</span>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Organizer Section */}
+            {organizer && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <User className="h-5 w-5 text-primary" />
+                    {t('activityDetail.aboutOrganizer')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Link
+                    to={`/user/${organizer.id}`}
+                    className="flex items-center gap-4 hover:bg-muted/50 -mx-2 p-2 rounded-lg transition-colors"
+                  >
+                    <Avatar className="h-16 w-16 border-2 border-primary/20">
+                      <AvatarImage src={organizer.avatar_url || undefined} alt={organizer.full_name || organizer.username || ''} />
+                      <AvatarFallback className="bg-primary/10 text-primary text-xl">
+                        {(organizer.full_name || organizer.username || 'O').charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-lg truncate">
+                        {organizer.full_name || organizer.username || t('activityDetail.organizer')}
+                      </p>
+                      {organizer.bio && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {organizer.bio}
+                        </p>
+                      )}
+                      <p className="text-sm text-primary mt-1">
+                        {t('activityDetail.viewProfile')} →
+                      </p>
+                    </div>
+                  </Link>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           <div className="lg:col-span-1">
@@ -408,7 +548,7 @@ export default function ActivityDetail() {
                     <div>
                       <p className="font-semibold">{t('activityDetail.participants')}</p>
                       <span>
-                        {activity.current_participants} / {activity.max_participants}
+                        {actualParticipants} / {activity.max_participants}
                       </span>
                       {availableSlots > 0 && (
                         <p className="text-sm text-muted-foreground">

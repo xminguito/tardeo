@@ -518,5 +518,12 @@ export default {
     leftActivity: "Te has desapuntado",
     leftActivityDesc: "Has cancelado tu participación en esta actividad",
     errorLeaving: "No se pudo completar la cancelación",
+    registered: "{{count}} Apuntado",
+    registered_plural: "{{count}} Apuntados",
+    anonymous: "Anónimo",
+    more: "más",
+    aboutOrganizer: "Sobre el organizador",
+    organizer: "Organizador",
+    viewProfile: "Ver perfil",
   },
 };

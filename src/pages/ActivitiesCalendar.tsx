@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useActivities } from '@/features/activities/hooks/useActivities';
 import { ActivityFiltersComponent } from '@/features/activities/components/ActivityFilters';
 import ActivityCard from '@/components/ActivityCard';
@@ -19,11 +19,60 @@ import PageTransition from '@/components/PageTransition';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { useAnalytics } from '@/lib/analytics/useAnalytics';
 
+// Helper to parse URL params to filters
+const parseFiltersFromURL = (searchParams: URLSearchParams): ActivityFilters => {
+  const filters: ActivityFilters = {};
+  
+  const category = searchParams.get('category');
+  if (category) filters.category = category;
+  
+  const location = searchParams.get('location');
+  if (location) filters.location = location;
+  
+  const dateFrom = searchParams.get('dateFrom');
+  if (dateFrom) filters.dateFrom = new Date(dateFrom);
+  
+  const dateTo = searchParams.get('dateTo');
+  if (dateTo) filters.dateTo = new Date(dateTo);
+  
+  const minCost = searchParams.get('minCost');
+  if (minCost) filters.minCost = Number(minCost);
+  
+  const maxCost = searchParams.get('maxCost');
+  if (maxCost) filters.maxCost = Number(maxCost);
+  
+  const availableOnly = searchParams.get('availableOnly');
+  if (availableOnly === 'true') filters.availableOnly = true;
+  
+  return filters;
+};
+
+// Helper to convert filters to URL params
+const filtersToURLParams = (filters: ActivityFilters): URLSearchParams => {
+  const params = new URLSearchParams();
+  
+  if (filters.category) params.set('category', filters.category);
+  if (filters.location) params.set('location', filters.location);
+  if (filters.dateFrom) params.set('dateFrom', filters.dateFrom.toISOString().split('T')[0]);
+  if (filters.dateTo) params.set('dateTo', filters.dateTo.toISOString().split('T')[0]);
+  if (filters.minCost !== null && filters.minCost !== undefined) params.set('minCost', String(filters.minCost));
+  if (filters.maxCost !== null && filters.maxCost !== undefined) params.set('maxCost', String(filters.maxCost));
+  if (filters.availableOnly) params.set('availableOnly', 'true');
+  
+  return params;
+};
+
 export default function ActivitiesCalendarPage() {
   const { t } = useTranslation();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [filters, setFilters] = useState<ActivityFilters>({});
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Parse initial filters from URL
+  const initialFilters = useMemo(() => parseFiltersFromURL(searchParams), []);
+  const [filters, setFilters] = useState<ActivityFilters>(initialFilters);
+  const [hasAppliedUserLocation, setHasAppliedUserLocation] = useState(false);
+  
   const [userId, setUserId] = useState<string | null>(null);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -37,12 +86,13 @@ export default function ActivitiesCalendarPage() {
     checkUser();
   }, []);
 
-  // Filtrar automáticamente por ciudad del usuario
+  // Apply user location only if no location filter in URL and hasn't been applied yet
   useEffect(() => {
-    if (userLocation?.city) {
+    if (userLocation?.city && !hasAppliedUserLocation && !searchParams.get('location')) {
       setFilters((prev) => ({ ...prev, location: userLocation.city }));
+      setHasAppliedUserLocation(true);
     }
-  }, [userLocation?.city]);
+  }, [userLocation?.city, hasAppliedUserLocation, searchParams]);
 
   // Analytics: Track view_activity_list on mount and when activities change
   useEffect(() => {
@@ -77,8 +127,12 @@ export default function ActivitiesCalendarPage() {
 
   const categories = [...new Set(activities?.map((a) => a.category) || [])];
 
-  const handleFiltersChange = (newFilters: ActivityFilters) => {
+  const handleFiltersChange = useCallback((newFilters: ActivityFilters) => {
     setFilters(newFilters);
+    
+    // Update URL with new filters
+    const params = filtersToURLParams(newFilters);
+    setSearchParams(params, { replace: true });
     
     // Analytics: Track filter_applied { filters: object, source: 'activity_list' }
     if (Object.keys(newFilters).length > 0) {
@@ -87,7 +141,7 @@ export default function ActivitiesCalendarPage() {
         source: 'activity_list',
       });
     }
-  };
+  }, [setSearchParams, track]);
 
   const handleReserve = async (activityId: string) => {
     const activity = activities?.find(a => a.id === activityId);
@@ -125,7 +179,11 @@ export default function ActivitiesCalendarPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <aside className="lg:col-span-1">
-            <ActivityFiltersComponent onFiltersChange={handleFiltersChange} categories={categories} />
+            <ActivityFiltersComponent 
+              onFiltersChange={handleFiltersChange} 
+              categories={categories} 
+              initialFilters={filters}
+            />
           </aside>
 
           <main className="lg:col-span-3">

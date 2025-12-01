@@ -40,14 +40,20 @@ export function useActivities(filters?: ActivityFilters) {
       if (filters?.maxCost !== undefined && filters?.maxCost !== null) {
         query = query.lte('cost', filters.maxCost);
       }
-      if (filters?.availableOnly) {
-        query = query.filter('current_participants', 'lt', 'max_participants');
-      }
+      // Note: availableOnly filter is applied client-side because Supabase 
+      // cannot compare two columns directly in a filter
 
       const { data, error } = await query;
       if (error) throw error;
       
       let activities = data as Activity[];
+
+      // Apply availableOnly filter client-side
+      if (filters?.availableOnly) {
+        activities = activities.filter(
+          (a) => a.current_participants < a.max_participants
+        );
+      }
 
       // Filter by distance if we have user coordinates
       if (userLocation?.coordinates) {

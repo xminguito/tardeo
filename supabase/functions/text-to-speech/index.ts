@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.1'
+import { checkUserTTSThrottle } from '../_shared/ttsProviderSelector.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -81,6 +82,22 @@ serve(async (req) => {
       } catch (e) {
         console.warn('Could not extract user from auth token:', e);
       }
+    }
+
+    // Check per-user throttling
+    const throttleCheck = await checkUserTTSThrottle(supabase, userId);
+    if (!throttleCheck.allowed) {
+      console.warn(`[TTS] User ${userId} throttled:`, throttleCheck.reason);
+      return new Response(
+        JSON.stringify({
+          error: 'Rate limit exceeded',
+          message: throttleCheck.reason,
+          retry_after: 60,
+          current_minute: throttleCheck.current_minute,
+          current_day: throttleCheck.current_day,
+        }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     logData = {

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.1';
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
+import { checkUserTTSThrottle } from '../_shared/ttsProviderSelector.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -213,6 +214,22 @@ serve(async (req) => {
     }
 
     console.log(user ? `Authenticated user: ${user.id}` : 'Proceeding as guest');
+    
+    // Check per-user throttling for voice chat
+    const throttleCheck = await checkUserTTSThrottle(supabaseClient, user?.id || null);
+    if (!throttleCheck.allowed) {
+      console.warn(`[Voice Chat] User ${user?.id} throttled:`, throttleCheck.reason);
+      return new Response(
+        JSON.stringify({
+          error: 'Rate limit exceeded',
+          message: throttleCheck.reason,
+          retry_after: 60,
+          current_minute: throttleCheck.current_minute,
+          current_day: throttleCheck.current_day,
+        }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     
     // Parse and validate request body
     const body = await req.json();

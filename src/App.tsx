@@ -7,6 +7,8 @@ import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-ro
 import { useVoiceActivityTools } from "@/features/activities/hooks/useVoiceActivityTools";
 import VoiceAssistant from "@/components/VoiceAssistant";
 import { CookieConsentComponent } from "@/components/CookieConsent";
+import { useComingSoon } from "@/hooks/useComingSoon";
+import ComingSoon from "./pages/ComingSoon";
 import type { ActivityFilters } from "@/features/activities/types/activity.types";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -43,6 +45,7 @@ const Friends = lazy(() => import("./features/social/pages/Friends"));
 const UserProfile = lazy(() => import("./features/social/pages/UserProfile"));
 const ExploreProfiles = lazy(() => import("./features/social/pages/ExploreProfiles"));
 const FileManager = lazy(() => import("./pages/admin/FileManager"));
+const SiteSettings = lazy(() => import("./pages/admin/SiteSettings"));
 
  
 const queryClient = new QueryClient();
@@ -52,6 +55,7 @@ const AppContent = () => {
   const location = useLocation();
   const [filters, setFilters] = useState<ActivityFilters>({});
   const voiceTools = useVoiceActivityTools(setFilters, filters, navigate);
+  const { settings, loading: comingSoonLoading, shouldShowComingSoon, grantAccess } = useComingSoon();
  
   // Track page navigation
   useEffect(() => {
@@ -60,6 +64,11 @@ const AppContent = () => {
       title: document.title,
     });
   }, [location.pathname]);
+
+  // Show coming soon page if enabled (but allow admin routes)
+  if (!comingSoonLoading && shouldShowComingSoon && !location.pathname.startsWith('/admin')) {
+    return <ComingSoon settings={settings} onAccessGranted={grantAccess} />;
+  }
 
   return (
     <UserLocationProvider>
@@ -120,6 +129,11 @@ const AppContent = () => {
             <Route path="archivos" element={
               <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><p className="text-lg text-muted-foreground">Loading...</p></div>}>
                 <FileManager />
+              </Suspense>
+            } />
+            <Route path="configuracion" element={
+              <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><p className="text-lg text-muted-foreground">Loading...</p></div>}>
+                <SiteSettings />
               </Suspense>
             } />
             <Route path="notificaciones" element={<NotificationSettings />} />

@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Languages, Mic, Settings, Bell, DollarSign, BarChart3, Activity, Mail, TrendingUp, Image, Users } from 'lucide-react';
+import { Languages, Mic, Settings, Bell, DollarSign, BarChart3, Activity, Mail, TrendingUp, Image, Users, Lock, FolderOpen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import PageHeader from '@/components/PageHeader';
 import PageTransition from '@/components/PageTransition';
@@ -101,6 +101,20 @@ export default function Admin() {
       icon: Users,
       path: '/admin/usuarios',
       color: 'text-amber-500',
+    },
+    {
+      title: 'Gestor de Archivos',
+      description: 'Administra imágenes y archivos subidos en los diferentes buckets de almacenamiento',
+      icon: FolderOpen,
+      path: '/admin/archivos',
+      color: 'text-slate-500',
+    },
+    {
+      title: 'Configuración del Sitio',
+      description: 'Configura opciones globales como el modo "Próximamente" con acceso protegido',
+      icon: Lock,
+      path: '/admin/configuracion',
+      color: 'text-red-500',
     },
   ];
 

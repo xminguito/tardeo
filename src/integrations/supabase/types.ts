@@ -1266,6 +1266,56 @@ export type Database = {
         Args: { column_name: string; row_id: string; table_name: string }
         Returns: undefined
       }
+      get_tts_monitoring_stats: {
+        Args: never
+        Returns: {
+          avg_audio_duration_seconds: number | null
+          avg_cost_per_request: number | null
+          avg_generation_time_ms: number | null
+          avg_text_length: number | null
+          brief_mode_count: number | null
+          cache_hit_rate: number | null
+          cache_hits: number | null
+          error_count: number | null
+          error_rate: number | null
+          full_mode_count: number | null
+          provider: string | null
+          time_bucket: string | null
+          total_actual_cost: number | null
+          total_cache_savings: number | null
+          total_estimated_cost: number | null
+          total_requests: number | null
+          unique_sessions: number | null
+          unique_users: number | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "tts_monitoring_stats"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      get_voice_quality_stats: {
+        Args: never
+        Returns: {
+          avg_clarity_score: number | null
+          avg_generation_time_ms: number | null
+          avg_response_length: number | null
+          avg_satisfaction_score: number | null
+          cache_hits: number | null
+          date: string | null
+          feedback_count: number | null
+          intent: string | null
+          language: string | null
+          total_responses: number | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "voice_quality_stats"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -22,6 +22,7 @@ import { useActivityChat, type ActivityChatMessage } from '../hooks/useActivityC
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import ChatBubble from '@/components/chat/ChatBubble';
+import EmojiPickerButton from '@/components/chat/EmojiPickerButton';
 
 interface ActivityChatDrawerProps {
   activityId: string;
@@ -118,6 +119,11 @@ export default function ActivityChatDrawer({
   const handleRemoveImage = () => {
     setSelectedImage(null);
     setImagePreview(null);
+  };
+
+  const handleEmojiSelect = (emoji: string) => {
+    setMessage(prev => prev + emoji);
+    inputRef.current?.focus();
   };
 
   const handleSend = async () => {
@@ -277,6 +283,11 @@ export default function ActivityChatDrawer({
           )}
           
           <div className="flex gap-2">
+            <EmojiPickerButton
+              onEmojiSelect={handleEmojiSelect}
+              disabled={isSending || uploading}
+            />
+
             <input
               type="file"
               accept="image/*"

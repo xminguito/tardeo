@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Mic, Sparkles, Loader2, Paperclip, X } from "lucide-react";
 import { SendMessageParams } from "../types";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import EmojiPickerButton from "@/components/chat/EmojiPickerButton";
 
 interface MessageInputProps {
   onSend: (params: SendMessageParams) => void;
@@ -17,6 +18,12 @@ const MessageInput = ({ onSend, isLoading }: MessageInputProps) => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const handleEmojiSelect = (emoji: string) => {
+    setText(prev => prev + emoji);
+    textareaRef.current?.focus();
+  };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -135,6 +142,7 @@ const MessageInput = ({ onSend, isLoading }: MessageInputProps) => {
       )}
       <div className="flex gap-2">
         <Textarea
+          ref={textareaRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -143,6 +151,11 @@ const MessageInput = ({ onSend, isLoading }: MessageInputProps) => {
           disabled={isLoading || uploading}
         />
         <div className="flex flex-col gap-2">
+          <EmojiPickerButton 
+            onEmojiSelect={handleEmojiSelect}
+            disabled={isLoading || uploading}
+          />
+
           <input
             type="file"
             accept="image/*"

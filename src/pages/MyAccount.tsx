@@ -11,7 +11,8 @@ import {
   Calendar,
   LogOut,
   Star,
-  CalendarCheck
+  CalendarCheck,
+  Shield
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
@@ -19,6 +20,7 @@ import { useFavorites } from '@/features/activities/hooks/useFavorites';
 import PageHeader from '@/components/PageHeader';
 import Header from '@/components/Header';
 import PageTransition from '@/components/PageTransition';
+import SetPasswordDialog from '@/components/auth/SetPasswordDialog';
 
 export default function MyAccount() {
   const { t } = useTranslation();
@@ -225,6 +227,30 @@ export default function MyAccount() {
               </p>
             </CardContent>
           </Card>
+
+          {/* Seguridad - Establecer/Cambiar Contraseña */}
+          <SetPasswordDialog
+            trigger={
+              <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Shield className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <CardTitle>{t('auth.security')}</CardTitle>
+                      <CardDescription>{t('auth.setPassword')}</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    {t('auth.securityDesc')}
+                  </p>
+                </CardContent>
+              </Card>
+            }
+          />
 
           {/* Admin Panel (solo si es admin) */}
           {isAdmin && (

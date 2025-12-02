@@ -9,6 +9,7 @@ import ActivityCard from "@/components/ActivityCard";
 import CreateActivityDialog from "@/components/CreateActivityDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useFavorites } from "@/features/activities/hooks/useFavorites";
+import { useUserParticipations } from "@/features/activities/hooks/useUserParticipations";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { useSliderByPage } from "@/hooks/useSliderByPage";
 import Header from "@/components/Header";
@@ -39,11 +40,11 @@ const Index = () => {
   const [user, setUser] = useState<any>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
-  const [userParticipations, setUserParticipations] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
   const { isFavorite, toggleFavorite, favorites } = useFavorites(user?.id);
+  const { isParticipating } = useUserParticipations();
   const { location } = useUserLocation();
   
   // Load slider for home page
@@ -67,7 +68,6 @@ const Index = () => {
       setUser(session.user);
       loadNotifications(session.user.id);
       checkIfAdmin(session.user.id);
-      loadUserParticipations(session.user.id);
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -75,25 +75,12 @@ const Index = () => {
       if (session?.user) {
         loadNotifications(session.user.id);
         checkIfAdmin(session.user.id);
-        loadUserParticipations(session.user.id);
       } else {
         setIsUserAdmin(false);
-        setUserParticipations(new Set());
       }
     });
 
     return () => subscription.unsubscribe();
-  };
-
-  const loadUserParticipations = async (userId: string) => {
-    const { data } = await supabase
-      .from("activity_participants")
-      .select("activity_id")
-      .eq("user_id", userId);
-    
-    if (data) {
-      setUserParticipations(new Set(data.map(p => p.activity_id).filter(Boolean) as string[]));
-    }
   };
 
   const checkIfAdmin = async (userId: string) => {
@@ -258,7 +245,7 @@ const Index = () => {
                     <ActivityCard
                       activity={{
                         ...activity,
-                        isUserParticipating: userParticipations.has(activity.id),
+                        isUserParticipating: isParticipating(activity.id),
                         availableSlots: activity.max_participants - activity.current_participants,
                       }}
                       onReserve={(id) => {

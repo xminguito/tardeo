@@ -54,7 +54,7 @@ export function useComingSoon() {
       }
 
       if (data?.value) {
-        setSettings(data.value as ComingSoonSettings);
+        setSettings(data.value as unknown as ComingSoonSettings);
       }
     } catch (error) {
       console.error('Error:', error);

@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Loader2, Save, Eye, EyeOff, Lock, Calendar, Type, FileText } from 'lucide-react';
+import type { Json } from '@/integrations/supabase/types';
 
 interface ComingSoonSettings {
   enabled: boolean;
@@ -58,7 +59,7 @@ export default function SiteSettings() {
       }
 
       if (data?.value) {
-        setSettings(data.value as ComingSoonSettings);
+        setSettings(data.value as unknown as ComingSoonSettings);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -72,10 +73,10 @@ export default function SiteSettings() {
     try {
       const { error } = await supabase
         .from('site_settings')
-        .upsert({
+        .upsert([{
           key: 'coming_soon',
-          value: settings,
-        }, { onConflict: 'key' });
+          value: settings as unknown as Json,
+        }], { onConflict: 'key' });
 
       if (error) throw error;
 

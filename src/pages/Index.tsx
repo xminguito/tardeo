@@ -39,6 +39,7 @@ const Index = () => {
   const [user, setUser] = useState<any>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
+  const [userParticipations, setUserParticipations] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
@@ -66,6 +67,7 @@ const Index = () => {
       setUser(session.user);
       loadNotifications(session.user.id);
       checkIfAdmin(session.user.id);
+      loadUserParticipations(session.user.id);
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -73,12 +75,25 @@ const Index = () => {
       if (session?.user) {
         loadNotifications(session.user.id);
         checkIfAdmin(session.user.id);
+        loadUserParticipations(session.user.id);
       } else {
         setIsUserAdmin(false);
+        setUserParticipations(new Set());
       }
     });
 
     return () => subscription.unsubscribe();
+  };
+
+  const loadUserParticipations = async (userId: string) => {
+    const { data } = await supabase
+      .from("activity_participants")
+      .select("activity_id")
+      .eq("user_id", userId);
+    
+    if (data) {
+      setUserParticipations(new Set(data.map(p => p.activity_id).filter(Boolean) as string[]));
+    }
   };
 
   const checkIfAdmin = async (userId: string) => {
@@ -243,7 +258,7 @@ const Index = () => {
                     <ActivityCard
                       activity={{
                         ...activity,
-                        isUserParticipating: false,
+                        isUserParticipating: userParticipations.has(activity.id),
                         availableSlots: activity.max_participants - activity.current_participants,
                       }}
                       onReserve={(id) => {

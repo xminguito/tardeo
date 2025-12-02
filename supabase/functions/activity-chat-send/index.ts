@@ -106,6 +106,33 @@ serve(async (req) => {
       .eq("id", user.id)
       .single();
 
+    // Get activity title for notifications
+    const { data: activity } = await supabase
+      .from("activities")
+      .select("title")
+      .eq("id", activity_id)
+      .single();
+
+    // Notify all other participants
+    const { data: participants } = await supabase
+      .from("activity_participants")
+      .select("user_id")
+      .eq("activity_id", activity_id)
+      .neq("user_id", user.id); // Exclude sender
+
+    if (participants && participants.length > 0) {
+      const notifications = participants.map((p) => ({
+        user_id: p.user_id,
+        activity_id: activity_id,
+        type: "activity_chat_message",
+        title: `Nuevo mensaje en ${activity?.title || 'actividad'}`,
+        message: `${profile?.full_name || profile?.username || 'Alguien'}: ${content.substring(0, 50)}${content.length > 50 ? '...' : ''}`,
+        read: false,
+      }));
+
+      await supabase.from("notifications").insert(notifications);
+    }
+
     // Return the message with user profile
     return new Response(
       JSON.stringify({ 

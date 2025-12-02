@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   MessageCircle, 
   Send, 
@@ -18,12 +17,11 @@ import {
   Paperclip,
   X
 } from 'lucide-react';
-import { format, type Locale } from 'date-fns';
 import { es, enUS, ca } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
 import { useActivityChat, type ActivityChatMessage } from '../hooks/useActivityChat';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import ChatBubble from '@/components/chat/ChatBubble';
 
 interface ActivityChatDrawerProps {
   activityId: string;
@@ -237,12 +235,21 @@ export default function ActivityChatDrawer({
               </div>
             ) : (
               allMessages.map((msg) => (
-                <ChatMessageBubble
+                <ChatBubble
                   key={msg.id}
-                  message={msg}
+                  message={{
+                    id: msg.id,
+                    content: msg.content,
+                    content_type: msg.content_type,
+                    attachment_url: msg.attachment_url,
+                    created_at: msg.created_at,
+                  }}
+                  user={msg.user}
                   isOwnMessage={msg.user_id === currentUserId}
-                  locale={getDateLocale()}
+                  showAvatar={true}
+                  showUsername={true}
                   isOptimistic={msg.id.startsWith('optimistic-')}
+                  locale={getDateLocale()}
                 />
               ))
             )}
@@ -313,88 +320,3 @@ export default function ActivityChatDrawer({
     </Sheet>
   );
 }
-
-// Message bubble component
-interface ChatMessageBubbleProps {
-  message: ActivityChatMessage;
-  isOwnMessage: boolean;
-  locale: Locale;
-  isOptimistic?: boolean;
-}
-
-function ChatMessageBubble({ 
-  message, 
-  isOwnMessage, 
-  locale,
-  isOptimistic 
-}: ChatMessageBubbleProps) {
-  const userName = message.user?.full_name || message.user?.username || 'Usuario';
-  const userInitial = userName.charAt(0).toUpperCase();
-
-  return (
-    <div className={cn(
-      "flex gap-2",
-      isOwnMessage ? "justify-end" : "justify-start"
-    )}>
-      {/* Avatar (only for others) */}
-      {!isOwnMessage && (
-        <Avatar className="h-8 w-8 flex-shrink-0">
-          <AvatarImage src={message.user?.avatar_url || undefined} />
-          <AvatarFallback className="bg-primary/10 text-primary text-xs">
-            {userInitial}
-          </AvatarFallback>
-        </Avatar>
-      )}
-
-      <div className={cn(
-        "max-w-[75%] space-y-1",
-        isOwnMessage ? "items-end" : "items-start"
-      )}>
-        {/* Username (only for others) */}
-        {!isOwnMessage && (
-          <p className="text-xs text-muted-foreground font-medium px-1">
-            {userName}
-          </p>
-        )}
-
-        {/* Message bubble */}
-        <div className={cn(
-          "rounded-2xl px-4 py-2",
-          isOwnMessage
-            ? "bg-primary text-primary-foreground rounded-br-sm"
-            : "bg-muted rounded-bl-sm",
-          isOptimistic && "opacity-70"
-        )}>
-          {/* Image attachment */}
-          {message.attachment_url && (
-            <div className="mb-2">
-              <img
-                src={message.attachment_url}
-                alt="Attachment"
-                className="max-w-full rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                onClick={() => window.open(message.attachment_url!, '_blank')}
-              />
-            </div>
-          )}
-
-          {/* Text content */}
-          {message.content && message.content !== '📷 Image' && message.content !== '📷' && (
-            <p className="text-sm whitespace-pre-wrap break-words">
-              {message.content}
-            </p>
-          )}
-
-          {/* Timestamp */}
-          <p className={cn(
-            "text-[10px] mt-1",
-            isOwnMessage ? "text-primary-foreground/70" : "text-muted-foreground"
-          )}>
-            {format(new Date(message.created_at), 'HH:mm', { locale })}
-            {isOptimistic && ' ⏳'}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-

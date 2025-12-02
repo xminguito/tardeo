@@ -15,6 +15,7 @@ import { useVoiceActivityTools } from '@/features/activities/hooks/useVoiceActiv
 import { ActivityRatings } from '@/features/activities/components/ActivityRatings';
 import ActivityImageGallery from '@/components/ActivityImageGallery';
 import ActivityMap from '@/components/ActivityMap';
+import ActivityChatDrawer from '@/features/activities/components/ActivityChatDrawer';
 import PageHeader from '@/components/PageHeader';
 import Header from '@/components/Header';
 import { useFavorites } from '@/features/activities/hooks/useFavorites';
@@ -593,6 +594,19 @@ export default function ActivityDetail() {
                   <p className="text-center text-sm text-muted-foreground">
                     {t('activityDetail.reminderText')}
                   </p>
+                )}
+
+                {/* Group Chat Button - Only for participants */}
+                {isParticipating && (
+                  <div className="pt-4 border-t">
+                    <ActivityChatDrawer
+                      activityId={activity.id}
+                      activityTitle={getTranslatedTitle(activity)}
+                      participantCount={realParticipantCount}
+                      currentUserId={userId}
+                      isParticipant={isParticipating}
+                    />
+                  </div>
                 )}
               </CardContent>
             </Card>

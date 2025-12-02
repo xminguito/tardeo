@@ -530,4 +530,14 @@ export default {
     organizer: "Organizador",
     viewProfile: "Ver perfil",
   },
+  activityChat: {
+    groupChat: "Chat del grupo",
+    participants: "{{count}} participantes",
+    noMessages: "Aún no hay mensajes",
+    startConversation: "¡Sé el primero en escribir!",
+    placeholder: "Escribe un mensaje...",
+    sendError: "Error al enviar mensaje",
+    invalidFileType: "Tipo de archivo no válido",
+    fileTooLarge: "El archivo es demasiado grande (máx. 5MB)",
+  },
 };

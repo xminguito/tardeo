@@ -509,4 +509,14 @@ export default {
     organizer: "Organizer",
     viewProfile: "View profile",
   },
+  activityChat: {
+    groupChat: "Group Chat",
+    participants: "{{count}} participants",
+    noMessages: "No messages yet",
+    startConversation: "Be the first to write!",
+    placeholder: "Type a message...",
+    sendError: "Error sending message",
+    invalidFileType: "Invalid file type",
+    fileTooLarge: "File is too large (max 5MB)",
+  },
 };

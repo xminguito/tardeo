@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { Eye, EyeOff, Mail, Lock, Wand2 } from "lucide-react";
+import Header from "@/components/Header";
 
 type AuthMode = "login" | "register";
 
@@ -190,8 +191,10 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex flex-col bg-background">
+      <Header user={null} isUserAdmin={false} favoritesCount={0} />
+      <div className="flex-1 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl">{t('auth.welcome')}</CardTitle>
           <CardDescription>
@@ -361,6 +364,7 @@ const Auth = () => {
           )}
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 };

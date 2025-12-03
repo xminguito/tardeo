@@ -182,6 +182,13 @@ export default {
       full: 'Complet',
       joined: 'Déjà inscrit',
       leave: 'Me désinscrire',
+      beTheFirst: 'Soyez le premier !',
+      moreParticipants: '+ {{count}}',
+      ariaParticipants: 'Participants totaux : {{current}} sur {{max}}. {{status}}.',
+      ariaJoined: 'Vous êtes inscrit',
+      ariaNotJoined: 'Vous n\'êtes pas inscrit',
+      groupChat: 'Chat du groupe',
+      openGroupChat: 'Ouvrir le chat du groupe {{title}}',
     },
     create: {
       title: 'Créer une nouvelle activité',

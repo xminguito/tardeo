@@ -13,7 +13,6 @@ import { supabase } from '@/integrations/supabase/client';
 import type { ActivityFilters } from '@/features/activities/types/activity.types';
 import { generateActivitySlug } from '@/lib/utils';
 import { useFavorites } from '@/features/activities/hooks/useFavorites';
-import { useUserParticipations } from '@/features/activities/hooks/useUserParticipations';
 import PageHeader from '@/components/PageHeader';
 import Header from '@/components/Header';
 import PageTransition from '@/components/PageTransition';
@@ -82,7 +81,6 @@ export default function ActivitiesCalendarPage() {
 
   const { data: activities, isLoading, error } = useActivities(filters);
   const { isFavorite, toggleFavorite, favorites } = useFavorites(userId);
-  const { isParticipating } = useUserParticipations();
 
   useEffect(() => {
     checkUser();
@@ -210,11 +208,7 @@ export default function ActivitiesCalendarPage() {
                         style={{ animationDelay: `${index * 0.05}s`, animationFillMode: 'backwards' }}
                       >
                         <ActivityCard
-                          activity={{
-                            ...activity,
-                            isUserParticipating: isParticipating(activity.id),
-                            availableSlots: activity.max_participants - activity.current_participants,
-                          }}
+                          activity={activity}
                           onReserve={handleReserve}
                           isFavorite={isFavorite(activity.id)}
                           onToggleFavorite={toggleFavorite}

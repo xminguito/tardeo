@@ -30,6 +30,14 @@ interface ActivityChatDrawerProps {
   participantCount: number;
   currentUserId: string | null;
   isParticipant: boolean;
+  /** Auto-open the drawer on mount (e.g., from ?chat=open URL param) */
+  initialOpen?: boolean;
+  /** Custom trigger element. If provided, replaces the default button */
+  children?: React.ReactNode;
+  /** Trigger button variant */
+  triggerVariant?: 'default' | 'outline' | 'primary';
+  /** Trigger button size */
+  triggerSize?: 'default' | 'lg';
 }
 
 export default function ActivityChatDrawer({
@@ -38,10 +46,14 @@ export default function ActivityChatDrawer({
   participantCount,
   currentUserId,
   isParticipant,
+  initialOpen = false,
+  children,
+  triggerVariant = 'outline',
+  triggerSize = 'default',
 }: ActivityChatDrawerProps) {
   const { t, i18n } = useTranslation();
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(initialOpen);
   const [message, setMessage] = useState('');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -208,10 +220,17 @@ export default function ActivityChatDrawer({
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" className="gap-2">
-          <MessageCircle className="h-4 w-4" />
-          {t('activityChat.groupChat')}
-        </Button>
+        {children || (
+          <Button 
+            variant={triggerVariant === 'primary' ? 'default' : triggerVariant}
+            size={triggerSize}
+            className={triggerSize === 'lg' ? 'w-full text-lg py-6 gap-2' : 'gap-2'}
+            aria-label={t('activityDetail.openGroupChat')}
+          >
+            <MessageCircle className={triggerSize === 'lg' ? 'h-5 w-5' : 'h-4 w-4'} />
+            {t('activityChat.groupChat')}
+          </Button>
+        )}
       </SheetTrigger>
       
       <SheetContent className="w-full sm:max-w-lg flex flex-col p-0">

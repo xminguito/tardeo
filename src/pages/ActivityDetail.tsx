@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -76,6 +76,7 @@ interface Organizer {
 export default function ActivityDetail() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
   const [activity, setActivity] = useState<Activity | null>(null);
@@ -89,6 +90,9 @@ export default function ActivityDetail() {
   const [organizer, setOrganizer] = useState<Organizer | null>(null);
   const [realParticipantCount, setRealParticipantCount] = useState<number>(0);
   const { favorites } = useFavorites(userId);
+  
+  // Check if chat should auto-open from URL param
+  const shouldOpenChat = searchParams.get('chat') === 'open';
   const { track, serverTrack } = useAnalytics();
 
   const getDateLocale = () => {
@@ -570,43 +574,43 @@ export default function ActivityDetail() {
                   </div>
                 </div>
 
-                <Button
-                  onClick={handleJoin}
-                  disabled={isFull || isParticipating || isJoining}
-                  className="w-full text-lg py-6"
-                  size="lg"
-                >
-                  {isJoining ? (
-                    <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      {t('activityDetail.processing')}
-                    </>
-                  ) : isFull ? (
-                    t('activityDetail.activityFull')
-                  ) : isParticipating ? (
-                    t('activityDetail.alreadyJoined')
-                  ) : (
-                    t('activityDetail.joinButton')
-                  )}
-                </Button>
-
-                {isParticipating && (
-                  <p className="text-center text-sm text-muted-foreground">
-                    {t('activityDetail.reminderText')}
-                  </p>
-                )}
-
-                {/* Group Chat Button - Only for participants */}
-                {isParticipating && (
-                  <div className="pt-4 border-t">
+                {/* Action Button: Join OR Chat (if already participating) */}
+                {isParticipating ? (
+                  /* Participating: Show Chat as Primary Action */
+                  <>
                     <ActivityChatDrawer
                       activityId={activity.id}
                       activityTitle={getTranslatedTitle(activity)}
                       participantCount={realParticipantCount}
                       currentUserId={userId}
                       isParticipant={isParticipating}
+                      initialOpen={shouldOpenChat}
+                      triggerVariant="primary"
+                      triggerSize="lg"
                     />
-                  </div>
+                    <p className="text-center text-sm text-muted-foreground">
+                      {t('activityDetail.reminderText')}
+                    </p>
+                  </>
+                ) : (
+                  /* Not Participating: Show Join Button */
+                  <Button
+                    onClick={handleJoin}
+                    disabled={isFull || isJoining}
+                    className="w-full text-lg py-6"
+                    size="lg"
+                  >
+                    {isJoining ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        {t('activityDetail.processing')}
+                      </>
+                    ) : isFull ? (
+                      t('activityDetail.activityFull')
+                    ) : (
+                      t('activityDetail.joinButton')
+                    )}
+                  </Button>
                 )}
               </CardContent>
             </Card>

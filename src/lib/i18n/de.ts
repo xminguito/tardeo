@@ -182,6 +182,13 @@ export default {
       full: 'Voll',
       joined: 'Bereits angemeldet',
       leave: 'Abmelden',
+      beTheFirst: 'Sei der Erste!',
+      moreParticipants: '+ {{count}}',
+      ariaParticipants: 'Gesamtteilnehmer: {{current}} von {{max}}. {{status}}.',
+      ariaJoined: 'Du bist angemeldet',
+      ariaNotJoined: 'Du bist nicht angemeldet',
+      groupChat: 'Gruppenchat',
+      openGroupChat: 'Gruppenchat für {{title}} öffnen',
     },
     create: {
       title: 'Neue Aktivität erstellen',

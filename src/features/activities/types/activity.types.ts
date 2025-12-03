@@ -51,7 +51,19 @@ export interface ActivityReservation {
   joined_at: string;
 }
 
+/** Participant preview for avatar stack */
+export interface ParticipantPreview {
+  id: string;
+  full_name: string | null;
+  username: string | null;
+  avatar_url: string | null;
+}
+
 export type ActivityWithParticipation = Activity & {
   isUserParticipating: boolean;
   availableSlots: number;
+  /** Real participant count from activity_participants table */
+  participants_count?: number;
+  /** Up to 3 participant previews for avatar stack (current user first if joined) */
+  participants_preview?: ParticipantPreview[];
 };

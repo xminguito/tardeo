@@ -182,6 +182,13 @@ export default {
       full: 'Complet',
       joined: 'Ja apuntat',
       leave: 'Desapuntar-me',
+      beTheFirst: 'Sigues el primer!',
+      moreParticipants: '+ {{count}}',
+      ariaParticipants: 'Total participants: {{current}} de {{max}}. {{status}}.',
+      ariaJoined: 'Estàs apuntat',
+      ariaNotJoined: 'No estàs apuntat',
+      groupChat: 'Xat del grup',
+      openGroupChat: 'Obrir xat del grup de {{title}}',
     },
     create: {
       title: 'Crear nova activitat',

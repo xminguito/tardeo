@@ -1,9 +1,93 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { Activity, ActivityFilters } from '../types/activity.types';
+import type { Activity, ActivityFilters, ActivityWithParticipation, ParticipantPreview } from '../types/activity.types';
 import { calculateDistance, geocodeLocation } from '@/lib/distance';
 import { useUserLocation } from '@/hooks/useUserLocation';
 export const ACTIVITIES_QUERY_KEY = ['activities'] as const;
+
+/**
+ * Fetches participant count and preview avatars for a list of activities
+ */
+async function enrichActivitiesWithParticipants(
+  activities: Activity[],
+  currentUserId: string | null
+): Promise<ActivityWithParticipation[]> {
+  if (activities.length === 0) return [];
+
+  const activityIds = activities.map(a => a.id);
+
+  // Batch fetch all participant counts
+  const { data: participantCounts, error: participantError } = await supabase
+    .from('activity_participants')
+    .select('activity_id, user_id')
+    .in('activity_id', activityIds);
+
+  // If RLS blocks anonymous access, participantCounts will be null/empty
+  // We'll still show participant count from activities.current_participants as fallback
+  const hasParticipantAccess = !participantError && participantCounts && participantCounts.length > 0;
+
+  // Group participants by activity
+  const participantsByActivity = new Map<string, string[]>();
+  if (hasParticipantAccess) {
+    participantCounts.forEach(p => {
+      const existing = participantsByActivity.get(p.activity_id) || [];
+      existing.push(p.user_id);
+      participantsByActivity.set(p.activity_id, existing);
+    });
+  }
+
+  // Get unique user IDs for profile fetching (max 3 per activity)
+  const userIdsToFetch = new Set<string>();
+  participantsByActivity.forEach((userIds) => {
+    // Prioritize current user if they're participating
+    const sorted = currentUserId && userIds.includes(currentUserId)
+      ? [currentUserId, ...userIds.filter(id => id !== currentUserId)]
+      : userIds;
+    sorted.slice(0, 3).forEach(id => userIdsToFetch.add(id));
+  });
+
+  // Fetch profiles for preview
+  let profilesMap = new Map<string, ParticipantPreview>();
+  if (userIdsToFetch.size > 0) {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, full_name, username, avatar_url')
+      .in('id', Array.from(userIdsToFetch));
+    
+    (profiles || []).forEach(p => {
+      profilesMap.set(p.id, p);
+    });
+  }
+
+  // Enrich activities
+  return activities.map(activity => {
+    const participantUserIds = participantsByActivity.get(activity.id) || [];
+    const isUserParticipating = currentUserId ? participantUserIds.includes(currentUserId) : false;
+    
+    // Use real count if we have access, otherwise fallback to current_participants from activities table
+    const realCount = hasParticipantAccess 
+      ? participantUserIds.length 
+      : activity.current_participants;
+    
+    // Build preview list (current user first if participating)
+    const sortedIds = isUserParticipating && currentUserId
+      ? [currentUserId, ...participantUserIds.filter(id => id !== currentUserId)]
+      : participantUserIds;
+    
+    const participants_preview = sortedIds
+      .slice(0, 3)
+      .map(id => profilesMap.get(id))
+      .filter((p): p is ParticipantPreview => !!p);
+
+    return {
+      ...activity,
+      isUserParticipating,
+      availableSlots: activity.max_participants - realCount,
+      participants_count: realCount,
+      participants_preview,
+    };
+  });
+}
 
 export function useActivities(filters?: ActivityFilters) {
   const { location: userLocation } = useUserLocation();
@@ -18,6 +102,10 @@ export function useActivities(filters?: ActivityFilters) {
       userLocation?.coordinates?.lng
     ],
     queryFn: async () => {
+      // Get current user for participation check
+      const { data: { user } } = await supabase.auth.getUser();
+      const currentUserId = user?.id || null;
+
       let query = supabase
         .from('activities')
         .select('*')
@@ -47,13 +135,6 @@ export function useActivities(filters?: ActivityFilters) {
       if (error) throw error;
       
       let activities = data as Activity[];
-
-      // Apply availableOnly filter client-side
-      if (filters?.availableOnly) {
-        activities = activities.filter(
-          (a) => a.current_participants < a.max_participants
-        );
-      }
 
       // Filter by distance if we have user coordinates
       if (userLocation?.coordinates) {
@@ -96,7 +177,17 @@ export function useActivities(filters?: ActivityFilters) {
         );
       }
 
-      return activities;
+      // Enrich with participant data
+      let enrichedActivities = await enrichActivitiesWithParticipants(activities, currentUserId);
+
+      // Apply availableOnly filter client-side (using real count)
+      if (filters?.availableOnly) {
+        enrichedActivities = enrichedActivities.filter(
+          (a) => a.availableSlots > 0
+        );
+      }
+
+      return enrichedActivities;
     },
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,

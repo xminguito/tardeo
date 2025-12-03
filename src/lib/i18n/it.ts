@@ -183,6 +183,13 @@ export default {
       full: "Completo",
       joined: "Già iscritto",
       leave: "Annullare",
+      beTheFirst: "Sii il primo!",
+      moreParticipants: "+ {{count}}",
+      ariaParticipants: "Partecipanti totali: {{current}} di {{max}}. {{status}}.",
+      ariaJoined: "Sei iscritto",
+      ariaNotJoined: "Non sei iscritto",
+      groupChat: "Chat del gruppo",
+      openGroupChat: "Apri chat del gruppo {{title}}",
     },
     create: {
       title: "Crea nuova attività",

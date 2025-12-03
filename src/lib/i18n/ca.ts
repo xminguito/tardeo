@@ -132,6 +132,9 @@ export default {
     passwordSetDesc: 'Ja pots accedir amb el teu correu i contrasenya',
     security: 'Seguretat',
     securityDesc: 'Estableix o canvia la teva contrasenya',
+    continueWithGoogle: 'Continuar amb Google',
+    orContinueWith: 'o continua amb',
+    googleError: 'Error en connectar amb Google',
   },
   profile: {
     title: 'El meu Perfil',

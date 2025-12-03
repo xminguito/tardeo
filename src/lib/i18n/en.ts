@@ -155,6 +155,9 @@ export default {
     passwordSetDesc: "You can now sign in with your email and password",
     security: "Security",
     securityDesc: "Set or change your password",
+    continueWithGoogle: "Continue with Google",
+    orContinueWith: "or continue with",
+    googleError: "Error connecting with Google",
   },
   profile: {
     title: "My Profile",

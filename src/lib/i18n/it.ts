@@ -133,6 +133,9 @@ export default {
     passwordSetDesc: "Ora puoi accedere con la tua email e password",
     security: "Sicurezza",
     securityDesc: "Imposta o modifica la tua password",
+    continueWithGoogle: "Continua con Google",
+    orContinueWith: "o continua con",
+    googleError: "Errore durante la connessione con Google",
   },
   profile: {
     title: "Il mio Profilo",

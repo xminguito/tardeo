@@ -132,6 +132,9 @@ export default {
     passwordSetDesc: 'Sie können sich jetzt mit Ihrer E-Mail und Ihrem Passwort anmelden',
     security: 'Sicherheit',
     securityDesc: 'Passwort festlegen oder ändern',
+    continueWithGoogle: 'Mit Google fortfahren',
+    orContinueWith: 'oder fortfahren mit',
+    googleError: 'Fehler bei der Verbindung mit Google',
   },
   profile: {
     title: 'Mein Profil',

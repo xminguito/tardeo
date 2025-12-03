@@ -10,28 +10,33 @@ import ConversationHistory from "./ConversationHistory";
 import { useTranslation } from "react-i18next";
 import { VoiceMetricsTracker } from "@/lib/tts/voiceMetricsTracker";
 import { useAnalytics } from "@/lib/analytics/useAnalytics";
-
 interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: number;
 }
-
 interface VoiceAssistantProps {
   clientTools: VoiceToolsMap;
 }
-
-const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
+const VoiceAssistant = ({
+  clientTools
+}: VoiceAssistantProps) => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isTextMessageLoading, setIsTextMessageLoading] = useState(false);
-  const { toast } = useToast();
-  const { t, i18n } = useTranslation();
+  const {
+    toast
+  } = useToast();
+  const {
+    t,
+    i18n
+  } = useTranslation();
   const navigate = useNavigate();
-  const { track } = useAnalytics();
-  
+  const {
+    track
+  } = useAnalytics();
   const conversation = useConversation({
     clientTools: {
       searchActivities: async (params: any) => {
@@ -44,26 +49,24 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
           if (import.meta.env.DEV) {
             console.log('[Voice Tool Wrapper] searchActivities result:', result);
           }
-          
+
           // Analytics: Track assistant_used_tool { tool_name, success: true, duration_ms }
           track('assistant_used_tool', {
             tool_name: 'searchActivities',
             success: true,
-            duration_ms: Date.now() - startTime,
+            duration_ms: Date.now() - startTime
           });
-          
           return result;
         } catch (error) {
           if (import.meta.env.DEV) {
             console.error('[Voice Tool Wrapper] searchActivities error:', error);
           }
-          
+
           // Analytics: Track assistant_used_tool { tool_name, success: false }
           track('assistant_used_tool', {
             tool_name: 'searchActivities',
-            success: false,
+            success: false
           });
-          
           return t('voice.errors.searchActivities');
         }
       },
@@ -77,26 +80,24 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
           if (import.meta.env.DEV) {
             console.log('[Voice Tool Wrapper] reserveActivity result:', result);
           }
-          
+
           // Analytics: Track assistant_used_tool { tool_name, success: true, duration_ms }
           track('assistant_used_tool', {
             tool_name: 'reserveActivity',
             success: true,
-            duration_ms: Date.now() - startTime,
+            duration_ms: Date.now() - startTime
           });
-          
           return result;
         } catch (error) {
           if (import.meta.env.DEV) {
             console.error('[Voice Tool Wrapper] reserveActivity error:', error);
           }
-          
+
           // Analytics: Track assistant_used_tool { tool_name, success: false }
           track('assistant_used_tool', {
             tool_name: 'reserveActivity',
-            success: false,
+            success: false
           });
-          
           return t('voice.errors.reserveActivity');
         }
       },
@@ -144,32 +145,30 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
           if (import.meta.env.DEV) {
             console.log('[Voice Tool Wrapper] navigateToActivities result:', result);
           }
-          
+
           // Analytics: Track assistant_used_tool { tool_name, success: true, duration_ms }
           track('assistant_used_tool', {
             tool_name: 'navigateToActivities',
             success: true,
-            duration_ms: Date.now() - startTime,
+            duration_ms: Date.now() - startTime
           });
-          
+
           // Analytics: Track assistant_action_navigate with target route
           track('assistant_action_navigate', {
             target_route: '/actividades',
-            category: params?.category || null,
+            category: params?.category || null
           });
-          
           return result;
         } catch (error) {
           if (import.meta.env.DEV) {
             console.error('[Voice Tool Wrapper] navigateToActivities error:', error);
           }
-          
+
           // Analytics: Track assistant_used_tool { tool_name, success: false }
           track('assistant_used_tool', {
             tool_name: 'navigateToActivities',
-            success: false,
+            success: false
           });
-          
           return t('voice.errors.navigate');
         }
       },
@@ -257,14 +256,14 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
           }
           return t('voice.errors.getRatings');
         }
-      },
+      }
     },
     onConnect: () => {
       setIsConnecting(false);
-      
+
       // Show popup immediately when connected
       setShowHistory(true);
-      
+
       // Add welcome message from assistant
       const welcomeMessage: Message = {
         role: 'assistant',
@@ -272,37 +271,35 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
         timestamp: Date.now()
       };
       setMessages([welcomeMessage]);
-      
+
       // Reset session and create new session ID for metrics tracking
       VoiceMetricsTracker.resetSession();
       const newSessionId = VoiceMetricsTracker.getSessionId();
       setSessionId(newSessionId);
-      
       if (import.meta.env.DEV) {
         console.log('[VoiceAssistant] New session started:', newSessionId);
       }
-      
+
       // Analytics: Track assistant_invoked { mode: 'voice' }
       track('assistant_invoked', {
-        mode: 'voice',
+        mode: 'voice'
       });
-      
       toast({
         title: t('voice.toast.connected'),
-        description: t('voice.toast.connectedDesc'),
+        description: t('voice.toast.connectedDesc')
       });
     },
     onDisconnect: () => {
       toast({
         title: t('voice.toast.disconnected'),
-        description: t('voice.toast.disconnectedDesc'),
+        description: t('voice.toast.disconnectedDesc')
       });
     },
-    onMessage: (message) => {
+    onMessage: message => {
       if (import.meta.env.DEV) {
         console.log('Mensaje recibido:', message);
       }
-      
+
       // Capturar transcripciones del usuario y respuestas del asistente
       if (message.source === 'user' && message.message) {
         setMessages(prev => [...prev, {
@@ -329,7 +326,7 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
             }];
           }
         });
-        
+
         // Track voice response metrics
         if (sessionId && message.message) {
           VoiceMetricsTracker.trackResponse({
@@ -337,7 +334,7 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
             intent: 'ai_response',
             responseText: message.message,
             language: i18n.language,
-            ttsProvider: 'elevenlabs',
+            ttsProvider: 'elevenlabs'
           }).catch(err => {
             if (import.meta.env.DEV) {
               console.error('[VoiceAssistant] Failed to track metrics:', err);
@@ -346,36 +343,35 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
         }
       }
     },
-    onError: (error) => {
+    onError: error => {
       if (import.meta.env.DEV) {
         console.error("Error en conversación:", error);
       }
       setIsConnecting(false);
-      
+
       // Analytics: Track assistant_failure { error_code }
       track('assistant_failure', {
-        error_code: 'connection_error',
+        error_code: 'connection_error'
       });
-      
       toast({
         title: t('voice.toast.error'),
         description: t('voice.toast.errorDesc'),
-        variant: "destructive",
+        variant: "destructive"
       });
-    },
+    }
   });
-
   useEffect(() => {
     // Solicitar permisos de micrófono al cargar
-    navigator.mediaDevices.getUserMedia({ audio: true }).catch(() => {
+    navigator.mediaDevices.getUserMedia({
+      audio: true
+    }).catch(() => {
       toast({
         title: t('voice.toast.micPermission'),
         description: t('voice.toast.micPermissionDesc'),
-        variant: "destructive",
+        variant: "destructive"
       });
     });
   }, []);
-
   const startConversation = async () => {
     try {
       setIsConnecting(true);
@@ -384,12 +380,13 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
       const currentLanguage = i18n.language || localStorage.getItem('appLanguage') || 'es';
 
       // Obtener signed URL desde nuestro edge function
-      const { data, error } = await supabase.functions.invoke('elevenlabs-signed-url');
-      
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('elevenlabs-signed-url');
       if (error || !data?.signedUrl) {
         throw new Error('No se pudo obtener la URL de conexión');
       }
-
       if (import.meta.env.DEV) {
         console.log('Iniciando conversación con ElevenLabs...');
       }
@@ -397,9 +394,9 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
         signedUrl: data.signedUrl,
         overrides: {
           agent: {
-            language: currentLanguage,
-          },
-        },
+            language: currentLanguage
+          }
+        }
       });
     } catch (error) {
       if (import.meta.env.DEV) {
@@ -409,11 +406,10 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "No pude iniciar la conversación",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   const endConversation = async () => {
     try {
       await conversation.endSession();
@@ -423,7 +419,6 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
       }
     }
   };
-
   const handleSendTextMessage = async (text: string) => {
     // Add user message immediately
     const userMessage: Message = {
@@ -436,7 +431,7 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
 
     // Analytics: Track assistant_invoked { mode: 'text' }
     track('assistant_invoked', {
-      mode: 'text',
+      mode: 'text'
     });
 
     // Temporarily disconnect ElevenLabs to prevent audio response
@@ -447,12 +442,12 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
         if (import.meta.env.DEV) {
           console.log('[VoiceAssistant] Disconnected voice for text-only response');
         }
-        
+
         // Show a subtle toast that voice was disconnected
         toast({
           title: t('voice.toast.textMode', 'Modo texto'),
           description: t('voice.toast.textModeDesc', 'Respuesta sin audio. Presiona 🎙️ para activar voz.'),
-          duration: 2000,
+          duration: 2000
         });
       } catch (error) {
         if (import.meta.env.DEV) {
@@ -460,62 +455,55 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
         }
       }
     }
-
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-chat`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({
-            messages: [...messages, userMessage].map(m => ({
-              role: m.role,
-              content: m.content
-            }))
-          }),
+      const {
+        data: {
+          session
         }
-      );
-
+      } = await supabase.auth.getSession();
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify({
+          messages: [...messages, userMessage].map(m => ({
+            role: m.role,
+            content: m.content
+          }))
+        })
+      });
       if (!response.ok) {
         throw new Error('Failed to send text message');
       }
-
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let assistantMessage = '';
       let navigationPath: string | null = null;
-
       if (reader) {
         while (true) {
-          const { done, value } = await reader.read();
+          const {
+            done,
+            value
+          } = await reader.read();
           if (done) break;
-
           const chunk = decoder.decode(value);
           const lines = chunk.split('\n');
-
           for (const line of lines) {
             if (line.startsWith('data: ')) {
               const data = line.slice(6);
               if (data === '[DONE]') continue;
-
               try {
                 const parsed = JSON.parse(data);
                 const content = parsed.choices?.[0]?.delta?.content;
-                
                 if (content) {
                   assistantMessage += content;
-                  
+
                   // Clean the message for display (remove any NAVIGATE commands)
-                  const displayMessage = assistantMessage
-                    .replace(/\n?\[NAVIGATE:[^\]]+\]/g, '')  // Remove navigation commands
-                    .replace(/\s+$/, '')  // Remove trailing whitespace
-                    .trim();
-                  
+                  const displayMessage = assistantMessage.replace(/\n?\[NAVIGATE:[^\]]+\]/g, '') // Remove navigation commands
+                  .replace(/\s+$/, '') // Remove trailing whitespace
+                  .trim();
                   setMessages(prev => {
                     const lastMsg = prev[prev.length - 1];
                     if (lastMsg?.role === 'assistant') {
@@ -538,7 +526,7 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
             }
           }
         }
-        
+
         // After stream ends, check for navigation command in complete message
         // Path must start with / and contain only valid URL characters
         const navMatch = assistantMessage.match(/\[NAVIGATE:(\/[a-zA-Z0-9\-\/_]+)\]/);
@@ -547,14 +535,14 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
           console.log("Navigation path detected:", navigationPath);
         }
       }
-      
+
       // Navigate after message is fully displayed
       if (navigationPath) {
         setTimeout(() => {
           navigate(navigationPath!);
           toast({
             title: t('voice.toast.navigating', 'Navegando...'),
-            description: t('voice.toast.navigatingDesc', 'Te llevo a la actividad'),
+            description: t('voice.toast.navigatingDesc', 'Te llevo a la actividad')
           });
         }, 1500);
       }
@@ -562,22 +550,20 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
       if (import.meta.env.DEV) {
         console.error('Error sending text message:', error);
       }
-      
+
       // Analytics: Track assistant_failure { error_code }
       track('assistant_failure', {
-        error_code: 'text_message_error',
+        error_code: 'text_message_error'
       });
-      
       toast({
         title: t('voice.toast.error'),
         description: t('voice.errors.textMessage', 'No se pudo enviar el mensaje'),
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsTextMessageLoading(false);
     }
   };
-
   const isConnected = conversation.status === 'connected';
   const isSpeaking = conversation.isSpeaking;
 
@@ -593,69 +579,29 @@ const VoiceAssistant = ({ clientTools }: VoiceAssistantProps) => {
       setMessages([welcomeMessage]);
     }
     setShowHistory(true);
-    
+
     // Analytics: Track assistant opened in text mode
     track('assistant_invoked', {
-      mode: 'text',
+      mode: 'text'
     });
   };
-
-  return (
-    <>
-      <ConversationHistory 
-        messages={messages} 
-        isVisible={showHistory || conversation.status === 'connected'}
-        onClose={() => setShowHistory(false)}
-        onSendTextMessage={handleSendTextMessage}
-        isTextMessageLoading={isTextMessageLoading}
-      />
+  return <>
+      <ConversationHistory messages={messages} isVisible={showHistory || conversation.status === 'connected'} onClose={() => setShowHistory(false)} onSendTextMessage={handleSendTextMessage} isTextMessageLoading={isTextMessageLoading} />
       
       <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 items-end">
         {/* Botón para activar voz cuando el chat está abierto */}
-        {showHistory && !isConnected && !isConnecting && (
-          <Button
-            onClick={startConversation}
-            size="sm"
-            variant="outline"
-            className="text-xs bg-background/90 px-3 py-2 rounded-full shadow-lg border hover:bg-primary hover:text-primary-foreground transition-colors"
-          >
+        {showHistory && !isConnected && !isConnecting && <Button onClick={startConversation} size="sm" variant="outline" className="text-xs bg-background/90 px-3 py-2 rounded-full shadow-lg border hover:bg-primary hover:text-primary-foreground transition-colors">
             💬 Modo texto · Presiona 🎙️ para voz
-          </Button>
-        )}
+          </Button>}
         
-        {!isConnected && !isConnecting ? (
-          <Button
-            onClick={openTextChat}
-            size="lg"
-            className="rounded-full w-16 h-16 shadow-2xl bg-primary hover:bg-primary/90"
-            title="Asistente virtual"
-          >
-            <Bot className="h-8 w-8" />
-          </Button>
-        ) : isConnecting ? (
-          <Button
-            disabled
-            size="lg"
-            className="rounded-full w-16 h-16 shadow-2xl"
-          >
+        {!isConnected && !isConnecting ? <Button onClick={openTextChat} size="lg" className="rounded-full w-16 h-16 shadow-2xl bg-primary hover:bg-primary/90" title="Asistente virtual">
+            <Bot className="size-12" />
+          </Button> : isConnecting ? <Button disabled size="lg" className="rounded-full w-16 h-16 shadow-2xl">
             <Loader2 className="h-8 w-8 animate-spin" />
-          </Button>
-        ) : (
-          <Button
-            onClick={endConversation}
-            size="lg"
-            className={`rounded-full w-16 h-16 shadow-2xl transition-all duration-300 ${
-              isSpeaking
-                ? "bg-accent hover:bg-accent/90 animate-pulse"
-                : "bg-primary hover:bg-primary/90"
-            }`}
-          >
+          </Button> : <Button onClick={endConversation} size="lg" className={`rounded-full w-16 h-16 shadow-2xl transition-all duration-300 ${isSpeaking ? "bg-accent hover:bg-accent/90 animate-pulse" : "bg-primary hover:bg-primary/90"}`}>
             <MicOff className="h-8 w-8" />
-          </Button>
-        )}
+          </Button>}
       </div>
-    </>
-  );
+    </>;
 };
-
 export default VoiceAssistant;

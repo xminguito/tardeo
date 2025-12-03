@@ -49,7 +49,11 @@ export default function ChatBubble({
 
   const handleImageClick = () => {
     if (message.attachment_url) {
-      onImageClick?.(message.attachment_url) || window.open(message.attachment_url, '_blank');
+      if (onImageClick) {
+        onImageClick(message.attachment_url);
+      } else {
+        window.open(message.attachment_url, '_blank');
+      }
     }
   };
 

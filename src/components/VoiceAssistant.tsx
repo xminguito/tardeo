@@ -595,7 +595,7 @@ const VoiceAssistant = ({
           </Button>}
         
         {!isConnected && !isConnecting ? <Button onClick={openTextChat} size="lg" className="rounded-full w-16 h-16 shadow-2xl bg-primary hover:bg-primary/90" title="Asistente virtual">
-            <Bot className="size-12" />
+            <Bot className="w-[3rem] h-[3rem]" />
           </Button> : isConnecting ? <Button disabled size="lg" className="rounded-full w-16 h-16 shadow-2xl">
             <Loader2 className="h-8 w-8 animate-spin" />
           </Button> : <Button onClick={endConversation} size="lg" className={`rounded-full w-16 h-16 shadow-2xl transition-all duration-300 ${isSpeaking ? "bg-accent hover:bg-accent/90 animate-pulse" : "bg-primary hover:bg-primary/90"}`}>

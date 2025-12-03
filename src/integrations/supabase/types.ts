@@ -119,6 +119,44 @@ export type Database = {
         }
         Relationships: []
       }
+      activity_messages: {
+        Row: {
+          activity_id: string
+          attachment_url: string | null
+          content: string
+          content_type: string | null
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          activity_id: string
+          attachment_url?: string | null
+          content: string
+          content_type?: string | null
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          activity_id?: string
+          attachment_url?: string | null
+          content?: string
+          content_type?: string | null
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_messages_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       activity_participants: {
         Row: {
           activity_id: string | null
@@ -1350,6 +1388,10 @@ export type Database = {
       increment_counter: {
         Args: { column_name: string; row_id: string; table_name: string }
         Returns: undefined
+      }
+      is_activity_participant: {
+        Args: { p_activity_id: string; p_user_id: string }
+        Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       refresh_tts_monitoring_stats: { Args: never; Returns: undefined }

@@ -14,6 +14,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -22,6 +29,24 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Plus, Loader2, MapPin, Check, Sparkles, ImagePlus, X } from 'lucide-react';
+
+// ============================================
+// Activity Categories
+// ============================================
+const ACTIVITY_CATEGORIES = [
+  { id: 'social', labelKey: 'activities.categories.social', emoji: '☕', icon: '☕' },
+  { id: 'culture', labelKey: 'activities.categories.culture', emoji: '🎨', icon: '🎨' },
+  { id: 'sport', labelKey: 'activities.categories.sport', emoji: '🏃', icon: '🏃' },
+  { id: 'food', labelKey: 'activities.categories.food', emoji: '🍷', icon: '🍷' },
+  { id: 'music', labelKey: 'activities.categories.music', emoji: '🎵', icon: '🎵' },
+  { id: 'games', labelKey: 'activities.categories.games', emoji: '🎲', icon: '🎲' },
+  { id: 'learning', labelKey: 'activities.categories.learning', emoji: '📚', icon: '📚' },
+  { id: 'family', labelKey: 'activities.categories.family', emoji: '👨‍👩‍👧‍👦', icon: '👨‍👩‍👧‍👦' },
+  { id: 'pets', labelKey: 'activities.categories.pets', emoji: '🐶', icon: '🐶' },
+  { id: 'other', labelKey: 'activities.categories.other', emoji: '✨', icon: '✨' },
+] as const;
+
+type CategoryId = typeof ACTIVITY_CATEGORIES[number]['id'];
 
 // ============================================
 // ImageUploadZone Component
@@ -886,16 +911,33 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
             />
           </div>
 
-            <div>
-              <Label htmlFor="category">{t('activities.create.category')} *</Label>
-              <Input
-                id="category"
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                required
-                placeholder={t('activities.create.categoryPlaceholder')}
-              />
-            </div>
+          {/* Category Select */}
+          <div className="space-y-2">
+            <Label htmlFor="category">{t('activities.create.category')} *</Label>
+            <Select
+              value={formData.category}
+              onValueChange={(value: CategoryId) => setFormData({ ...formData, category: value })}
+              required
+            >
+              <SelectTrigger id="category" className="w-full">
+                <SelectValue placeholder={t('activities.create.categoryPlaceholder')} />
+              </SelectTrigger>
+              <SelectContent>
+                {ACTIVITY_CATEGORIES.map((category) => (
+                  <SelectItem 
+                    key={category.id} 
+                    value={category.id}
+                    className="cursor-pointer"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="text-base">{category.emoji}</span>
+                      <span>{t(category.labelKey)}</span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* Google Places Autocomplete for Location */}
           <div className="space-y-2">

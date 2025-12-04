@@ -159,11 +159,16 @@ All colors MUST be HSL.
 /* Google Places Autocomplete Dropdown - ensure it appears above modals */
 .pac-container {
   z-index: 10000 !important;
+  pointer-events: auto !important; /* Override Radix Dialog's pointer-events: none on outside elements */
   font-family: var(--font-sans);
   border-radius: 0.5rem;
   border: 1px solid hsl(var(--border));
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   margin-top: 4px;
+}
+
+.pac-container * {
+  pointer-events: auto !important; /* Ensure all children are also clickable */
 }
 
 .pac-container .pac-item {

@@ -42,7 +42,7 @@ export default function ActivityMap({
   const [distance, setDistance] = useState<number | null>(null);
   const [geocoding, setGeocoding] = useState(false);
   const [calculatedDistanceFromInput, setCalculatedDistanceFromInput] = useState<number | null>(null);
-  const [showMap, setShowMap] = useState(false);
+  const [showMap, setShowMap] = useState(true); // Map open by default
 
   // Check if Google Maps API key is configured
   const hasGoogleMapsKey = Boolean(import.meta.env.VITE_GOOGLE_MAPS_API_KEY);

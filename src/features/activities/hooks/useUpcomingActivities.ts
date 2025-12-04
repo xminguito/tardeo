@@ -30,7 +30,6 @@ export function useUpcomingActivities() {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        console.log('[useUpcomingActivities] No user logged in');
         return [];
       }
 
@@ -41,12 +40,10 @@ export function useUpcomingActivities() {
         .eq('user_id', user.id);
 
       if (partError) {
-        console.error('[useUpcomingActivities] Error fetching participations:', partError);
         return [];
       }
 
       if (!participations || participations.length === 0) {
-        console.log('[useUpcomingActivities] User has no joined activities');
         return [];
       }
 
@@ -54,12 +51,9 @@ export function useUpcomingActivities() {
         .map(p => p.activity_id)
         .filter(Boolean) as string[];
 
-      console.log('[useUpcomingActivities] User joined activity IDs:', activityIds);
-
       // Get today's date in local timezone (YYYY-MM-DD format)
       // This fixes the issue where UTC conversion could exclude today's events
       const todayStr = getLocalDateString();
-      console.log('[useUpcomingActivities] Filtering activities >= ', todayStr);
 
       const { data: activities, error: actError } = await supabase
         .from('activities')
@@ -75,11 +69,9 @@ export function useUpcomingActivities() {
       }
 
       if (!activities || activities.length === 0) {
-        console.log('[useUpcomingActivities] No upcoming activities found');
         return [];
       }
 
-      console.log('[useUpcomingActivities] Found upcoming activities:', activities.length);
 
       // Enrich with countdown info using local dates
       const today = new Date();
@@ -89,7 +81,6 @@ export function useUpcomingActivities() {
         .filter(activity => {
           // Safety check: ensure date and time exist
           if (!activity.date || !activity.time) {
-            console.warn('[useUpcomingActivities] Activity missing date/time:', activity.id);
             return false;
           }
           return true;
@@ -129,7 +120,6 @@ export function useUpcomingActivities() {
           return true;
         });
 
-      console.log('[useUpcomingActivities] Enriched activities:', enrichedActivities.length);
       return enrichedActivities;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes

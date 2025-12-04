@@ -114,19 +114,16 @@ function isAnalyticsDisabled(): boolean {
 export async function initMixpanel(config: AnalyticsConfig): Promise<void> {
   // Prevent double initialization
   if (isInitialized || isInitializing) {
-    console.log('[Analytics] Already initialized or initializing');
     return;
   }
 
   // Check if disabled
   if (isAnalyticsDisabled()) {
-    console.log('[Analytics] Analytics disabled by user preference');
     return;
   }
 
   // SSR protection
   if (typeof window === 'undefined') {
-    console.log('[Analytics] Skipping init in SSR context');
     return;
   }
 
@@ -218,9 +215,8 @@ export async function trackEvent(
 
     // Send ALL events to server (for admin dashboard analytics)
     // This ensures recent_events table has complete data for accurate metrics
-    console.log('[Analytics] Sending event to server:', event);
-    sendToServer(event, enrichedProps).catch(err => {
-      console.warn(`[Analytics] Failed to send ${event} to server:`, err);
+    sendToServer(event, enrichedProps).catch(() => {
+      // Silent fail - server analytics are supplementary
     });
   } catch (error) {
     console.error(`[Analytics] Error tracking ${event}:`, error);

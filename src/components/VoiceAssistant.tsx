@@ -532,7 +532,6 @@ const VoiceAssistant = ({
         const navMatch = assistantMessage.match(/\[NAVIGATE:(\/[a-zA-Z0-9\-\/_]+)\]/);
         if (navMatch) {
           navigationPath = navMatch[1];
-          console.log("Navigation path detected:", navigationPath);
         }
       }
 

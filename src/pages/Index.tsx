@@ -34,13 +34,6 @@ const Index = () => {
   // Fetch user's upcoming activities for personalized hero
   const { nextActivity, upcomingActivities, upcomingCount, isLoading: upcomingLoading } = useNextActivity();
   
-  // Debug: Log upcoming activities state
-  console.log('[Index] User:', user?.email);
-  console.log('[Index] Next Activity:', nextActivity);
-  console.log('[Index] Upcoming Activities:', upcomingActivities?.length);
-  console.log('[Index] Upcoming Loading:', upcomingLoading);
-  console.log('[Index] Should show UserDashboardHero:', user && nextActivity && !upcomingLoading);
-  
   // Limit to 6 activities for the home page
   const featuredActivities = activities.slice(0, 6);
   

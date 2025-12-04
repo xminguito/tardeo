@@ -931,6 +931,20 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
       </DialogTrigger>
       <DialogContent 
         className="max-w-2xl max-h-[90vh] overflow-y-auto"
+        onPointerDownOutside={(event) => {
+          // Prevent Dialog from capturing clicks on Google Places dropdown
+          const target = event.target as HTMLElement | null;
+          if (target && target.closest('.pac-container')) {
+            event.preventDefault();
+          }
+        }}
+        onFocusOutside={(event) => {
+          // Prevent Dialog from stealing focus when interacting with Google dropdown
+          const target = event.target as HTMLElement | null;
+          if (target && target.closest('.pac-container')) {
+            event.preventDefault();
+          }
+        }}
         onInteractOutside={(event) => {
           // Prevent closing when clicking on Google Places dropdown
           const target = event.target as HTMLElement | null;
@@ -1060,7 +1074,20 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
               <Input
                 id="location"
                       value={locationInputValue}
-                      onChange={handleLocationInputChange}
+                      onChange={handleLocationInputChange} 
+                      onBlur={(e) => {
+                        // Prevent blur from interfering with pac-container clicks
+                        // The relatedTarget is null when clicking on pac-container (it's outside React)
+                        const relatedTarget = e.relatedTarget as HTMLElement | null;
+                        if (!relatedTarget) {
+                          // Check if pac-container is visible (user might be clicking on it)
+                          const pacContainer = document.querySelector('.pac-container');
+                          if (pacContainer && pacContainer.childElementCount > 0) {
+                            // Re-focus the input to allow selection
+                            e.target.focus();
+                          }
+                        }
+                      }}
                       placeholder={t('activities.create.locationAutocompletePlaceholder')}
                       className="pl-10 pr-10"
                 required

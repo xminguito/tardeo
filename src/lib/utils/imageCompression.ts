@@ -71,7 +71,6 @@ export async function compressImage(
   const targetSizeBytes = (opts.maxSizeMB || 0.5) * 1024 * 1024;
   
   if (file.size < targetSizeBytes && file.type === targetType) {
-    console.log(`[compressImage] Skipping - already optimized: ${file.name}`);
     return file;
   }
 
@@ -94,17 +93,9 @@ export async function compressImage(
       lastModified: Date.now(),
     });
 
-    const originalMB = (file.size / 1024 / 1024).toFixed(2);
-    const compressedMB = (compressedFile.size / 1024 / 1024).toFixed(2);
-    const savings = ((1 - compressedFile.size / file.size) * 100).toFixed(0);
-    
-    console.log(
-      `[compressImage] ${file.name}: ${originalMB}MB → ${compressedMB}MB (${savings}% smaller)`
-    );
-
     return compressedFile;
   } catch (error) {
-    console.error('[compressImage] Compression failed, returning original:', error);
+    // Compression failed, return original file as fallback
     return file;
   }
 }

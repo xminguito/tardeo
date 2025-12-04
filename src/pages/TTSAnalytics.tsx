@@ -70,7 +70,6 @@ export default function TTSAnalytics() {
           table: 'tts_monitoring_logs'
         },
         () => {
-          console.log('TTS logs updated, refreshing dashboard...');
           setTimeout(() => setRefreshKey(prev => prev + 1), 1000);
         }
       )
@@ -82,7 +81,6 @@ export default function TTSAnalytics() {
           table: 'system_flags'
         },
         () => {
-          console.log('System flags updated, refreshing...');
           loadSystemFlags();
         }
       )

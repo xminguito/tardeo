@@ -155,3 +155,43 @@ All colors MUST be HSL.
     @apply text-xl md:text-2xl py-4 px-8 min-h-[60px];
   }
 }
+
+/* Google Places Autocomplete Dropdown - ensure it appears above modals */
+.pac-container {
+  z-index: 10000 !important;
+  font-family: var(--font-sans);
+  border-radius: 0.5rem;
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  margin-top: 4px;
+}
+
+.pac-container .pac-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1.5;
+  border-top: 1px solid hsl(var(--border));
+}
+
+.pac-container .pac-item:first-child {
+  border-top: none;
+}
+
+.pac-container .pac-item:hover,
+.pac-container .pac-item-selected {
+  background-color: hsl(var(--accent));
+}
+
+.pac-container .pac-item .pac-icon {
+  margin-right: 8px;
+}
+
+.pac-container .pac-item .pac-item-query {
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+
+.pac-container .pac-matched {
+  font-weight: 700;
+}

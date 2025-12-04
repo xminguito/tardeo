@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLoadScript, Autocomplete } from '@react-google-maps/api';
 import {
   Dialog,
   DialogContent,
@@ -14,7 +15,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, Loader2, MapPin, Check } from 'lucide-react';
+
+// Libraries for Google Maps
+const libraries: ("places")[] = ["places"];
 
 interface CreateActivityDialogProps {
   onActivityCreated?: () => void;
@@ -36,11 +40,106 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
     time: '18:00',
     cost: 0,
     maxParticipants: 20,
+    latitude: null as number | null,
+    longitude: null as number | null,
   });
   const [mainImage, setMainImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [secondaryImages, setSecondaryImages] = useState<File[]>([]);
   const [secondaryPreviews, setSecondaryPreviews] = useState<string[]>([]);
+
+  // Google Places Autocomplete
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const [locationInputValue, setLocationInputValue] = useState('');
+  const [isPlaceSelected, setIsPlaceSelected] = useState(false);
+
+  const { isLoaded, loadError } = useLoadScript({
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
+    libraries,
+  });
+
+  // Extract address component by type
+  const getAddressComponent = useCallback(
+    (components: google.maps.GeocoderAddressComponent[], type: string): string => {
+      const component = components.find((c) => c.types.includes(type));
+      return component?.long_name || '';
+    },
+    []
+  );
+
+  // Handle place selection from autocomplete
+  const handlePlaceChanged = useCallback(() => {
+    if (!autocompleteRef.current) return;
+
+    const place = autocompleteRef.current.getPlace();
+
+    if (!place.geometry?.location) {
+      toast({
+        title: t('common.error'),
+        description: t('activities.create.locationNotFound'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const lat = place.geometry.location.lat();
+    const lng = place.geometry.location.lng();
+    const addressComponents = place.address_components || [];
+
+    // Extract location name (establishment name or formatted address)
+    const locationName = place.name || place.formatted_address || '';
+
+    // Extract city (locality or administrative_area_level_2)
+    const city =
+      getAddressComponent(addressComponents, 'locality') ||
+      getAddressComponent(addressComponents, 'administrative_area_level_2') ||
+      getAddressComponent(addressComponents, 'administrative_area_level_1');
+
+    // Extract province (administrative_area_level_2 or administrative_area_level_1)
+    const province =
+      getAddressComponent(addressComponents, 'administrative_area_level_2') ||
+      getAddressComponent(addressComponents, 'administrative_area_level_1');
+
+    // Update form data
+    setFormData((prev) => ({
+      ...prev,
+      location: locationName,
+      city,
+      province,
+      latitude: lat,
+      longitude: lng,
+    }));
+
+    setLocationInputValue(place.formatted_address || locationName);
+    setIsPlaceSelected(true);
+  }, [getAddressComponent, t, toast]);
+
+  // Handle autocomplete load
+  const handleAutocompleteLoad = useCallback(
+    (autocomplete: google.maps.places.Autocomplete) => {
+      autocompleteRef.current = autocomplete;
+    },
+    []
+  );
+
+  // Reset location when user clears the input
+  const handleLocationInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setLocationInputValue(value);
+
+    // If user clears or modifies the input, reset the selection
+    if (isPlaceSelected && value !== locationInputValue) {
+      setIsPlaceSelected(false);
+      setFormData((prev) => ({
+        ...prev,
+        location: '',
+        city: '',
+        province: '',
+        latitude: null,
+        longitude: null,
+      }));
+    }
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -199,23 +298,9 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
         return;
       }
 
-      // Geocode location to get coordinates
-      let latitude: number | null = null;
-      let longitude: number | null = null;
-      
-      if (formData.city) {
-        try {
-          const { geocodeLocation } = await import('@/lib/distance');
-          const searchQuery = `${formData.location}, ${formData.city}, ${formData.province || ''}, España`;
-          const coords = await geocodeLocation(searchQuery);
-          if (coords) {
-            latitude = coords.lat;
-            longitude = coords.lng;
-          }
-        } catch (error) {
-          console.error('Geocoding error:', error);
-        }
-      }
+      // Use coordinates from Google Places (already set in formData)
+      const latitude = formData.latitude;
+      const longitude = formData.longitude;
 
       // Insert activity with all translations
       const { error: insertError } = await supabase.from('activities').insert({
@@ -278,11 +363,15 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
         time: '18:00',
         cost: 0,
         maxParticipants: 20,
+        latitude: null,
+        longitude: null,
       });
       setMainImage(null);
       setImagePreview(null);
       setSecondaryImages([]);
       setSecondaryPreviews([]);
+      setLocationInputValue('');
+      setIsPlaceSelected(false);
 
       onActivityCreated?.();
     } catch (error) {
@@ -306,7 +395,16 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
           <span className="sm:hidden">{t('common.create')}</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent 
+        className="max-w-2xl max-h-[90vh] overflow-y-auto"
+        onInteractOutside={(event) => {
+          // Prevent closing when clicking on Google Places dropdown
+          const target = event.target as HTMLElement | null;
+          if (target && target.closest('.pac-container')) {
+            event.preventDefault();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle>{t('activities.create.title')}</DialogTitle>
           <DialogDescription>
@@ -397,51 +495,95 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="category">{t('activities.create.category')} *</Label>
-              <Input
-                id="category"
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                required
-                placeholder={t('activities.create.categoryPlaceholder')}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="location">{t('activities.create.location')} *</Label>
-              <Input
-                id="location"
-                value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                required
-                placeholder={t('activities.create.locationPlaceholder')}
-              />
-            </div>
+          <div>
+            <Label htmlFor="category">{t('activities.create.category')} *</Label>
+            <Input
+              id="category"
+              value={formData.category}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              required
+              placeholder={t('activities.create.categoryPlaceholder')}
+            />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="city">{t('activities.create.city')} *</Label>
-              <Input
-                id="city"
-                value={formData.city}
-                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                required
-                placeholder={t('activities.create.cityPlaceholder')}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="province">{t('activities.create.province')}</Label>
-              <Input
-                id="province"
-                value={formData.province}
-                onChange={(e) => setFormData({ ...formData, province: e.target.value })}
-                placeholder={t('activities.create.provincePlaceholder')}
-              />
-            </div>
+          {/* Google Places Autocomplete for Location */}
+          <div className="space-y-2">
+            <Label htmlFor="location">{t('activities.create.location')} *</Label>
+            {isLoaded && !loadError ? (
+              <div className="relative">
+                <Autocomplete
+                  onLoad={handleAutocompleteLoad}
+                  onPlaceChanged={handlePlaceChanged}
+                  options={{
+                    componentRestrictions: { country: 'es' },
+                    fields: ['name', 'formatted_address', 'geometry', 'address_components'],
+                  }}
+                >
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="location"
+                      value={locationInputValue}
+                      onChange={handleLocationInputChange}
+                      placeholder={t('activities.create.locationAutocompletePlaceholder')}
+                      className="pl-10 pr-10"
+                      required
+                    />
+                    {isPlaceSelected && (
+                      <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
+                    )}
+                  </div>
+                </Autocomplete>
+                {/* Show extracted location details */}
+                {isPlaceSelected && formData.city && (
+                  <div className="mt-2 p-3 bg-muted/50 rounded-lg border border-border text-sm">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-muted-foreground">{t('activities.create.location')}:</span>
+                        <p className="font-medium truncate">{formData.location}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">{t('activities.create.city')}:</span>
+                        <p className="font-medium">{formData.city}</p>
+                      </div>
+                      {formData.province && formData.province !== formData.city && (
+                        <div>
+                          <span className="text-muted-foreground">{t('activities.create.province')}:</span>
+                          <p className="font-medium">{formData.province}</p>
+                        </div>
+                      )}
+                      {formData.latitude && formData.longitude && (
+                        <div>
+                          <span className="text-muted-foreground">Coords:</span>
+                          <p className="font-medium text-xs font-mono">
+                            {formData.latitude.toFixed(4)}, {formData.longitude.toFixed(4)}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder={loadError ? t('activities.create.mapsError') : t('common.loading')}
+                    disabled
+                    className="pl-10"
+                  />
+                </div>
+                {loadError && (
+                  <p className="text-xs text-destructive">
+                    {t('activities.create.mapsConfigError')}
+                  </p>
+                )}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">
+              {t('activities.create.locationHelp')}
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

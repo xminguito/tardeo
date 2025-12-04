@@ -1,32 +1,85 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
+// translate-activity - Native Supabase Edge Function
+// Translates activity title and description to 5 languages using OpenAI
+// NO Lovable dependencies - 100% native implementation
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-serve(async (req) => {
+interface TranslateRequest {
+  title: string;
+  description?: string;
+}
+
+interface Translations {
+  title_en: string;
+  title_ca: string;
+  title_fr: string;
+  title_it: string;
+  title_de: string;
+  description_en: string;
+  description_ca: string;
+  description_fr: string;
+  description_it: string;
+  description_de: string;
+}
+
+serve(async (req: Request) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      status: 204,
+      headers: corsHeaders 
+    });
   }
 
   try {
-    const { title, description } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    const { title, description }: TranslateRequest = await req.json();
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    if (!OPENAI_API_KEY) {
+      console.error('OPENAI_API_KEY is not configured');
+      return new Response(
+        JSON.stringify({ error: 'OpenAI API key not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    console.log('Translating activity:', { title, description });
+    if (!title || title.trim().length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'Title is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    // Create the prompt for translation
-    const prompt = `Translate the following activity title and description to English, Catalan, French, Italian, and German.
-Return ONLY a valid JSON object with this exact structure (no markdown, no code blocks, just the raw JSON):
+    console.log('Translating activity:', { title, description: description?.slice(0, 50) });
+
+    // System prompt for consistent translations
+    const systemPrompt = `You are a professional translator specializing in event and activity content.
+Your task is to translate Spanish text into English, Catalan, French, Italian, and German.
+
+Rules:
+- Maintain the friendly and engaging tone of the original
+- Keep the same meaning, style, and any emojis
+- Preserve formatting and punctuation style
+- Return ONLY a valid JSON object, no markdown code blocks
+- If description is empty or "No description provided", translate that phrase appropriately`;
+
+    // User prompt with the content to translate
+    const userPrompt = `Translate this Spanish activity content to 5 languages.
+
+Original Spanish:
+Title: ${title}
+Description: ${description || 'No description provided'}
+
+Return this exact JSON structure:
 {
   "title_en": "English title",
-  "title_ca": "Catalan title",
+  "title_ca": "Catalan title", 
   "title_fr": "French title",
   "title_it": "Italian title",
   "title_de": "German title",
@@ -35,39 +88,30 @@ Return ONLY a valid JSON object with this exact structure (no markdown, no code 
   "description_fr": "French description",
   "description_it": "Italian description",
   "description_de": "German description"
-}
+}`;
 
-Original Spanish content:
-Title: ${title}
-Description: ${description || 'No description provided'}
-
-Important: 
-- Keep the tone friendly and engaging
-- Maintain the same meaning and style
-- Return ONLY the JSON object, nothing else`;
-
-    // Call Lovable AI
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    // Call OpenAI API directly (no Lovable gateway)
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'gpt-4o-mini',
         messages: [
-          {
-            role: 'user',
-            content: prompt
-          }
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
         ],
         temperature: 0.3,
+        max_tokens: 1000,
+        response_format: { type: "json_object" },
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('AI gateway error:', response.status, errorText);
+      console.error('OpenAI API error:', response.status, errorText);
       
       if (response.status === 429) {
         return new Response(
@@ -76,29 +120,36 @@ Important:
         );
       }
       
-      if (response.status === 402) {
+      if (response.status === 401) {
         return new Response(
-          JSON.stringify({ error: 'Payment required. Please add credits to your Lovable AI workspace.' }),
-          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify({ error: 'Invalid OpenAI API key' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      if (response.status === 402 || response.status === 403) {
+        return new Response(
+          JSON.stringify({ error: 'OpenAI API access issue. Check your API key and billing.' }),
+          { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       
-      throw new Error(`AI gateway error: ${response.status}`);
+      throw new Error(`OpenAI API error: ${response.status}`);
     }
 
     const data = await response.json();
     const translatedText = data.choices?.[0]?.message?.content;
 
     if (!translatedText) {
-      throw new Error('No translation received from AI');
+      throw new Error('No translation received from OpenAI');
     }
 
-    console.log('Raw AI response:', translatedText);
+    console.log('Raw AI response received, parsing...');
 
     // Parse the JSON response
-    let translations;
+    let translations: Translations;
     try {
-      // Remove markdown code blocks if present
+      // Clean up any potential markdown formatting
       const cleanedText = translatedText
         .replace(/```json\n?/g, '')
         .replace(/```\n?/g, '')
@@ -107,11 +158,11 @@ Important:
       translations = JSON.parse(cleanedText);
     } catch (parseError) {
       console.error('Failed to parse AI response:', translatedText);
-      throw new Error('Invalid JSON response from AI');
+      throw new Error('Invalid JSON response from OpenAI');
     }
 
     // Validate the response has all required fields
-    const requiredFields = [
+    const requiredFields: (keyof Translations)[] = [
       'title_en', 'title_ca', 'title_fr', 'title_it', 'title_de',
       'description_en', 'description_ca', 'description_fr', 'description_it', 'description_de'
     ];
@@ -123,11 +174,14 @@ Important:
       }
     }
 
-    console.log('Successfully translated activity');
+    console.log('Successfully translated activity to 5 languages');
 
     return new Response(
       JSON.stringify(translations),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     );
 
   } catch (error) {

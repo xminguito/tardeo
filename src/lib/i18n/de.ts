@@ -249,6 +249,9 @@ export default {
       aiGenerationError: 'Fehler beim Generieren. Bitte erneut versuchen.',
       aiGenerated: 'Beschreibung generiert!',
       aiGeneratedDesc: 'Du kannst sie bearbeiten, wenn du möchtest',
+      dropMainImage: 'Bild hierher ziehen oder klicken',
+      addImage: 'Hinzufügen',
+      invalidImageType: 'Ungültiger Bildtyp. Verwende JPG, PNG oder WEBP',
     },
     reservation: {
       confirm: 'Reservierung bestätigen',

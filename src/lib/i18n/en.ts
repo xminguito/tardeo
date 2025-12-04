@@ -277,6 +277,9 @@ export default {
       aiGenerationError: "Error generating description. Please try again.",
       aiGenerated: "Description generated!",
       aiGeneratedDesc: "You can edit it if you want",
+      dropMainImage: "Drag an image or click to upload",
+      addImage: "Add",
+      invalidImageType: "Invalid image type. Use JPG, PNG or WEBP",
     },
     reservation: {
       confirm: "Confirm reservation",

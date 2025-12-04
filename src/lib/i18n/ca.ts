@@ -249,6 +249,9 @@ export default {
       aiGenerationError: 'Error al generar la descripció. Torna-ho a provar.',
       aiGenerated: 'Descripció generada!',
       aiGeneratedDesc: 'Pots editar-la si ho desitges',
+      dropMainImage: 'Arrossega una imatge o fes clic',
+      addImage: 'Afegir',
+      invalidImageType: 'Tipus d\'imatge no vàlid. Utilitza JPG, PNG o WEBP',
     },
     reservation: {
       confirm: 'Confirmar reserva',

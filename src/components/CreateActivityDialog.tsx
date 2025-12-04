@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, DragEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLoadScript, Autocomplete } from '@react-google-maps/api';
 import {
@@ -13,9 +13,375 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Loader2, MapPin, Check, Sparkles } from 'lucide-react';
+import { Plus, Loader2, MapPin, Check, Sparkles, ImagePlus, X } from 'lucide-react';
+
+// ============================================
+// ImageUploadZone Component
+// ============================================
+interface ImageUploadZoneProps {
+  preview: string | null;
+  onFileSelect: (file: File) => void;
+  onRemove: () => void;
+  accept?: string;
+  maxSizeMB?: number;
+  label: string;
+  hint: string;
+  height?: string;
+}
+
+function ImageUploadZone({
+  preview,
+  onFileSelect,
+  onRemove,
+  accept = 'image/jpeg,image/png,image/webp,image/jpg',
+  maxSizeMB = 5,
+  label,
+  hint,
+  height = 'h-48',
+}: ImageUploadZoneProps) {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const validateFile = (file: File): boolean => {
+    const validTypes = accept.split(',').map(t => t.trim());
+    if (!validTypes.includes(file.type)) {
+      toast({
+        title: t('common.error'),
+        description: t('activities.create.invalidImageType'),
+        variant: 'destructive',
+      });
+      return false;
+    }
+    if (file.size > maxSizeMB * 1024 * 1024) {
+      toast({
+        title: t('common.error'),
+        description: t('activities.create.imageTooLarge'),
+        variant: 'destructive',
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file && validateFile(file)) {
+      onFileSelect(file);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && validateFile(file)) {
+      onFileSelect(file);
+    }
+    // Reset input so same file can be selected again
+    if (inputRef.current) inputRef.current.value = '';
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      inputRef.current?.click();
+    }
+  };
+
+  if (preview) {
+    return (
+      <div className={`relative ${height} rounded-xl overflow-hidden border border-border group`}>
+        <img
+          src={preview}
+          alt="Preview"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors" />
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={onRemove}
+                className="absolute top-2 right-2 p-1.5 rounded-full bg-destructive text-destructive-foreground 
+                           opacity-0 group-hover:opacity-100 transition-opacity
+                           hover:bg-destructive/90 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring"
+                aria-label={t('common.delete')}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{t('common.delete')}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => inputRef.current?.click()}
+      onKeyDown={handleKeyDown}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      className={`
+        ${height} rounded-xl border-2 border-dashed cursor-pointer
+        flex flex-col items-center justify-center gap-2
+        transition-all duration-200
+        ${isDragging 
+          ? 'border-primary bg-primary/10 scale-[1.02]' 
+          : 'border-muted-foreground/30 hover:border-primary/50 hover:bg-muted/50'
+        }
+        focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2
+      `}
+    >
+      <input
+        ref={inputRef}
+        type="file"
+        accept={accept}
+        onChange={handleFileChange}
+        className="hidden"
+        aria-label={label}
+      />
+      <div className={`p-3 rounded-full ${isDragging ? 'bg-primary/20' : 'bg-muted'} transition-colors`}>
+        <ImagePlus className={`h-6 w-6 ${isDragging ? 'text-primary' : 'text-muted-foreground'}`} />
+      </div>
+      <div className="text-center px-4">
+        <p className={`text-sm font-medium ${isDragging ? 'text-primary' : 'text-foreground'}`}>
+          {label}
+        </p>
+        <p className="text-xs text-muted-foreground mt-0.5">{hint}</p>
+      </div>
+    </div>
+  );
+}
+
+// ============================================
+// GalleryUploadGrid Component
+// ============================================
+interface GalleryUploadGridProps {
+  previews: string[];
+  onFilesSelect: (files: File[]) => void;
+  onRemove: (index: number) => void;
+  maxFiles?: number;
+  accept?: string;
+  maxSizeMB?: number;
+}
+
+function GalleryUploadGrid({
+  previews,
+  onFilesSelect,
+  onRemove,
+  maxFiles = 4,
+  accept = 'image/jpeg,image/png,image/webp,image/jpg',
+  maxSizeMB = 5,
+}: GalleryUploadGridProps) {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  
+  const canAddMore = previews.length < maxFiles;
+
+  const validateFiles = (files: File[]): File[] => {
+    const validTypes = accept.split(',').map(t => t.trim());
+    return files.filter(file => {
+      if (!validTypes.includes(file.type)) {
+        toast({
+          title: t('common.error'),
+          description: t('activities.create.invalidImageType'),
+          variant: 'destructive',
+        });
+        return false;
+      }
+      if (file.size > maxSizeMB * 1024 * 1024) {
+        toast({
+          title: t('common.error'),
+          description: t('activities.create.imageTooLarge'),
+          variant: 'destructive',
+        });
+        return false;
+      }
+      return true;
+    });
+  };
+
+  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (canAddMore) setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    if (!canAddMore) return;
+
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    const availableSlots = maxFiles - previews.length;
+    const filesToAdd = droppedFiles.slice(0, availableSlots);
+    const validFiles = validateFiles(filesToAdd);
+
+    if (validFiles.length > 0) {
+      onFilesSelect(validFiles);
+    }
+
+    if (droppedFiles.length > availableSlots) {
+      toast({
+        title: t('common.error'),
+        description: t('activities.create.maxSecondaryImages'),
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const availableSlots = maxFiles - previews.length;
+    const filesToAdd = files.slice(0, availableSlots);
+    const validFiles = validateFiles(filesToAdd);
+
+    if (validFiles.length > 0) {
+      onFilesSelect(validFiles);
+    }
+
+    if (files.length > availableSlots) {
+      toast({
+        title: t('common.error'),
+        description: t('activities.create.maxSecondaryImages'),
+        variant: 'destructive',
+      });
+    }
+
+    // Reset input
+    if (inputRef.current) inputRef.current.value = '';
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if ((e.key === 'Enter' || e.key === ' ') && canAddMore) {
+      e.preventDefault();
+      inputRef.current?.click();
+    }
+  };
+
+  return (
+    <div
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      className="space-y-2"
+    >
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        {/* Existing previews */}
+        {previews.map((preview, index) => (
+          <div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-border group">
+            <img
+              src={preview}
+              alt={`Gallery ${index + 1}`}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors" />
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => onRemove(index)}
+                    className="absolute top-1 right-1 p-1 rounded-full bg-destructive text-destructive-foreground 
+                               opacity-0 group-hover:opacity-100 transition-opacity
+                               hover:bg-destructive/90 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring"
+                    aria-label={t('common.delete')}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{t('common.delete')}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        ))}
+
+        {/* Add more button */}
+        {canAddMore && (
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => inputRef.current?.click()}
+            onKeyDown={handleKeyDown}
+            className={`
+              aspect-square rounded-lg border-2 border-dashed cursor-pointer
+              flex flex-col items-center justify-center gap-1
+              transition-all duration-200
+              ${isDragging 
+                ? 'border-primary bg-primary/10 scale-[1.02]' 
+                : 'border-muted-foreground/30 hover:border-primary/50 hover:bg-muted/50'
+              }
+              focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2
+            `}
+          >
+            <Plus className={`h-5 w-5 ${isDragging ? 'text-primary' : 'text-muted-foreground'}`} />
+            <span className={`text-xs font-medium ${isDragging ? 'text-primary' : 'text-muted-foreground'}`}>
+              {t('activities.create.addImage')}
+            </span>
+          </div>
+        )}
+      </div>
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept={accept}
+        onChange={handleFileChange}
+        className="hidden"
+        multiple
+        aria-label={t('activities.create.secondaryImages')}
+      />
+
+      <p className="text-xs text-muted-foreground">
+        {t('activities.create.secondaryImagesHelp')} ({previews.length}/{maxFiles})
+      </p>
+    </div>
+  );
+}
 
 // Libraries for Google Maps
 const libraries: ("places")[] = ["places"];
@@ -212,65 +578,37 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
     }
   }, [formData.title, formData.category, formData.location, t, toast]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: t('common.error'),
-          description: t('activities.create.imageTooLarge'),
-          variant: 'destructive',
-        });
-        return;
-      }
-      setMainImage(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+  // Main image handlers using URL.createObjectURL for instant preview
+  const handleMainImageSelect = useCallback((file: File) => {
+    // Revoke previous URL to prevent memory leak
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
     }
-  };
+    setMainImage(file);
+    setImagePreview(URL.createObjectURL(file));
+  }, [imagePreview]);
 
-  const handleSecondaryImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    
-    if (files.length + secondaryImages.length > 4) {
-      toast({
-        title: t('common.error'),
-        description: t('activities.create.maxSecondaryImages'),
-        variant: 'destructive',
-      });
-      return;
+  const handleMainImageRemove = useCallback(() => {
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
     }
+    setMainImage(null);
+    setImagePreview(null);
+  }, [imagePreview]);
 
-    const validFiles = files.filter(file => {
-      if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: t('common.error'),
-          description: t('activities.create.imageTooLarge'),
-          variant: 'destructive',
-        });
-        return false;
-      }
-      return true;
-    });
+  // Secondary images handlers
+  const handleSecondaryImagesSelect = useCallback((files: File[]) => {
+    const newPreviews = files.map(file => URL.createObjectURL(file));
+    setSecondaryImages(prev => [...prev, ...files]);
+    setSecondaryPreviews(prev => [...prev, ...newPreviews]);
+  }, []);
 
-    setSecondaryImages(prev => [...prev, ...validFiles]);
-
-    validFiles.forEach(file => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setSecondaryPreviews(prev => [...prev, reader.result as string]);
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
-  const removeSecondaryImage = (index: number) => {
+  const handleSecondaryImageRemove = useCallback((index: number) => {
+    // Revoke URL for the removed image
+    URL.revokeObjectURL(secondaryPreviews[index]);
     setSecondaryImages(prev => prev.filter((_, i) => i !== index));
     setSecondaryPreviews(prev => prev.filter((_, i) => i !== index));
-  };
+  }, [secondaryPreviews]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -524,64 +862,28 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
             />
           </div>
 
-          <div>
-            <Label htmlFor="image">{t('activities.create.mainImage')}</Label>
-            <Input
-              id="image"
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/jpg"
-              onChange={handleImageChange}
-              className="cursor-pointer"
+          {/* Main Image Upload Zone */}
+          <div className="space-y-2">
+            <Label>{t('activities.create.mainImage')}</Label>
+            <ImageUploadZone
+              preview={imagePreview}
+              onFileSelect={handleMainImageSelect}
+              onRemove={handleMainImageRemove}
+              label={t('activities.create.dropMainImage')}
+              hint={t('activities.create.imageRequirements')}
+              height="h-48"
             />
-            {imagePreview && (
-              <div className="mt-2 relative w-full h-48 rounded-lg overflow-hidden border border-border">
-                <img 
-                  src={imagePreview} 
-                  alt="Preview" 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
-            <p className="text-xs text-muted-foreground mt-1">
-              {t('activities.create.imageRequirements')}
-            </p>
           </div>
 
-          <div>
-            <Label htmlFor="secondaryImages">{t('activities.create.secondaryImages')}</Label>
-            <Input
-              id="secondaryImages"
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/jpg"
-              onChange={handleSecondaryImagesChange}
-              className="cursor-pointer"
-              multiple
-              disabled={secondaryImages.length >= 4}
+          {/* Secondary Images Gallery */}
+          <div className="space-y-2">
+            <Label>{t('activities.create.secondaryImages')}</Label>
+            <GalleryUploadGrid
+              previews={secondaryPreviews}
+              onFilesSelect={handleSecondaryImagesSelect}
+              onRemove={handleSecondaryImageRemove}
+              maxFiles={4}
             />
-            {secondaryPreviews.length > 0 && (
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                {secondaryPreviews.map((preview, index) => (
-                  <div key={index} className="relative h-32 rounded-lg overflow-hidden border border-border group">
-                    <img 
-                      src={preview} 
-                      alt={`Secondary ${index + 1}`} 
-                      className="w-full h-full object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeSecondaryImage(index)}
-                      className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <span className="sr-only">Remove</span>
-                      ✕
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <p className="text-xs text-muted-foreground mt-1">
-              {t('activities.create.secondaryImagesHelp')} ({secondaryImages.length}/4)
-            </p>
           </div>
 
             <div>

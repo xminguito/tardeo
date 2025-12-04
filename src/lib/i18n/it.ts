@@ -251,6 +251,9 @@ export default {
       aiGenerationError: 'Errore nella generazione. Riprova.',
       aiGenerated: 'Descrizione generata!',
       aiGeneratedDesc: 'Puoi modificarla se vuoi',
+      dropMainImage: 'Trascina un\'immagine o clicca',
+      addImage: 'Aggiungi',
+      invalidImageType: 'Tipo di immagine non valido. Usa JPG, PNG o WEBP',
     },
     reservation: {
       confirm: "Conferma prenotazione",

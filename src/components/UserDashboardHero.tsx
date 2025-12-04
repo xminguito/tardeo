@@ -21,14 +21,28 @@ interface CountdownTime {
   totalSeconds: number;
 }
 
-function useCountdown(targetDate: Date): CountdownTime {
+const EXPIRED_COUNTDOWN: CountdownTime = {
+  days: 0,
+  hours: 0,
+  minutes: 0,
+  seconds: 0,
+  isExpired: true,
+  totalSeconds: 0,
+};
+
+function useCountdown(targetDate: Date | null | undefined): CountdownTime {
   const calculateTimeLeft = useCallback((): CountdownTime => {
+    // Safety: handle null/undefined/invalid dates
+    if (!targetDate || !(targetDate instanceof Date) || isNaN(targetDate.getTime())) {
+      return EXPIRED_COUNTDOWN;
+    }
+
     const now = new Date().getTime();
     const target = targetDate.getTime();
     const difference = target - now;
 
     if (difference <= 0) {
-      return { days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: true, totalSeconds: 0 };
+      return EXPIRED_COUNTDOWN;
     }
 
     const totalSeconds = Math.floor(difference / 1000);
@@ -40,11 +54,16 @@ function useCountdown(targetDate: Date): CountdownTime {
     return { days, hours, minutes, seconds, isExpired: false, totalSeconds };
   }, [targetDate]);
 
-  const [timeLeft, setTimeLeft] = useState<CountdownTime>(calculateTimeLeft);
+  const [timeLeft, setTimeLeft] = useState<CountdownTime>(() => calculateTimeLeft());
 
   useEffect(() => {
     // Update immediately
     setTimeLeft(calculateTimeLeft());
+
+    // Don't set interval for invalid dates
+    if (!targetDate || !(targetDate instanceof Date) || isNaN(targetDate.getTime())) {
+      return;
+    }
 
     // Set up interval - updates every second
     const intervalId = setInterval(() => {
@@ -53,7 +72,7 @@ function useCountdown(targetDate: Date): CountdownTime {
 
     // Cleanup on unmount - CRITICAL for preventing memory leaks
     return () => clearInterval(intervalId);
-  }, [calculateTimeLeft]);
+  }, [calculateTimeLeft, targetDate]);
 
   return timeLeft;
 }
@@ -163,12 +182,32 @@ export default function UserDashboardHero({
   const { t, i18n } = useTranslation();
 
   // Calculate target date for countdown
-  const activityDateTime = useMemo(() => {
-    const [hours, minutes] = nextActivity.time.split(':').map(Number);
-    const date = new Date(nextActivity.date);
-    date.setHours(hours, minutes, 0, 0);
-    return date;
-  }, [nextActivity.date, nextActivity.time]);
+  // Calculate target date for countdown with safety checks
+  const activityDateTime = useMemo((): Date | null => {
+    try {
+      if (!nextActivity?.date || !nextActivity?.time) {
+        return null;
+      }
+
+      const timeParts = nextActivity.time.split(':');
+      const hours = parseInt(timeParts[0], 10);
+      const minutes = parseInt(timeParts[1], 10);
+
+      if (isNaN(hours) || isNaN(minutes)) {
+        return null;
+      }
+
+      const date = new Date(nextActivity.date);
+      if (isNaN(date.getTime())) {
+        return null;
+      }
+
+      date.setHours(hours, minutes, 0, 0);
+      return date;
+    } catch {
+      return null;
+    }
+  }, [nextActivity?.date, nextActivity?.time]);
 
   const timeLeft = useCountdown(activityDateTime);
 
@@ -276,59 +315,59 @@ export default function UserDashboardHero({
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-4">
                 <span className="bg-white/25 text-white text-sm font-bold px-3 py-1.5 rounded-full">
-                  {t('home.dashboard.nextEvent')}
-                </span>
+              {t('home.dashboard.nextEvent')}
+            </span>
                 <span className="text-white font-semibold text-base">
-                  {getCountdownText()}
-                </span>
-              </div>
+              {getCountdownText()}
+            </span>
+          </div>
 
               <h2 className="text-2xl md:text-3xl font-bold mb-5 line-clamp-2 drop-shadow-sm">
-                {getTranslatedTitle()}
-              </h2>
+            {getTranslatedTitle()}
+          </h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 <div className="flex items-center gap-2.5 text-white">
                   <Calendar className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
                   <span className="text-base font-medium">
-                    {format(new Date(nextActivity.date), 'EEE, d MMM', { locale: getDateLocale() })}
-                  </span>
-                </div>
+                {format(new Date(nextActivity.date), 'EEE, d MMM', { locale: getDateLocale() })}
+              </span>
+            </div>
                 <div className="flex items-center gap-2.5 text-white">
                   <Clock className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
                   <span className="text-base font-medium">{nextActivity.time.slice(0, 5)}</span>
-                </div>
+            </div>
                 <div className="flex items-center gap-2.5 text-white">
                   <MapPin className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
                   <span className="text-base font-medium truncate">
-                    {nextActivity.city || nextActivity.location}
-                  </span>
-                </div>
-              </div>
+                {nextActivity.city || nextActivity.location}
+              </span>
+            </div>
+          </div>
 
               {/* Actions - full-width buttons with focus states and min 44px touch targets */}
               <div className="w-full flex flex-col sm:flex-row gap-3">
-                <Button
-                  onClick={handleGoToChat}
-                  size="lg"
+            <Button
+              onClick={handleGoToChat}
+              size="lg"
                   className="w-full sm:flex-1 min-h-[44px] bg-white text-primary hover:bg-white/90 font-bold gap-2 text-base
                              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary
                              transition-all duration-200 shadow-md hover:shadow-lg"
-                >
+            >
                   <MessageCircle className="h-5 w-5" aria-hidden="true" />
-                  {t('home.dashboard.goToChat')}
-                </Button>
-                <Button
-                  onClick={handleViewActivity}
-                  size="lg"
-                  variant="outline"
+              {t('home.dashboard.goToChat')}
+            </Button>
+            <Button
+              onClick={handleViewActivity}
+              size="lg"
+              variant="outline"
                   className="w-full sm:flex-1 min-h-[44px] border-2 border-white/50 bg-white/10 text-white hover:bg-white/20 hover:border-white/70 font-bold gap-2 text-base
                              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary
                              transition-all duration-200"
-                >
-                  {t('home.dashboard.viewDetails')}
+            >
+              {t('home.dashboard.viewDetails')}
                   <ChevronRight className="h-5 w-5" aria-hidden="true" />
-                </Button>
+            </Button>
               </div>
             </div>
 
@@ -365,4 +404,3 @@ export default function UserDashboardHero({
     </Card>
   );
 }
-

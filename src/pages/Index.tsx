@@ -10,13 +10,16 @@ import CreateActivityDialog from "@/components/CreateActivityDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useFavorites } from "@/features/activities/hooks/useFavorites";
 import { useActivities, ACTIVITIES_QUERY_KEY } from "@/features/activities/hooks/useActivities";
+import { useNextActivity } from "@/features/activities/hooks/useUpcomingActivities";
 import { useSliderByPage } from "@/hooks/useSliderByPage";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
 import HeroSlider from "@/components/HeroSlider";
+import UserDashboardHero from "@/components/UserDashboardHero";
 
 const Index = () => {
   const [user, setUser] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<{ full_name: string | null } | null>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
   const navigate = useNavigate();
@@ -26,7 +29,17 @@ const Index = () => {
   const { isFavorite, toggleFavorite, favorites } = useFavorites(user?.id);
   
   // Use the enhanced useActivities hook that includes participant data
-  const { data: activities = [], isLoading: loading, refetch } = useActivities();
+  const { data: activities = [], isLoading: loading } = useActivities();
+  
+  // Fetch user's upcoming activities for personalized hero
+  const { nextActivity, upcomingCount, isLoading: upcomingLoading } = useNextActivity();
+  
+  // Debug: Log upcoming activities state
+  console.log('[Index] User:', user?.email);
+  console.log('[Index] Next Activity:', nextActivity);
+  console.log('[Index] Upcoming Count:', upcomingCount);
+  console.log('[Index] Upcoming Loading:', upcomingLoading);
+  console.log('[Index] Should show UserDashboardHero:', user && nextActivity && !upcomingLoading);
   
   // Limit to 6 activities for the home page
   const featuredActivities = activities.slice(0, 6);
@@ -44,6 +57,7 @@ const Index = () => {
       setUser(session.user);
       loadNotifications(session.user.id);
       checkIfAdmin(session.user.id);
+      loadUserProfile(session.user.id);
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -51,12 +65,24 @@ const Index = () => {
       if (session?.user) {
         loadNotifications(session.user.id);
         checkIfAdmin(session.user.id);
+        loadUserProfile(session.user.id);
       } else {
         setIsUserAdmin(false);
+        setUserProfile(null);
       }
     });
 
     return () => subscription.unsubscribe();
+  };
+
+  const loadUserProfile = async (userId: string) => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', userId)
+      .single();
+    
+    if (data) setUserProfile(data);
   };
 
   const checkIfAdmin = async (userId: string) => {
@@ -96,12 +122,27 @@ const Index = () => {
       />
 
       <PageTransition>
-        {/* Hero Slider */}
-        {!bannersLoading && heroSlides.length > 0 && (
-          <div className="container mx-auto px-4 pt-8 pb-4">
-            <HeroSlider slides={heroSlides} autoplayInterval={5000} />
-          </div>
-        )}
+        {/* Hero Section - Conditional based on user state */}
+        <div className="container mx-auto px-4 pt-8 pb-4">
+          {user && nextActivity && !upcomingLoading ? (
+            /* State A: Active User Dashboard */
+            <UserDashboardHero
+              userName={userProfile?.full_name?.split(' ')[0] || user.email?.split('@')[0] || 'Usuario'}
+              nextActivity={nextActivity}
+              upcomingCount={upcomingCount}
+            />
+          ) : !user ? (
+            /* State B: Discovery Mode for non-logged users */
+            !bannersLoading && heroSlides.length > 0 ? (
+              <HeroSlider slides={heroSlides} autoplayInterval={5000} />
+            ) : null
+          ) : (
+            /* State C: Logged in but no upcoming activities - show discovery slider */
+            !bannersLoading && heroSlides.length > 0 && (
+              <HeroSlider slides={heroSlides} autoplayInterval={5000} />
+            )
+          )}
+        </div>
 
         <main className="container mx-auto px-4 py-12">
         {!user && (

@@ -1,7 +1,6 @@
 import { useState, useRef, useCallback, DragEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLoadScript, Autocomplete } from '@react-google-maps/api';
-import imageCompression from 'browser-image-compression';
 import {
   Dialog,
   DialogContent,
@@ -30,49 +29,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Plus, Loader2, MapPin, Check, Sparkles, ImagePlus, X } from 'lucide-react';
-
-// ============================================
-// Image Compression Configuration
-// ============================================
-const IMAGE_COMPRESSION_OPTIONS = {
-  maxSizeMB: 0.5, // Target ~500KB
-  maxWidthOrHeight: 1920, // Full HD max dimension
-  useWebWorker: true, // Avoid freezing UI
-  fileType: 'image/webp' as const, // Modern format
-  initialQuality: 0.8,
-};
-
-/**
- * Optimizes an image file using browser-image-compression
- * Converts to WebP, resizes, and compresses for optimal web delivery
- */
-async function optimizeImage(file: File): Promise<File> {
-  // Skip if already small enough and webp
-  if (file.size < 500 * 1024 && file.type === 'image/webp') {
-    return file;
-  }
-
-  try {
-    const compressedBlob = await imageCompression(file, IMAGE_COMPRESSION_OPTIONS);
-    
-    // Create a new File from the compressed blob with .webp extension
-    const fileName = file.name.replace(/\.[^/.]+$/, '.webp');
-    const compressedFile = new File([compressedBlob], fileName, {
-      type: 'image/webp',
-      lastModified: Date.now(),
-    });
-
-    console.log(
-      `Image optimized: ${(file.size / 1024 / 1024).toFixed(2)}MB → ${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`
-    );
-
-    return compressedFile;
-  } catch (error) {
-    console.error('Image compression failed:', error);
-    // Return original file if compression fails
-    return file;
-  }
-}
+import { compressImage, GALLERY_OPTIONS, calculateSavings } from '@/lib/utils/imageCompression';
 
 // ============================================
 // Activity Categories
@@ -551,13 +508,13 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
     const place = autocompleteRef.current.getPlace();
 
     if (!place.geometry?.location) {
-      toast({
-        title: t('common.error'),
+        toast({
+          title: t('common.error'),
         description: t('activities.create.locationNotFound'),
-        variant: 'destructive',
-      });
-      return;
-    }
+          variant: 'destructive',
+        });
+        return;
+      }
 
     const lat = place.geometry.location.lat();
     const lng = place.geometry.location.lng();
@@ -642,13 +599,13 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
 
       if (error) {
         console.error('AI generation error:', error);
-        toast({
-          title: t('common.error'),
+      toast({
+        title: t('common.error'),
           description: t('activities.create.aiGenerationError'),
-          variant: 'destructive',
-        });
-        return;
-      }
+        variant: 'destructive',
+      });
+      return;
+    }
 
       if (data?.description) {
         // Typewriter effect for the generated description
@@ -676,11 +633,11 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
       }
     } catch (error) {
       console.error('Error generating description:', error);
-      toast({
-        title: t('common.error'),
+        toast({
+          title: t('common.error'),
         description: t('activities.create.aiGenerationError'),
-        variant: 'destructive',
-      });
+          variant: 'destructive',
+        });
     } finally {
       setIsGeneratingDescription(false);
     }
@@ -697,7 +654,7 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
     setIsCompressingMain(true);
 
     try {
-      const optimizedFile = await optimizeImage(file);
+      const optimizedFile = await compressImage(file, GALLERY_OPTIONS);
       setMainImage(optimizedFile);
       setImagePreview(URL.createObjectURL(optimizedFile));
 
@@ -739,7 +696,7 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
     try {
       // Compress all files in parallel
       const optimizedFiles = await Promise.all(
-        files.map(file => optimizeImage(file))
+        files.map(file => compressImage(file, GALLERY_OPTIONS))
       );
 
       const newPreviews = optimizedFiles.map(file => URL.createObjectURL(file));
@@ -1059,11 +1016,11 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
 
           {/* Category Select */}
           <div className="space-y-2">
-            <Label htmlFor="category">{t('activities.create.category')} *</Label>
+              <Label htmlFor="category">{t('activities.create.category')} *</Label>
             <Select
-              value={formData.category}
+                value={formData.category}
               onValueChange={(value: CategoryId) => setFormData({ ...formData, category: value })}
-              required
+                required
             >
               <SelectTrigger id="category" className="w-full">
                 <SelectValue placeholder={t('activities.create.categoryPlaceholder')} />
@@ -1083,7 +1040,7 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
                 ))}
               </SelectContent>
             </Select>
-          </div>
+            </div>
 
           {/* Google Places Autocomplete for Location */}
           <div className="space-y-2">
@@ -1107,11 +1064,11 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
                       placeholder={t('activities.create.locationAutocompletePlaceholder')}
                       className="pl-10 pr-10"
                 required
-                    />
+              />
                     {isPlaceSelected && (
                       <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
                     )}
-                  </div>
+            </div>
                 </Autocomplete>
                 {/* Show extracted location details */}
                 {isPlaceSelected && formData.city && (
@@ -1120,11 +1077,11 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
                       <div>
                         <span className="text-muted-foreground">{t('activities.create.location')}:</span>
                         <p className="font-medium truncate">{formData.location}</p>
-            </div>
-                      <div>
+          </div>
+            <div>
                         <span className="text-muted-foreground">{t('activities.create.city')}:</span>
                         <p className="font-medium">{formData.city}</p>
-          </div>
+            </div>
                       {formData.province && formData.province !== formData.city && (
             <div>
                           <span className="text-muted-foreground">{t('activities.create.province')}:</span>

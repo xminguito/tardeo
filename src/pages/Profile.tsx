@@ -17,6 +17,7 @@ import { useTranslation } from "react-i18next";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { compressImage, AVATAR_OPTIONS, GALLERY_OPTIONS, calculateSavings } from "@/lib/utils/imageCompression";
 
 const MAX_GALLERY_IMAGES = 5;
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -26,7 +27,9 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [compressingAvatar, setCompressingAvatar] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
+  const [compressingGallery, setCompressingGallery] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [interests, setInterests] = useState<any[]>([]);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
@@ -155,9 +158,33 @@ const Profile = () => {
     const file = e.target.files?.[0];
     if (!file || !userId) return;
 
+    const originalSize = file.size;
+
+    // Step 1: Compress
+    setCompressingAvatar(true);
+    let optimizedFile: File;
+    try {
+      optimizedFile = await compressImage(file, AVATAR_OPTIONS);
+      
+      // Show compression savings
+      if (optimizedFile.size < originalSize) {
+        const { savedMB, percentage } = calculateSavings(originalSize, optimizedFile.size);
+        toast({
+          title: "Imagen optimizada",
+          description: `Reducida ${percentage}% (${savedMB}MB ahorrados)`,
+        });
+      }
+    } catch (error) {
+      console.error('Avatar compression failed:', error);
+      optimizedFile = file; // Fallback to original
+    } finally {
+      setCompressingAvatar(false);
+    }
+
+    // Step 2: Upload
     setUploadingAvatar(true);
     try {
-      const url = await uploadImage(file, 'avatar');
+      const url = await uploadImage(optimizedFile, 'avatar');
       if (url) {
         // Update profile with new avatar URL
         const { error } = await supabase
@@ -199,11 +226,38 @@ const Profile = () => {
       return;
     }
 
+    const originalTotalSize = files.reduce((acc, f) => acc + f.size, 0);
+
+    // Step 1: Compress all files in parallel
+    setCompressingGallery(true);
+    let optimizedFiles: File[];
+    try {
+      optimizedFiles = await Promise.all(
+        files.map(file => compressImage(file, GALLERY_OPTIONS))
+      );
+      
+      // Show compression savings
+      const compressedTotalSize = optimizedFiles.reduce((acc, f) => acc + f.size, 0);
+      if (compressedTotalSize < originalTotalSize) {
+        const { savedMB, percentage } = calculateSavings(originalTotalSize, compressedTotalSize);
+        toast({
+          title: `${files.length} imagen(es) optimizada(s)`,
+          description: `Reducidas ${percentage}% (${savedMB}MB ahorrados)`,
+        });
+      }
+    } catch (error) {
+      console.error('Gallery compression failed:', error);
+      optimizedFiles = files; // Fallback to original
+    } finally {
+      setCompressingGallery(false);
+    }
+
+    // Step 2: Upload all compressed files
     setUploadingGallery(true);
     try {
       const uploadedUrls: string[] = [];
       
-      for (const file of files) {
+      for (const file of optimizedFiles) {
         const url = await uploadImage(file, 'gallery');
         if (url) uploadedUrls.push(url);
       }
@@ -411,11 +465,19 @@ const Profile = () => {
                 </Avatar>
                 <button
                   onClick={() => avatarInputRef.current?.click()}
-                  disabled={uploadingAvatar}
-                  className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  disabled={uploadingAvatar || compressingAvatar}
+                  className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                 >
-                  {uploadingAvatar ? (
-                    <Loader2 className="h-8 w-8 text-white animate-spin" />
+                  {compressingAvatar ? (
+                    <>
+                      <Loader2 className="h-8 w-8 text-white animate-spin" />
+                      <span className="text-xs text-white mt-1">Optimizando...</span>
+                    </>
+                  ) : uploadingAvatar ? (
+                    <>
+                      <Loader2 className="h-8 w-8 text-white animate-spin" />
+                      <span className="text-xs text-white mt-1">Subiendo...</span>
+                    </>
                   ) : (
                     <Camera className="h-8 w-8 text-white" />
                   )}
@@ -511,11 +573,19 @@ const Profile = () => {
                 {galleryImages.length < MAX_GALLERY_IMAGES && (
                   <button
                     onClick={() => galleryInputRef.current?.click()}
-                    disabled={uploadingGallery}
+                    disabled={uploadingGallery || compressingGallery}
                     className="aspect-square border-2 border-dashed border-muted-foreground/30 rounded-lg flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer"
                   >
-                    {uploadingGallery ? (
-                      <Loader2 className="h-6 w-6 text-muted-foreground animate-spin" />
+                    {compressingGallery ? (
+                      <>
+                        <Loader2 className="h-6 w-6 text-muted-foreground animate-spin" />
+                        <span className="text-xs text-muted-foreground">Optimizando...</span>
+                      </>
+                    ) : uploadingGallery ? (
+                      <>
+                        <Loader2 className="h-6 w-6 text-muted-foreground animate-spin" />
+                        <span className="text-xs text-muted-foreground">Subiendo...</span>
+                      </>
                     ) : (
                       <>
                         <ImagePlus className="h-6 w-6 text-muted-foreground" />

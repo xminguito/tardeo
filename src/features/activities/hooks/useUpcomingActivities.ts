@@ -138,13 +138,14 @@ export function useUpcomingActivities() {
 }
 
 /**
- * Returns just the next upcoming activity (closest in time)
+ * Returns the next upcoming activity and all upcoming activities for carousel
  */
 export function useNextActivity() {
   const { data: upcomingActivities, isLoading, error } = useUpcomingActivities();
   
   return {
     nextActivity: upcomingActivities?.[0] ?? null,
+    upcomingActivities: upcomingActivities ?? [],
     upcomingCount: upcomingActivities?.length ?? 0,
     isLoading,
     error,

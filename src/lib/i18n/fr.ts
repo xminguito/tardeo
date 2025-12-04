@@ -102,6 +102,7 @@ export default {
       viewDetails: 'Voir détails',
       moreActivities: '+{{count}} activité de plus',
       moreActivities_plural: '+{{count}} activités de plus',
+      viewAllActivities: "Voir toutes mes activités ({{count}})",
     },
   },
   auth: {

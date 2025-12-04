@@ -32,12 +32,12 @@ const Index = () => {
   const { data: activities = [], isLoading: loading } = useActivities();
   
   // Fetch user's upcoming activities for personalized hero
-  const { nextActivity, upcomingCount, isLoading: upcomingLoading } = useNextActivity();
+  const { nextActivity, upcomingActivities, upcomingCount, isLoading: upcomingLoading } = useNextActivity();
   
   // Debug: Log upcoming activities state
   console.log('[Index] User:', user?.email);
   console.log('[Index] Next Activity:', nextActivity);
-  console.log('[Index] Upcoming Count:', upcomingCount);
+  console.log('[Index] Upcoming Activities:', upcomingActivities?.length);
   console.log('[Index] Upcoming Loading:', upcomingLoading);
   console.log('[Index] Should show UserDashboardHero:', user && nextActivity && !upcomingLoading);
   
@@ -128,8 +128,7 @@ const Index = () => {
             /* State A: Active User Dashboard */
             <UserDashboardHero
               userName={userProfile?.full_name?.split(' ')[0] || user.email?.split('@')[0] || 'Usuario'}
-              nextActivity={nextActivity}
-              upcomingCount={upcomingCount}
+              activities={upcomingActivities}
             />
           ) : !user ? (
             /* State B: Discovery Mode for non-logged users */

@@ -252,6 +252,12 @@ export default {
       dropMainImage: 'Arrossega una imatge o fes clic',
       addImage: 'Afegir',
       invalidImageType: 'Tipus d\'imatge no vàlid. Utilitza JPG, PNG o WEBP',
+      optimizingImage: 'Optimitzant imatge...',
+      optimizingHint: 'Comprimint per a millor rendiment',
+      imageOptimized: 'Imatge optimitzada',
+      imageOptimizedDesc: '{{original}}MB → {{compressed}}MB',
+      imagesOptimized: 'Imatges optimitzades',
+      imagesOptimizedDesc: '{{count}} imatges, {{saved}}MB estalviats',
     },
     categories: {
       social: 'Social',

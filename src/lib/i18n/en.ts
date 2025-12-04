@@ -280,6 +280,12 @@ export default {
       dropMainImage: "Drag an image or click to upload",
       addImage: "Add",
       invalidImageType: "Invalid image type. Use JPG, PNG or WEBP",
+      optimizingImage: "Optimizing image...",
+      optimizingHint: "Compressing for better performance",
+      imageOptimized: "Image optimized",
+      imageOptimizedDesc: "{{original}}MB → {{compressed}}MB",
+      imagesOptimized: "Images optimized",
+      imagesOptimizedDesc: "{{count}} images, {{saved}}MB saved",
     },
     categories: {
       social: "Social",

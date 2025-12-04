@@ -254,6 +254,12 @@ export default {
       dropMainImage: 'Trascina un\'immagine o clicca',
       addImage: 'Aggiungi',
       invalidImageType: 'Tipo di immagine non valido. Usa JPG, PNG o WEBP',
+      optimizingImage: 'Ottimizzazione immagine...',
+      optimizingHint: 'Compressione per migliori prestazioni',
+      imageOptimized: 'Immagine ottimizzata',
+      imageOptimizedDesc: '{{original}}MB → {{compressed}}MB',
+      imagesOptimized: 'Immagini ottimizzate',
+      imagesOptimizedDesc: '{{count}} immagini, {{saved}}MB risparmiati',
     },
     categories: {
       social: 'Sociale',

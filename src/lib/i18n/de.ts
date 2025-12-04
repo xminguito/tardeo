@@ -252,6 +252,12 @@ export default {
       dropMainImage: 'Bild hierher ziehen oder klicken',
       addImage: 'Hinzufügen',
       invalidImageType: 'Ungültiger Bildtyp. Verwende JPG, PNG oder WEBP',
+      optimizingImage: 'Bild wird optimiert...',
+      optimizingHint: 'Komprimierung für bessere Leistung',
+      imageOptimized: 'Bild optimiert',
+      imageOptimizedDesc: '{{original}}MB → {{compressed}}MB',
+      imagesOptimized: 'Bilder optimiert',
+      imagesOptimizedDesc: '{{count}} Bilder, {{saved}}MB gespart',
     },
     categories: {
       social: 'Soziales',

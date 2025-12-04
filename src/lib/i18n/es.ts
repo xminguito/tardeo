@@ -301,6 +301,12 @@ export default {
       dropMainImage: "Arrastra una imagen o haz clic",
       addImage: "Añadir",
       invalidImageType: "Tipo de imagen no válido. Usa JPG, PNG o WEBP",
+      optimizingImage: "Optimizando imagen...",
+      optimizingHint: "Comprimiendo para mejor rendimiento",
+      imageOptimized: "Imagen optimizada",
+      imageOptimizedDesc: "{{original}}MB → {{compressed}}MB",
+      imagesOptimized: "Imágenes optimizadas",
+      imagesOptimizedDesc: "{{count}} imágenes, {{saved}}MB ahorrados",
     },
     categories: {
       social: "Social",

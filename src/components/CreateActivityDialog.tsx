@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, DragEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLoadScript, Autocomplete } from '@react-google-maps/api';
+import imageCompression from 'browser-image-compression';
 import {
   Dialog,
   DialogContent,
@@ -29,6 +30,49 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Plus, Loader2, MapPin, Check, Sparkles, ImagePlus, X } from 'lucide-react';
+
+// ============================================
+// Image Compression Configuration
+// ============================================
+const IMAGE_COMPRESSION_OPTIONS = {
+  maxSizeMB: 0.5, // Target ~500KB
+  maxWidthOrHeight: 1920, // Full HD max dimension
+  useWebWorker: true, // Avoid freezing UI
+  fileType: 'image/webp' as const, // Modern format
+  initialQuality: 0.8,
+};
+
+/**
+ * Optimizes an image file using browser-image-compression
+ * Converts to WebP, resizes, and compresses for optimal web delivery
+ */
+async function optimizeImage(file: File): Promise<File> {
+  // Skip if already small enough and webp
+  if (file.size < 500 * 1024 && file.type === 'image/webp') {
+    return file;
+  }
+
+  try {
+    const compressedBlob = await imageCompression(file, IMAGE_COMPRESSION_OPTIONS);
+    
+    // Create a new File from the compressed blob with .webp extension
+    const fileName = file.name.replace(/\.[^/.]+$/, '.webp');
+    const compressedFile = new File([compressedBlob], fileName, {
+      type: 'image/webp',
+      lastModified: Date.now(),
+    });
+
+    console.log(
+      `Image optimized: ${(file.size / 1024 / 1024).toFixed(2)}MB → ${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`
+    );
+
+    return compressedFile;
+  } catch (error) {
+    console.error('Image compression failed:', error);
+    // Return original file if compression fails
+    return file;
+  }
+}
 
 // ============================================
 // Activity Categories
@@ -60,6 +104,7 @@ interface ImageUploadZoneProps {
   label: string;
   hint: string;
   height?: string;
+  isCompressing?: boolean;
 }
 
 function ImageUploadZone({
@@ -71,6 +116,7 @@ function ImageUploadZone({
   label,
   hint,
   height = 'h-48',
+  isCompressing = false,
 }: ImageUploadZoneProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -136,6 +182,23 @@ function ImageUploadZone({
       inputRef.current?.click();
     }
   };
+
+  // Show compressing state
+  if (isCompressing) {
+    return (
+      <div className={`${height} rounded-xl border-2 border-dashed border-primary/50 bg-primary/5
+                       flex flex-col items-center justify-center gap-3`}>
+        <div className="relative">
+          <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping" />
+          <Loader2 className="h-8 w-8 text-primary animate-spin" />
+        </div>
+        <div className="text-center">
+          <p className="text-sm font-medium text-primary">{t('activities.create.optimizingImage')}</p>
+          <p className="text-xs text-muted-foreground">{t('activities.create.optimizingHint')}</p>
+        </div>
+      </div>
+    );
+  }
 
   if (preview) {
     return (
@@ -220,6 +283,8 @@ interface GalleryUploadGridProps {
   maxFiles?: number;
   accept?: string;
   maxSizeMB?: number;
+  isCompressing?: boolean;
+  compressingCount?: number;
 }
 
 function GalleryUploadGrid({
@@ -229,6 +294,8 @@ function GalleryUploadGrid({
   maxFiles = 4,
   accept = 'image/jpeg,image/png,image/webp,image/jpg',
   maxSizeMB = 5,
+  isCompressing = false,
+  compressingCount = 0,
 }: GalleryUploadGridProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -365,8 +432,19 @@ function GalleryUploadGrid({
           </div>
         ))}
 
+        {/* Compressing placeholders */}
+        {isCompressing && Array.from({ length: compressingCount }).map((_, index) => (
+          <div 
+            key={`compressing-${index}`} 
+            className="aspect-square rounded-lg border-2 border-dashed border-primary/50 bg-primary/5
+                       flex items-center justify-center"
+          >
+            <Loader2 className="h-5 w-5 text-primary animate-spin" />
+          </div>
+        ))}
+
         {/* Add more button */}
-        {canAddMore && (
+        {canAddMore && !isCompressing && (
           <div
             role="button"
             tabIndex={0}
@@ -438,6 +516,11 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [secondaryImages, setSecondaryImages] = useState<File[]>([]);
   const [secondaryPreviews, setSecondaryPreviews] = useState<string[]>([]);
+
+  // Image compression states
+  const [isCompressingMain, setIsCompressingMain] = useState(false);
+  const [isCompressingSecondary, setIsCompressingSecondary] = useState(false);
+  const [compressingCount, setCompressingCount] = useState(0);
 
   // AI Description generation state
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
@@ -603,15 +686,42 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
     }
   }, [formData.title, formData.category, formData.location, t, toast]);
 
-  // Main image handlers using URL.createObjectURL for instant preview
-  const handleMainImageSelect = useCallback((file: File) => {
+  // Main image handlers with compression
+  const handleMainImageSelect = useCallback(async (file: File) => {
     // Revoke previous URL to prevent memory leak
     if (imagePreview) {
       URL.revokeObjectURL(imagePreview);
     }
-    setMainImage(file);
-    setImagePreview(URL.createObjectURL(file));
-  }, [imagePreview]);
+
+    // Start compression
+    setIsCompressingMain(true);
+
+    try {
+      const optimizedFile = await optimizeImage(file);
+      setMainImage(optimizedFile);
+      setImagePreview(URL.createObjectURL(optimizedFile));
+
+      // Show success toast with size reduction info
+      const originalSizeMB = (file.size / 1024 / 1024).toFixed(2);
+      const compressedSizeMB = (optimizedFile.size / 1024 / 1024).toFixed(2);
+      if (file.size !== optimizedFile.size) {
+        toast({
+          title: t('activities.create.imageOptimized'),
+          description: t('activities.create.imageOptimizedDesc', { 
+            original: originalSizeMB, 
+            compressed: compressedSizeMB 
+          }),
+        });
+      }
+    } catch (error) {
+      console.error('Error optimizing image:', error);
+      // Fallback to original file
+      setMainImage(file);
+      setImagePreview(URL.createObjectURL(file));
+    } finally {
+      setIsCompressingMain(false);
+    }
+  }, [imagePreview, t, toast]);
 
   const handleMainImageRemove = useCallback(() => {
     if (imagePreview) {
@@ -621,12 +731,45 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
     setImagePreview(null);
   }, [imagePreview]);
 
-  // Secondary images handlers
-  const handleSecondaryImagesSelect = useCallback((files: File[]) => {
-    const newPreviews = files.map(file => URL.createObjectURL(file));
-    setSecondaryImages(prev => [...prev, ...files]);
-    setSecondaryPreviews(prev => [...prev, ...newPreviews]);
-  }, []);
+  // Secondary images handlers with compression
+  const handleSecondaryImagesSelect = useCallback(async (files: File[]) => {
+    setIsCompressingSecondary(true);
+    setCompressingCount(files.length);
+
+    try {
+      // Compress all files in parallel
+      const optimizedFiles = await Promise.all(
+        files.map(file => optimizeImage(file))
+      );
+
+      const newPreviews = optimizedFiles.map(file => URL.createObjectURL(file));
+      setSecondaryImages(prev => [...prev, ...optimizedFiles]);
+      setSecondaryPreviews(prev => [...prev, ...newPreviews]);
+
+      // Calculate total savings
+      const originalTotal = files.reduce((acc, f) => acc + f.size, 0);
+      const compressedTotal = optimizedFiles.reduce((acc, f) => acc + f.size, 0);
+      
+      if (originalTotal !== compressedTotal) {
+        toast({
+          title: t('activities.create.imagesOptimized'),
+          description: t('activities.create.imagesOptimizedDesc', { 
+            count: files.length,
+            saved: ((originalTotal - compressedTotal) / 1024 / 1024).toFixed(2)
+          }),
+        });
+      }
+    } catch (error) {
+      console.error('Error optimizing images:', error);
+      // Fallback to original files
+      const newPreviews = files.map(file => URL.createObjectURL(file));
+      setSecondaryImages(prev => [...prev, ...files]);
+      setSecondaryPreviews(prev => [...prev, ...newPreviews]);
+    } finally {
+      setIsCompressingSecondary(false);
+      setCompressingCount(0);
+    }
+  }, [t, toast]);
 
   const handleSecondaryImageRemove = useCallback((index: number) => {
     // Revoke URL for the removed image
@@ -897,6 +1040,7 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
               label={t('activities.create.dropMainImage')}
               hint={t('activities.create.imageRequirements')}
               height="h-48"
+              isCompressing={isCompressingMain}
             />
           </div>
 
@@ -908,6 +1052,8 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
               onFilesSelect={handleSecondaryImagesSelect}
               onRemove={handleSecondaryImageRemove}
               maxFiles={4}
+              isCompressing={isCompressingSecondary}
+              compressingCount={compressingCount}
             />
           </div>
 

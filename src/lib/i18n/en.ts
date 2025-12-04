@@ -271,6 +271,12 @@ export default {
       mapsError: "Error loading map",
       mapsConfigError: "Check Google Maps API configuration",
       locationHelp: "Type to search and select from suggestions to autofill city and province",
+      generateWithAI: "Generate with AI",
+      generating: "Generating...",
+      titleRequiredForAI: "Write a title first to generate the description",
+      aiGenerationError: "Error generating description. Please try again.",
+      aiGenerated: "Description generated!",
+      aiGeneratedDesc: "You can edit it if you want",
     },
     reservation: {
       confirm: "Confirm reservation",

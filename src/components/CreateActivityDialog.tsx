@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Loader2, MapPin, Check } from 'lucide-react';
+import { Plus, Loader2, MapPin, Check, Sparkles } from 'lucide-react';
 
 // Libraries for Google Maps
 const libraries: ("places")[] = ["places"];
@@ -47,6 +47,9 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [secondaryImages, setSecondaryImages] = useState<File[]>([]);
   const [secondaryPreviews, setSecondaryPreviews] = useState<string[]>([]);
+
+  // AI Description generation state
+  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
 
   // Google Places Autocomplete
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
@@ -140,6 +143,74 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
       }));
     }
   };
+
+  // Generate AI description using native Supabase Edge Function
+  const handleGenerateDescription = useCallback(async () => {
+    if (!formData.title.trim()) {
+      toast({
+        title: t('common.error'),
+        description: t('activities.create.titleRequiredForAI'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsGeneratingDescription(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-description', {
+        body: {
+          title: formData.title,
+          category: formData.category || undefined,
+          location: formData.location || undefined,
+        },
+      });
+
+      if (error) {
+        console.error('AI generation error:', error);
+        toast({
+          title: t('common.error'),
+          description: t('activities.create.aiGenerationError'),
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (data?.description) {
+        // Typewriter effect for the generated description
+        const description = data.description;
+        let currentIndex = 0;
+        
+        setFormData((prev) => ({ ...prev, description: '' }));
+        
+        const typeInterval = setInterval(() => {
+          if (currentIndex < description.length) {
+            setFormData((prev) => ({
+              ...prev,
+              description: description.slice(0, currentIndex + 1),
+            }));
+            currentIndex++;
+          } else {
+            clearInterval(typeInterval);
+          }
+        }, 20);
+
+        toast({
+          title: '✨ ' + t('activities.create.aiGenerated'),
+          description: t('activities.create.aiGeneratedDesc'),
+        });
+      }
+    } catch (error) {
+      console.error('Error generating description:', error);
+      toast({
+        title: t('common.error'),
+        description: t('activities.create.aiGenerationError'),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGeneratingDescription(false);
+    }
+  }, [formData.title, formData.category, formData.location, t, toast]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -272,7 +343,7 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
         }
       }
 
-      // Translate title and description using Lovable AI
+      // Translate title and description using Edge Function
       toast({
         title: t('activities.create.translating'),
         description: t('activities.create.translatingDescription'),
@@ -425,13 +496,31 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
           </div>
 
           <div>
-            <Label htmlFor="description">{t('activities.create.activityDescription')}</Label>
+            <div className="flex items-center justify-between mb-1.5">
+              <Label htmlFor="description" className="mb-0">{t('activities.create.activityDescription')}</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleGenerateDescription}
+                disabled={isGeneratingDescription || !formData.title.trim()}
+                className="h-7 px-2.5 text-xs gap-1.5 border-purple-300 text-purple-600 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-400 dark:border-purple-700 dark:text-purple-400 dark:hover:bg-purple-950 dark:hover:text-purple-300"
+              >
+                {isGeneratingDescription ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Sparkles className="h-3.5 w-3.5" />
+                )}
+                {isGeneratingDescription ? t('activities.create.generating') : t('activities.create.generateWithAI')}
+              </Button>
+            </div>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder={t('activities.create.descriptionPlaceholder')}
               rows={4}
+              className={isGeneratingDescription ? 'animate-pulse' : ''}
             />
           </div>
 
@@ -495,20 +584,20 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
             </p>
           </div>
 
-          <div>
-            <Label htmlFor="category">{t('activities.create.category')} *</Label>
-            <Input
-              id="category"
-              value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              required
-              placeholder={t('activities.create.categoryPlaceholder')}
-            />
-          </div>
+            <div>
+              <Label htmlFor="category">{t('activities.create.category')} *</Label>
+              <Input
+                id="category"
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                required
+                placeholder={t('activities.create.categoryPlaceholder')}
+              />
+            </div>
 
           {/* Google Places Autocomplete for Location */}
           <div className="space-y-2">
-            <Label htmlFor="location">{t('activities.create.location')} *</Label>
+              <Label htmlFor="location">{t('activities.create.location')} *</Label>
             {isLoaded && !loadError ? (
               <div className="relative">
                 <Autocomplete
@@ -521,13 +610,13 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
                 >
                   <div className="relative">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="location"
+              <Input
+                id="location"
                       value={locationInputValue}
                       onChange={handleLocationInputChange}
                       placeholder={t('activities.create.locationAutocompletePlaceholder')}
                       className="pl-10 pr-10"
-                      required
+                required
                     />
                     {isPlaceSelected && (
                       <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
@@ -541,19 +630,19 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
                       <div>
                         <span className="text-muted-foreground">{t('activities.create.location')}:</span>
                         <p className="font-medium truncate">{formData.location}</p>
-                      </div>
+            </div>
                       <div>
                         <span className="text-muted-foreground">{t('activities.create.city')}:</span>
                         <p className="font-medium">{formData.city}</p>
-                      </div>
+          </div>
                       {formData.province && formData.province !== formData.city && (
-                        <div>
+            <div>
                           <span className="text-muted-foreground">{t('activities.create.province')}:</span>
                           <p className="font-medium">{formData.province}</p>
-                        </div>
+            </div>
                       )}
                       {formData.latitude && formData.longitude && (
-                        <div>
+            <div>
                           <span className="text-muted-foreground">Coords:</span>
                           <p className="font-medium text-xs font-mono">
                             {formData.latitude.toFixed(4)}, {formData.longitude.toFixed(4)}
@@ -568,12 +657,12 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
               <div className="space-y-2">
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
+              <Input
                     placeholder={loadError ? t('activities.create.mapsError') : t('common.loading')}
                     disabled
                     className="pl-10"
-                  />
-                </div>
+              />
+            </div>
                 {loadError && (
                   <p className="text-xs text-destructive">
                     {t('activities.create.mapsConfigError')}

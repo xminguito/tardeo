@@ -243,6 +243,12 @@ export default {
       mapsError: 'Erreur de chargement de la carte',
       mapsConfigError: 'Vérifiez la configuration de l\'API Google Maps',
       locationHelp: 'Tapez pour rechercher et sélectionnez parmi les suggestions pour compléter ville et province',
+      generateWithAI: 'Générer avec IA',
+      generating: 'Génération...',
+      titleRequiredForAI: 'Écrivez d\'abord un titre pour générer la description',
+      aiGenerationError: 'Erreur lors de la génération. Veuillez réessayer.',
+      aiGenerated: 'Description générée!',
+      aiGeneratedDesc: 'Vous pouvez la modifier si vous le souhaitez',
     },
     reservation: {
       confirm: 'Confirmer la réservation',

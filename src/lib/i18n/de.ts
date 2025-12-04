@@ -243,6 +243,12 @@ export default {
       mapsError: 'Fehler beim Laden der Karte',
       mapsConfigError: 'Überprüfe die Google Maps API-Konfiguration',
       locationHelp: 'Tippe zum Suchen und wähle aus den Vorschlägen, um Stadt und Provinz automatisch auszufüllen',
+      generateWithAI: 'Mit KI generieren',
+      generating: 'Generiere...',
+      titleRequiredForAI: 'Schreibe zuerst einen Titel, um die Beschreibung zu generieren',
+      aiGenerationError: 'Fehler beim Generieren. Bitte erneut versuchen.',
+      aiGenerated: 'Beschreibung generiert!',
+      aiGeneratedDesc: 'Du kannst sie bearbeiten, wenn du möchtest',
     },
     reservation: {
       confirm: 'Reservierung bestätigen',

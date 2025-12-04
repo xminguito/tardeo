@@ -243,6 +243,12 @@ export default {
       mapsError: 'Error al carregar el mapa',
       mapsConfigError: 'Verifica la configuració de l\'API de Google Maps',
       locationHelp: 'Escriu per cercar i selecciona de les suggerències per autocompletar ciutat i província',
+      generateWithAI: 'Generar amb IA',
+      generating: 'Generant...',
+      titleRequiredForAI: 'Escriu un títol primer per generar la descripció',
+      aiGenerationError: 'Error al generar la descripció. Torna-ho a provar.',
+      aiGenerated: 'Descripció generada!',
+      aiGeneratedDesc: 'Pots editar-la si ho desitges',
     },
     reservation: {
       confirm: 'Confirmar reserva',

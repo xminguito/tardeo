@@ -292,6 +292,12 @@ export default {
       mapsError: "Error al cargar el mapa",
       mapsConfigError: "Verifica la configuración de la API de Google Maps",
       locationHelp: "Escribe para buscar y selecciona de las sugerencias para autocompletar ciudad y provincia",
+      generateWithAI: "Generar con IA",
+      generating: "Generando...",
+      titleRequiredForAI: "Escribe un título primero para generar la descripción",
+      aiGenerationError: "Error al generar la descripción. Inténtalo de nuevo.",
+      aiGenerated: "¡Descripción generada!",
+      aiGeneratedDesc: "Puedes editarla si lo deseas",
     },
     reservation: {
       confirm: "Confirmar reserva",

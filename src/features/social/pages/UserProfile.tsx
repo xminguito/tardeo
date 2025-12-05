@@ -19,7 +19,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useFavorites } from "@/features/activities/hooks/useFavorites";
 
 const UserProfile = () => {
-  const { id } = useParams<{ id: string }>();
+  // Support both /u/:identifier and /user/:identifier routes
+  const { identifier } = useParams<{ identifier: string }>();
   const navigate = useNavigate();
   const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
   const [user, setUser] = useState<any>(null);
@@ -46,18 +47,19 @@ const UserProfile = () => {
     checkUser();
   }, []);
 
-  const { data: profile, isLoading, error } = useSocialProfile(id || "");
+  // useSocialProfile now accepts either UUID or username
+  const { data: profile, isLoading, error } = useSocialProfile(identifier || "");
 
-  // Get reviews count
+  // Get reviews count (use profile.id once loaded)
   const { data: reviewsData } = useQuery({
-    queryKey: ["user-reviews-count", id],
+    queryKey: ["user-reviews-count", profile?.id],
     queryFn: async () => {
-      if (!id) return { count: 0 };
+      if (!profile?.id) return { count: 0 };
       
       const { data: activities } = await supabase
         .from("activities")
         .select("id")
-        .eq("created_by", id);
+        .eq("created_by", profile.id);
 
       if (!activities || activities.length === 0) return { count: 0 };
 
@@ -68,7 +70,7 @@ const UserProfile = () => {
 
       return { count: count || 0 };
     },
-    enabled: !!id && !!profile?.isPublic,
+    enabled: !!profile?.id && !!profile?.isPublic,
   });
 
   if (isLoading) {

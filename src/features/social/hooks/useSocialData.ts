@@ -16,31 +16,53 @@ export const useConversations = () => {
   });
 };
 
-export const useSocialProfile = (userId: string) => {
+// Helper to detect if a string looks like a UUID
+const isUUID = (str: string): boolean => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+};
+
+/**
+ * Fetch a social profile by either UUID (id) or username.
+ * The identifier can be:
+ * - A UUID like "123e4567-e89b-12d3-a456-426614174000" → fetch by id
+ * - A username like "johndoe" → fetch by username
+ */
+export const useSocialProfile = (identifier: string) => {
   return useQuery({
-    queryKey: ["social-profile", userId],
+    queryKey: ["social-profile", identifier],
     queryFn: async () => {
-      // Fetch profile
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .single();
+      // Determine if this is a UUID or username
+      const lookupByUUID = isUUID(identifier);
+      
+      // Fetch profile by id or username
+      let query = supabase.from("profiles").select("*");
+      
+      if (lookupByUUID) {
+        query = query.eq("id", identifier);
+      } else {
+        // Lookup by username (case-insensitive)
+        query = query.eq("username", identifier.toLowerCase());
+      }
+      
+      const { data: profile, error } = await query.single();
 
       if (error) throw error;
+      
+      const profileId = profile.id;
 
       // Fetch relationship status (follow)
       const { data: { user } } = await supabase.auth.getUser();
       let isFollowing = false;
       let friendStatus = null;
-      const isOwnProfile = user?.id === userId;
+      const isOwnProfile = user?.id === profileId;
 
       if (user && !isOwnProfile) {
         const { data: follow } = await supabase
           .from("follows")
           .select("*")
           .eq("follower_id", user.id)
-          .eq("following_id", userId)
+          .eq("following_id", profileId)
           .single();
         isFollowing = !!follow;
 
@@ -48,7 +70,7 @@ export const useSocialProfile = (userId: string) => {
           .from("friends")
           .select("status")
           .or(
-            `and(user_id.eq.${user.id},friend_id.eq.${userId}),and(user_id.eq.${userId},friend_id.eq.${user.id})`,
+            `and(user_id.eq.${user.id},friend_id.eq.${profileId}),and(user_id.eq.${profileId},friend_id.eq.${user.id})`,
           )
           .single();
         friendStatus = friend?.status || null;
@@ -73,7 +95,7 @@ export const useSocialProfile = (userId: string) => {
         profile_visibility?: 'public' | 'private';
       };
     },
-    enabled: !!userId,
+    enabled: !!identifier,
   });
 };
 

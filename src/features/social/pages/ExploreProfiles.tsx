@@ -26,7 +26,7 @@ const UserCard = ({ profile, formatDate, t }: { profile: any, formatDate: (d?: s
       <CardContent className="p-6">
         <div 
           className="flex items-start gap-4 mb-4 cursor-pointer"
-          onClick={() => navigate(`/user/${profile.id}`)}
+          onClick={() => navigate(`/u/${profile.username || profile.id}`)}
         >
           <Avatar className="w-16 h-16">
             <AvatarImage src={profile.avatar_url || ""} />

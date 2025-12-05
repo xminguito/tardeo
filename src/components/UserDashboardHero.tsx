@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { format } from 'date-fns';
+import { format, type Locale } from 'date-fns';
 import { es, enUS, ca, fr, it, de } from 'date-fns/locale';
 import { Calendar, Clock, MapPin, MessageCircle, ChevronRight, ChevronLeft, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -81,7 +81,7 @@ function useCountdown(targetDate: Date | null | undefined): CountdownTime {
 }
 
 // ============================================
-// CountdownDisplay Component
+// CountdownDisplay Component - LARGE and Bold
 // ============================================
 interface CountdownDisplayProps {
   timeLeft: CountdownTime;
@@ -108,7 +108,7 @@ function CountdownDisplay({ timeLeft, labels, happeningNowText }: CountdownDispl
         aria-label={happeningNowText}
       >
         <Zap className="h-6 w-6 text-yellow-300 animate-pulse" aria-hidden="true" />
-        <span className="text-lg md:text-xl font-bold text-white">
+        <span className="text-lg font-bold text-white">
           {happeningNowText}
         </span>
       </div>
@@ -117,19 +117,19 @@ function CountdownDisplay({ timeLeft, labels, happeningNowText }: CountdownDispl
 
   const CountdownBlock = ({ value, label }: { value: number; label: string }) => (
     <div className="flex flex-col items-center">
-      <div className="bg-white/20 backdrop-blur-sm rounded-xl px-3 md:px-4 py-2 md:py-3 border border-white/30 min-w-[60px] md:min-w-[72px]">
-        <span className="font-mono text-2xl md:text-3xl lg:text-4xl font-bold text-white tabular-nums drop-shadow-md">
+      <div className="bg-white/20 backdrop-blur-sm rounded-xl px-3 py-2 border border-white/30 min-w-[56px]">
+        <span className="font-mono text-2xl md:text-3xl font-bold text-white tabular-nums drop-shadow-md">
           {String(value).padStart(2, '0')}
         </span>
       </div>
-      <span className="text-xs md:text-sm font-semibold text-white/80 mt-1.5 uppercase tracking-wider">
+      <span className="text-xs font-semibold text-white/80 mt-1.5 uppercase tracking-wider">
         {label}
       </span>
     </div>
   );
 
   const Separator = () => (
-    <span className="text-2xl md:text-3xl font-bold text-white/60 -mt-5" aria-hidden="true">:</span>
+    <span className="text-xl md:text-2xl font-bold text-white/60 -mt-4" aria-hidden="true">:</span>
   );
 
   return (
@@ -138,7 +138,7 @@ function CountdownDisplay({ timeLeft, labels, happeningNowText }: CountdownDispl
       role="timer"
       aria-label={ariaLabel}
     >
-      <div className="flex items-center gap-2 md:gap-3" aria-hidden="true">
+      <div className="flex items-center gap-1.5 md:gap-2" aria-hidden="true">
         {isUnder24Hours ? (
           <>
             <CountdownBlock value={timeLeft.hours} label={labels.hours} />
@@ -162,7 +162,7 @@ function CountdownDisplay({ timeLeft, labels, happeningNowText }: CountdownDispl
 }
 
 // ============================================
-// ActivitySlide Component - Individual slide with its own countdown
+// ActivitySlide Component - Bold card layout
 // ============================================
 interface ActivitySlideProps {
   activity: UpcomingActivity;
@@ -171,6 +171,7 @@ interface ActivitySlideProps {
   getDateLocale: () => Locale;
   i18n: { language: string };
   t: (key: string, options?: Record<string, unknown>) => string;
+  isSingleActivity?: boolean;
 }
 
 function ActivitySlide({ 
@@ -179,7 +180,8 @@ function ActivitySlide({
   happeningNowText, 
   getDateLocale,
   i18n,
-  t 
+  t,
+  isSingleActivity = false,
 }: ActivitySlideProps) {
   const navigate = useNavigate();
 
@@ -240,81 +242,86 @@ function ActivitySlide({
   };
 
   return (
-    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-      {/* Left side: Activity info */}
-      <div className="flex-1 min-w-0">
-        <div className="flex flex-wrap items-center gap-2 mb-4">
-          <span className="bg-white/25 text-white text-sm font-bold px-3 py-1.5 rounded-full">
-            {t('home.dashboard.nextEvent')}
-          </span>
-          <span className="text-white font-semibold text-base">
-            {getCountdownText()}
-          </span>
-        </div>
-
-        <h2 className="text-2xl md:text-3xl font-bold mb-5 line-clamp-2 drop-shadow-sm text-white">
-          {getTranslatedTitle()}
-        </h2>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <div className="flex items-center gap-2.5 text-white">
-            <Calendar className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
-            <span className="text-base font-medium">
-              {format(new Date(activity.date), 'EEE, d MMM', { locale: getDateLocale() })}
-            </span>
-          </div>
-          <div className="flex items-center gap-2.5 text-white">
-            <Clock className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
-            <span className="text-base font-medium">{activity.time.slice(0, 5)}</span>
-          </div>
-          <div className="flex items-center gap-2.5 text-white">
-            <MapPin className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
-            <span className="text-base font-medium truncate">
-              {activity.city || activity.location}
-            </span>
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="w-full flex flex-col sm:flex-row gap-3">
-          <Button
-            onClick={handleGoToChat}
-            size="lg"
-            className="w-full sm:flex-1 min-h-[44px] bg-white text-primary hover:bg-white/90 font-bold gap-2 text-base
-                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary
-                       transition-all duration-200 shadow-md hover:shadow-lg"
-          >
-            <MessageCircle className="h-5 w-5" aria-hidden="true" />
-            {t('home.dashboard.goToChat')}
-          </Button>
-          <Button
-            onClick={handleViewActivity}
-            size="lg"
-            variant="outline"
-            className="w-full sm:flex-1 min-h-[44px] border-2 border-white/50 bg-white/10 text-white hover:bg-white/20 hover:border-white/70 font-bold gap-2 text-base
-                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary
-                       transition-all duration-200"
-          >
-            {t('home.dashboard.viewDetails')}
-            <ChevronRight className="h-5 w-5" aria-hidden="true" />
-          </Button>
-        </div>
+    <div 
+      className={cn(
+        "flex flex-col h-full gap-4",
+        isSingleActivity && "md:max-w-2xl md:mx-auto"
+      )}
+    >
+      {/* Header: Badge + Date */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="bg-white/25 text-white text-sm font-bold px-3 py-1.5 rounded-full">
+          {t('home.dashboard.nextEvent')}
+        </span>
+        <span className="text-white font-semibold text-base">
+          {getCountdownText()}
+        </span>
       </div>
 
-      {/* Right side: Countdown Timer */}
-      <div className="flex justify-center lg:justify-end lg:self-center">
+      {/* Title - LARGE */}
+      <h2 className="text-xl md:text-2xl font-bold line-clamp-2 drop-shadow-sm text-white leading-tight">
+        {getTranslatedTitle()}
+      </h2>
+
+      {/* Countdown Timer - centered, LARGE */}
+      <div className="flex justify-center py-2">
         <CountdownDisplay
           timeLeft={timeLeft}
           labels={countdownLabels}
           happeningNowText={happeningNowText}
         />
       </div>
+
+      {/* Meta info: date, time, location */}
+      <div className="flex flex-wrap gap-x-4 gap-y-2">
+        <div className="flex items-center gap-2 text-white">
+          <Calendar className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+          <span className="font-medium">
+            {format(new Date(activity.date), 'EEE, d MMM', { locale: getDateLocale() })}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 text-white">
+          <Clock className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+          <span className="font-medium">{activity.time.slice(0, 5)}</span>
+        </div>
+        <div className="flex items-center gap-2 text-white">
+          <MapPin className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+          <span className="font-medium truncate max-w-[180px]">
+            {activity.city || activity.location}
+          </span>
+        </div>
+      </div>
+
+      {/* Actions - push to bottom */}
+      <div className="mt-auto flex flex-col gap-2.5">
+        <Button
+          onClick={handleGoToChat}
+          size="default"
+          className="w-full min-h-[44px] bg-white text-primary hover:bg-white/90 font-bold gap-2
+                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary
+                     transition-all duration-200 shadow-md hover:shadow-lg"
+        >
+          <MessageCircle className="h-5 w-5" aria-hidden="true" />
+          {t('home.dashboard.goToChat')}
+        </Button>
+        <Button
+          onClick={handleViewActivity}
+          size="default"
+          variant="outline"
+          className="w-full min-h-[44px] border-2 border-white/50 bg-white/10 text-white hover:bg-white/20 hover:border-white/70 font-bold gap-2
+                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary
+                     transition-all duration-200"
+        >
+          {t('home.dashboard.viewDetails')}
+          <ChevronRight className="h-5 w-5" aria-hidden="true" />
+        </Button>
+      </div>
     </div>
   );
 }
 
 // ============================================
-// Carousel Pagination Dots
+// Carousel Pagination Dots - Small and subtle
 // ============================================
 interface CarouselDotsProps {
   count: number;
@@ -326,16 +333,16 @@ function CarouselDots({ count, current, onDotClick }: CarouselDotsProps) {
   if (count <= 1) return null;
 
   return (
-    <div className="flex justify-center gap-2 mt-4">
+    <div className="flex justify-center gap-1 mt-4">
       {Array.from({ length: count }).map((_, index) => (
         <button
           key={index}
           onClick={() => onDotClick(index)}
           className={cn(
-            "w-2.5 h-2.5 rounded-full transition-all duration-300",
+            "h-2 rounded-full transition-all duration-300",
             index === current
-              ? "bg-white w-6"
-              : "bg-white/40 hover:bg-white/60"
+              ? "bg-white w-5"
+              : "bg-white/40 hover:bg-white/60 w-2"
           )}
           aria-label={`Go to slide ${index + 1}`}
           aria-current={index === current ? 'true' : 'false'}
@@ -361,22 +368,34 @@ export default function UserDashboardHero({
   const { t, i18n } = useTranslation();
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
 
-  // Handle carousel selection changes
+  // Determine if we have a single activity (for special layout)
+  const isSingleActivity = activities.length === 1;
+
+  // Handle carousel API and scroll state
   useEffect(() => {
     if (!api) return;
 
-    const onSelect = () => {
+    const updateScrollState = () => {
       setCurrent(api.selectedScrollSnap());
+      setCanScrollPrev(api.canScrollPrev());
+      setCanScrollNext(api.canScrollNext());
     };
 
-    api.on('select', onSelect);
-    onSelect(); // Initialize
+    api.on('select', updateScrollState);
+    api.on('reInit', updateScrollState);
+    updateScrollState(); // Initialize
 
     return () => {
-      api.off('select', onSelect);
+      api.off('select', updateScrollState);
+      api.off('reInit', updateScrollState);
     };
   }, [api]);
+
+  // Smart navigation: only show if there's somewhere to scroll
+  const showNavigation = canScrollPrev || canScrollNext;
 
   const handleDotClick = useCallback((index: number) => {
     api?.scrollTo(index);
@@ -396,7 +415,6 @@ export default function UserDashboardHero({
   }
 
   const currentActivity = activities[current] || activities[0];
-  const showNavigation = activities.length > 1;
 
   // Countdown labels based on language
   const countdownLabels = useMemo(() => {
@@ -456,77 +474,104 @@ export default function UserDashboardHero({
       <div className="absolute inset-0 bg-black/15 z-[1]" aria-hidden="true" />
 
       {/* Content */}
-      <div className="relative z-10 p-6 md:p-8 lg:p-10 text-white">
+      <div className="relative z-10 p-5 md:p-6 lg:p-8 text-white">
         {/* Greeting */}
-        <div className="mb-6 md:mb-8">
-          <p className="text-white/90 text-base md:text-lg font-semibold mb-1 tracking-wide uppercase">
+        <div className="mb-5 md:mb-6">
+          <p className="text-white/90 text-sm md:text-base font-semibold mb-0.5 tracking-wide uppercase">
             {t('home.dashboard.greeting')}
           </p>
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold drop-shadow-sm">
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold drop-shadow-sm">
             {t('home.dashboard.headline', { name: userName })} 👋
           </h1>
         </div>
 
         {/* Carousel Container */}
         <div className="relative">
-          {/* Navigation Arrows - only show if multiple activities */}
+          {/* Navigation Arrows - visible, subtle, centered on edges */}
           {showNavigation && (
             <>
               <button
                 onClick={handlePrev}
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:-translate-x-4 z-20
-                           w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/20 backdrop-blur-sm border border-white/30
-                           flex items-center justify-center text-white hover:bg-white/30 transition-all
-                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                disabled={!canScrollPrev}
+                className={cn(
+                  "absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:-translate-x-4 z-20",
+                  "h-8 w-8 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm",
+                  "flex items-center justify-center text-white transition-all",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white",
+                  !canScrollPrev && "opacity-30 cursor-not-allowed"
+                )}
                 aria-label="Previous activity"
               >
-                <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
+                <ChevronLeft className="h-5 w-5" />
               </button>
               <button
                 onClick={handleNext}
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-4 z-20
-                           w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/20 backdrop-blur-sm border border-white/30
-                           flex items-center justify-center text-white hover:bg-white/30 transition-all
-                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                disabled={!canScrollNext}
+                className={cn(
+                  "absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-4 z-20",
+                  "h-8 w-8 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm",
+                  "flex items-center justify-center text-white transition-all",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white",
+                  !canScrollNext && "opacity-30 cursor-not-allowed"
+                )}
                 aria-label="Next activity"
               >
-                <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
+                <ChevronRight className="h-5 w-5" />
               </button>
             </>
           )}
 
-          {/* Activity Card with Carousel */}
-          <div className="bg-black/25 backdrop-blur-md rounded-2xl p-5 md:p-6 border border-white/25 shadow-lg">
+          {/* Activity Cards Container */}
+          <div 
+            className={cn(
+              "bg-black/25 backdrop-blur-md rounded-2xl p-5 md:p-6 border border-white/25 shadow-lg",
+              showNavigation && "mx-5 md:mx-8" // Add margin for arrow space
+            )}
+          >
             <Carousel
               opts={{
                 align: 'start',
-                loop: true,
+                loop: activities.length > 2, // Only loop if more than 2 activities
               }}
               setApi={setApi}
               className="w-full"
             >
-              <CarouselContent className="-ml-0">
+              <CarouselContent className="-ml-4">
                 {activities.map((activity) => (
-                  <CarouselItem key={activity.id} className="pl-0">
-                    <ActivitySlide
-                      activity={activity}
-                      countdownLabels={countdownLabels}
-                      happeningNowText={happeningNowText}
-                      getDateLocale={getDateLocale}
-                      i18n={i18n}
-                      t={t}
-                    />
+                  <CarouselItem 
+                    key={activity.id} 
+                    className={cn(
+                      "pl-4",
+                      // Mobile: 1 item, Desktop: 2 items (unless single activity)
+                      isSingleActivity 
+                        ? "basis-full" 
+                        : "basis-full md:basis-1/2"
+                    )}
+                  >
+                    <div className="h-full min-h-[340px]">
+                      <ActivitySlide
+                        activity={activity}
+                        countdownLabels={countdownLabels}
+                        happeningNowText={happeningNowText}
+                        getDateLocale={getDateLocale}
+                        i18n={i18n}
+                        t={t}
+                        isSingleActivity={isSingleActivity}
+                      />
+                    </div>
                   </CarouselItem>
                 ))}
               </CarouselContent>
             </Carousel>
 
-            {/* Pagination Dots */}
-            <CarouselDots
-              count={activities.length}
-              current={current}
-              onDotClick={handleDotClick}
-            />
+            {/* Pagination Dots - only when scrollable */}
+            {showNavigation && (
+              <CarouselDots
+                count={activities.length}
+                current={current}
+                onDotClick={handleDotClick}
+              />
+            )}
           </div>
         </div>
 
@@ -534,21 +579,21 @@ export default function UserDashboardHero({
         {activities.length > 1 && (
           <button
             onClick={() => navigate('/mis-actividades')}
-            className="flex items-center gap-2 text-white/90 hover:text-white transition-colors text-base font-semibold mt-4
-                       min-h-[44px] px-2 -mx-2 rounded-lg
+            className="flex items-center gap-1.5 text-white/90 hover:text-white transition-colors text-sm font-semibold mt-4
+                       min-h-[40px] px-2 -mx-2 rounded-lg
                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
           >
             <span>
               {t('home.dashboard.viewAllActivities', { count: activities.length })}
             </span>
-            <ChevronRight className="h-5 w-5" aria-hidden="true" />
+            <ChevronRight className="h-4 w-4" aria-hidden="true" />
           </button>
         )}
       </div>
 
       {/* Decorative elements */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" aria-hidden="true" />
-      <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" aria-hidden="true" />
+      <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" aria-hidden="true" />
+      <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" aria-hidden="true" />
     </Card>
   );
 }

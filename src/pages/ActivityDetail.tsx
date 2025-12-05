@@ -446,7 +446,7 @@ export default function ActivityDetail() {
                     {participants.slice(0, 10).map((participant) => (
                       <Link
                         key={participant.id}
-                        to={`/user/${participant.id}`}
+                        to={`/u/${participant.username || participant.id}`}
                         className="flex flex-col items-center gap-1 hover:opacity-80 transition-opacity"
                       >
                         <Avatar className="h-12 w-12 border-2 border-background shadow-sm">
@@ -484,7 +484,7 @@ export default function ActivityDetail() {
                 </CardHeader>
                 <CardContent>
                   <Link
-                    to={`/user/${organizer.id}`}
+                    to={`/u/${organizer.username || organizer.id}`}
                     className="flex items-center gap-4 hover:bg-muted/50 -mx-2 p-2 rounded-lg transition-colors"
                   >
                     <Avatar className="h-16 w-16 border-2 border-primary/20">

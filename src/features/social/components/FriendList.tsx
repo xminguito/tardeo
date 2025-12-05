@@ -39,7 +39,7 @@ const FriendList = ({ userId, type }: FriendListProps) => {
         <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg">
           <div 
             className="flex items-center gap-3 cursor-pointer"
-            onClick={() => navigate(`/user/${item.profile.id}`)}
+            onClick={() => navigate(`/u/${item.profile.username || item.profile.id}`)}
           >
             <Avatar>
               <AvatarImage src={item.profile.avatar_url} />

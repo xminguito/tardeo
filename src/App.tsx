@@ -96,7 +96,14 @@ const AppContent = () => {
               <Friends />
             </Suspense>
           } />
-          <Route path="/user/:id" element={
+          {/* Public profile routes - support both UUID and username */}
+          <Route path="/u/:identifier" element={
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+              <UserProfile />
+            </Suspense>
+          } />
+          {/* Legacy route for backwards compatibility */}
+          <Route path="/user/:identifier" element={
             <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
               <UserProfile />
             </Suspense>

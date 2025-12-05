@@ -6,22 +6,16 @@ import PageHeader from "@/components/PageHeader";
 import PageTransition from "@/components/PageTransition";
 import Header from "@/components/Header";
 import UserProfileAbout from "../components/UserProfileAbout";
+import UserGallery from "../components/UserGallery";
 import UserCreations from "../components/UserCreations";
-import UserPublications from "../components/UserPublications";
-import UserForums from "../components/UserForums";
 import UserReviews from "../components/UserReviews";
-import FollowButton from "../components/FollowButton";
-import FriendRequestButton from "../components/FriendRequestButton";
-import { Button } from "@/components/ui/button";
-import { MessageCircle, Lock } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Lock } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useFavorites } from "@/features/activities/hooks/useFavorites";
 
 const UserProfile = () => {
   // Support both /u/:identifier and /user/:identifier routes
   const { identifier } = useParams<{ identifier: string }>();
-  const navigate = useNavigate();
   const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
   const [user, setUser] = useState<any>(null);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
@@ -50,25 +44,34 @@ const UserProfile = () => {
   // useSocialProfile now accepts either UUID or username
   const { data: profile, isLoading, error } = useSocialProfile(identifier || "");
 
-  // Get reviews count (use profile.id once loaded)
-  const { data: reviewsData } = useQuery({
-    queryKey: ["user-reviews-count", profile?.id],
+  // Get profile stats (reviews count + events created)
+  const { data: profileStats } = useQuery({
+    queryKey: ["user-profile-stats", profile?.id],
     queryFn: async () => {
-      if (!profile?.id) return { count: 0 };
+      if (!profile?.id) return { reviewsCount: 0, eventsCount: 0 };
       
-      const { data: activities } = await supabase
+      // Get activities created by this user
+      const { data: activities, count: activitiesCount } = await supabase
         .from("activities")
-        .select("id")
+        .select("id", { count: "exact" })
         .eq("created_by", profile.id);
 
-      if (!activities || activities.length === 0) return { count: 0 };
+      const eventsCount = activitiesCount || 0;
 
-      const { count } = await supabase
+      if (!activities || activities.length === 0) {
+        return { reviewsCount: 0, eventsCount };
+      }
+
+      // Get reviews count on those activities
+      const { count: reviewsCount } = await supabase
         .from("activity_ratings")
         .select("*", { count: "exact", head: true })
         .in("activity_id", activities.map((a) => a.id));
 
-      return { count: count || 0 };
+      return { 
+        reviewsCount: reviewsCount || 0, 
+        eventsCount 
+      };
     },
     enabled: !!profile?.id && !!profile?.isPublic,
   });
@@ -132,26 +135,14 @@ const UserProfile = () => {
             ]}
           />
 
-        {/* Profile Header with Actions */}
-        <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex-1">
-            <UserProfileAbout 
-              profile={profile} 
-              reviewsCount={reviewsData?.count || 0}
-              isOwnProfile={isOwnProfile}
-            />
-          </div>
-          
-          {!isOwnProfile && (
-            <div className="flex flex-wrap gap-2">
-              <FollowButton userId={profile.id} isFollowing={profile.isFollowing} />
-              <FriendRequestButton userId={profile.id} status={profile.friendStatus} />
-              <Button onClick={() => navigate(`/chat?userId=${profile.id}`)}>
-                <MessageCircle className="mr-2 h-4 w-4" />
-                Chat
-              </Button>
-            </div>
-          )}
+        {/* Profile Header Card - includes stats and action buttons */}
+        <div className="mb-6">
+          <UserProfileAbout 
+            profile={profile} 
+            reviewsCount={profileStats?.reviewsCount || 0}
+            eventsCount={profileStats?.eventsCount}
+            isOwnProfile={isOwnProfile}
+          />
         </div>
 
         {/* Privacy Notice */}
@@ -166,16 +157,16 @@ const UserProfile = () => {
 
         {/* Sections */}
         <div className="space-y-6">
-          {/* Creaciones */}
+          {/* Galería - User's photo gallery (only if has images) */}
+          <UserGallery 
+            images={(profile as any).gallery_images as string[] || []} 
+            isPublic={isPublic} 
+          />
+
+          {/* Creaciones - Activities created by this user */}
           <UserCreations userId={profile.id} isPublic={isPublic} />
 
-          {/* Publicaciones */}
-          <UserPublications userId={profile.id} isPublic={isPublic} />
-
-          {/* Foros */}
-          <UserForums userId={profile.id} isPublic={isPublic} />
-
-          {/* Reseñas */}
+          {/* Reseñas - Reviews on activities created by this user */}
           <UserReviews userId={profile.id} isPublic={isPublic} />
         </div>
         </div>

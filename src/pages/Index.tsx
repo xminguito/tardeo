@@ -153,12 +153,12 @@ const Index = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
             <h2 className="text-2xl md:text-3xl font-semibold">{t('home.featuredActivities')}</h2>
             <div className="flex gap-2 md:gap-3 flex-shrink-0">
-              <Button variant="outline" size="sm" className="md:size-default" onClick={() => navigate("/actividades")}>
+              {user && (
+                  <CreateActivityDialog onActivityCreated={handleActivityCreated} />
+              )}
+              <Button variant="outline" size="sm" className="md:size-default bg-secondary text-white" onClick={() => navigate("/actividades")}>
                 {t('home.viewAll')}
               </Button>
-              {user && (
-                <CreateActivityDialog onActivityCreated={handleActivityCreated} />
-              )}
             </div>
           </div>
           {loading ? (

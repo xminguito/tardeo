@@ -76,6 +76,21 @@ export const useSocialProfile = (identifier: string) => {
         friendStatus = friend?.status || null;
       }
 
+      // Fetch follower/following counts
+      const [followersResult, followingResult] = await Promise.all([
+        supabase
+          .from("follows")
+          .select("*", { count: "exact", head: true })
+          .eq("following_id", profileId),
+        supabase
+          .from("follows")
+          .select("*", { count: "exact", head: true })
+          .eq("follower_id", profileId),
+      ]);
+
+      const followersCount = followersResult.count || 0;
+      const followingCount = followingResult.count || 0;
+
       // Check if profile is public or if user is friend/following
       const profileVisibility = (profile as any).profile_visibility || 'public';
       const isPublic = isOwnProfile || profileVisibility === 'public' || 
@@ -87,11 +102,15 @@ export const useSocialProfile = (identifier: string) => {
         friendStatus,
         isPublic,
         isOwnProfile,
+        followersCount,
+        followingCount,
       } as SocialProfile & {
         isFollowing: boolean;
         friendStatus: "pending" | "accepted" | "blocked" | null;
         isPublic: boolean;
         isOwnProfile: boolean;
+        followersCount: number;
+        followingCount: number;
         profile_visibility?: 'public' | 'private';
       };
     },

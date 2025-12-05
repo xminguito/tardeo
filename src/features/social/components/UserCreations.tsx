@@ -1,13 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, Euro } from "lucide-react";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
-import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import ActivityCard from "@/components/ActivityCard";
+import type { ActivityWithParticipation, ParticipantPreview } from "@/features/activities/types/activity.types";
+import { useState, useEffect } from "react";
 
 interface UserCreationsProps {
   userId: string;
@@ -16,12 +13,22 @@ interface UserCreationsProps {
 
 export default function UserCreations({ userId, isPublic = true }: UserCreationsProps) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  // Get current user for participation check
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id || null);
+    };
+    getUser();
+  }, []);
 
   const { data: activities, isLoading } = useQuery({
     queryKey: ["user-creations", userId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Fetch activities created by this user
+      const { data: rawActivities, error } = await supabase
         .from("activities")
         .select("*")
         .eq("created_by", userId)
@@ -29,20 +36,106 @@ export default function UserCreations({ userId, isPublic = true }: UserCreations
         .limit(10);
 
       if (error) throw error;
-      return data || [];
+      if (!rawActivities || rawActivities.length === 0) return [];
+
+      // Get participant counts and previews for each activity
+      const activityIds = rawActivities.map(a => a.id);
+      
+      // Fetch participant counts
+      const { data: participantCounts } = await supabase
+        .from("activity_participants")
+        .select("activity_id")
+        .in("activity_id", activityIds);
+
+      // Count participants per activity
+      const countMap: Record<string, number> = {};
+      participantCounts?.forEach(p => {
+        countMap[p.activity_id] = (countMap[p.activity_id] || 0) + 1;
+      });
+
+      // Fetch participant previews (up to 3 per activity)
+      const { data: participantsWithProfiles } = await supabase
+        .from("activity_participants")
+        .select(`
+          activity_id,
+          user_id,
+          profiles:user_id (
+            id,
+            full_name,
+            username,
+            avatar_url
+          )
+        `)
+        .in("activity_id", activityIds)
+        .limit(30); // Enough for ~3 per activity
+
+      // Build preview map
+      const previewMap: Record<string, ParticipantPreview[]> = {};
+      participantsWithProfiles?.forEach(p => {
+        if (!previewMap[p.activity_id]) {
+          previewMap[p.activity_id] = [];
+        }
+        if (previewMap[p.activity_id].length < 3 && p.profiles) {
+          const profile = p.profiles as unknown as {
+            id: string;
+            full_name: string | null;
+            username: string | null;
+            avatar_url: string | null;
+          };
+          previewMap[p.activity_id].push({
+            id: profile.id,
+            full_name: profile.full_name,
+            username: profile.username,
+            avatar_url: profile.avatar_url,
+          });
+        }
+      });
+
+      // Check if current user is participating in any of these activities
+      let userParticipationMap: Record<string, boolean> = {};
+      if (currentUserId) {
+        const { data: userParticipations } = await supabase
+          .from("activity_participants")
+          .select("activity_id")
+          .eq("user_id", currentUserId)
+          .in("activity_id", activityIds);
+        
+        userParticipations?.forEach(p => {
+          userParticipationMap[p.activity_id] = true;
+        });
+      }
+
+      // Transform to ActivityWithParticipation
+      const transformed: ActivityWithParticipation[] = rawActivities.map(activity => {
+        const participantsCount = countMap[activity.id] || 0;
+        return {
+          ...activity,
+          participants_count: participantsCount,
+          participants_preview: previewMap[activity.id] || [],
+          isUserParticipating: userParticipationMap[activity.id] || false,
+          availableSlots: activity.max_participants - participantsCount,
+        };
+      });
+
+      return transformed;
     },
     enabled: isPublic && !!userId,
   });
+
+  // Handler for reserve/join button (no-op in this context, just navigate)
+  const handleReserve = () => {
+    // The ActivityCard will handle navigation internally
+  };
 
   if (!isPublic) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Sus Creaciones</CardTitle>
+          <CardTitle>{t('profile.creations', 'Sus Creaciones')}</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground text-center py-8">
-            Este perfil es privado
+            {t('profile.privateProfile', 'Este perfil es privado')}
           </p>
         </CardContent>
       </Card>
@@ -53,10 +146,14 @@ export default function UserCreations({ userId, isPublic = true }: UserCreations
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Sus Creaciones</CardTitle>
+          <CardTitle>{t('profile.creations', 'Sus Creaciones')}</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground text-center py-8">Cargando...</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[1, 2].map((i) => (
+              <div key={i} className="h-80 rounded-lg bg-muted animate-pulse" />
+            ))}
+          </div>
         </CardContent>
       </Card>
     );
@@ -66,74 +163,33 @@ export default function UserCreations({ userId, isPublic = true }: UserCreations
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Sus Creaciones</CardTitle>
+          <CardTitle>{t('profile.creations', 'Sus Creaciones')}</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground text-center py-8">
-            Este usuario aún no ha creado actividades
+            {t('profile.noActivities', 'Este usuario aún no ha creado actividades')}
           </p>
         </CardContent>
       </Card>
     );
   }
 
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), "EEE, d MMM. HH:mm'h'", { locale: es });
-    } catch {
-      return dateString;
-    }
-  };
-
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Sus Creaciones</CardTitle>
+        <CardTitle>{t('profile.creations', 'Sus Creaciones')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {activities.map((activity) => (
-            <div
+            <ActivityCard
               key={activity.id}
-              className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => navigate(`/activity/${activity.id}`)}
-            >
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex-1">
-                  <h4 className="font-semibold line-clamp-2">{activity.title}</h4>
-                  <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    <span>{formatDate(activity.date)}</span>
-                  </div>
-                  {activity.city && (
-                    <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-                      <MapPin className="h-4 w-4" />
-                      <span>{activity.city}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between mt-3">
-                <div className="flex items-center gap-2">
-                  {activity.cost === 0 ? (
-                    <Badge variant="secondary">Gratuita</Badge>
-                  ) : (
-                    <div className="flex items-center gap-1 text-sm font-semibold">
-                      <Euro className="h-4 w-4" />
-                      <span>{activity.cost}</span>
-                    </div>
-                  )}
-                </div>
-                <Button size="sm" variant="outline">
-                  Saber más
-                </Button>
-              </div>
-            </div>
+              activity={activity}
+              onReserve={handleReserve}
+            />
           ))}
         </div>
       </CardContent>
     </Card>
   );
 }
-

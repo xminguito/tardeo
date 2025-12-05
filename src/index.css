@@ -21,17 +21,20 @@ All colors MUST be HSL.
     --popover: 240 5% 90%;
     --popover-foreground: 240 5% 10%;
 
-    --primary: 333 71% 50%; /* Coral más oscuro para mejor contraste */
-    --primary-foreground: 327 73% 97%; /* Blanco puro */
+    /* TU ROSA (#da2576) -> HSL: 333 71% 50% */
+    --primary: 333 71% 50%;
+    --primary-foreground: 0 0% 100%; /* Texto blanco sobre rosa */
 
-    --secondary: 240 5% 33%; /* Verde mucho más oscuro */
-    --secondary-foreground: 0 0% 98%;
+    /* EL NUEVO INDIGO (#6366f1) -> HSL: 244 75% 59% */
+    --secondary: 244 75% 59%;
+    --secondary-foreground: 0 0% 100%; /* Texto blanco sobre morado */
 
     --muted: 240 4% 83%;
     --muted-foreground: 240 5% 10%; /* Más oscuro para mejor legibilidad */
 
-    --accent: 355 100% 97%; /* Amarillo miel más oscuro */
-    --accent-foreground: 349 89% 60%; /* Cambiado a blanco para mejor contraste */
+    /* ACCENT: Un tono muy suave para hovers (mezcla de gris y morado) */
+    --accent: 240 5% 96%;
+    --accent-foreground: 240 6% 10%;
 
     --destructive: 0 72% 50%;
     --destructive-foreground: 0 85% 97%;
@@ -81,17 +84,19 @@ All colors MUST be HSL.
     --popover: 240 5% 26%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 328 85% 70%; /* Coral más brillante para dark mode */
-    --primary-foreground: 336 83% 17%; /* Texto oscuro sobre coral */
+    /* En modo oscuro, a veces conviene aclarar un pelín los colores para que brillen */
+    --primary: 333 71% 55%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 3% 46%; /* Verde más brillante */
-    --secondary-foreground: 0 0% 98%; /* Texto oscuro sobre verde */
+    --secondary: 244 75% 65%;
+    --secondary-foreground: 0 0% 100%;
 
     --muted: 240 3% 46%;
     --muted-foreground: 0 0% 98%;
 
-    --accent: 343 87% 15%; /* Amarillo más brillante */
-    --accent-foreground: 351 94% 71%; /* Texto oscuro sobre amarillo */
+    /* Accent oscuro */
+    --accent: 240 4% 16%;
+    --accent-foreground: 0 0% 98%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 85% 97%;
@@ -152,7 +157,7 @@ All colors MUST be HSL.
   }
 
   button {
-    @apply text-xl md:text-2xl py-4 px-8 min-h-[60px];
+    @apply text-xl md:text-2xl py-4 px-8 min-h-[60px] rounded-full;
   }
 }
 

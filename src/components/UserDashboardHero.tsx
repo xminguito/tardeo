@@ -249,7 +249,7 @@ function ActivitySlide({
       )}
     >
       {/* Header: Badge + Date */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 justify-around">
         <span className="bg-white/25 text-white text-sm font-bold px-3 py-1.5 rounded-full">
           {t('home.dashboard.nextEvent')}
         </span>
@@ -273,7 +273,7 @@ function ActivitySlide({
       </div>
 
       {/* Meta info: date, time, location */}
-      <div className="flex flex-wrap gap-x-4 gap-y-2">
+      <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center">
         <div className="flex items-center gap-2 text-white">
           <Calendar className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
           <span className="font-medium">
@@ -457,7 +457,7 @@ export default function UserDashboardHero({
   // Use current activity's image or fallback gradient
   const backgroundStyle = currentActivity.image_url
     ? {
-        backgroundImage: `linear-gradient(135deg, rgba(190, 24, 93, 0.95) 0%, rgba(126, 34, 206, 0.92) 100%), url(${currentActivity.image_url})`,
+        backgroundImage: `linear-gradient(135deg, rgb(223 69 135) 0%, rgba(224, 71, 137, 0.6) 100%), url(${currentActivity.image_url})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }
@@ -467,7 +467,7 @@ export default function UserDashboardHero({
 
   return (
     <Card 
-      className="relative overflow-hidden border-0 shadow-2xl"
+      className="relative overflow-hidden border-0 shadow-2xl md:mx-12"
       style={backgroundStyle}
     >
       {/* Dark overlay for enhanced text contrast */}
@@ -525,7 +525,7 @@ export default function UserDashboardHero({
           <div 
             className={cn(
               "bg-black/25 backdrop-blur-md rounded-2xl p-5 md:p-6 border border-white/25 shadow-lg",
-              showNavigation && "mx-5 md:mx-8" // Add margin for arrow space
+              showNavigation && "md:mx-8" // Add margin for arrow space
             )}
           >
             <Carousel

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Calendar, MapPin, Users, Clock, Euro, MessageCircle, Loader2, User } from 'lucide-react';
+import { Calendar, MapPin, Users, Clock, Euro, MessageCircle, Loader2, User, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import { es, enUS, ca, fr, it, de } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -23,6 +23,7 @@ import PageTransition from '@/components/PageTransition';
 import type { ActivityFilters } from '@/features/activities/types/activity.types';
 import { extractIdFromSlug } from '@/lib/utils';
 import { useAnalytics } from '@/lib/analytics/useAnalytics';
+import CreateActivityDialog from '@/components/CreateActivityDialog';
 
 interface Activity {
   id: string;
@@ -89,6 +90,7 @@ export default function ActivityDetail() {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [organizer, setOrganizer] = useState<Organizer | null>(null);
   const [realParticipantCount, setRealParticipantCount] = useState<number>(0);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const { favorites } = useFavorites(userId);
   
   // Check if chat should auto-open from URL param
@@ -372,6 +374,19 @@ export default function ActivityDetail() {
   const actualParticipants = realParticipantCount;
   const isFull = actualParticipants >= activity.max_participants;
   const availableSlots = activity.max_participants - actualParticipants;
+  
+  // Check if current user is the owner/organizer of this activity
+  const isOwner = userId && activity.created_by && userId === activity.created_by;
+
+  const handleEditActivity = () => {
+    setIsEditDialogOpen(true);
+  };
+
+  const handleActivityUpdated = () => {
+    setIsEditDialogOpen(false);
+    // Refresh activity data
+    loadActivity();
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -408,12 +423,8 @@ export default function ActivityDetail() {
               <div className="space-y-4">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h1 className="text-4xl font-bold mb-2">{getTranslatedTitle(activity)}</h1>
                   <Badge className="text-lg px-4 py-1">{activity.category}</Badge>
                 </div>
-                <Button variant="outline" size="icon" onClick={handleShare}>
-                  <MessageCircle className="h-4 w-4" />
-                </Button>
               </div>
 
               <p className="text-lg text-muted-foreground leading-relaxed">
@@ -574,8 +585,31 @@ export default function ActivityDetail() {
                   </div>
                 </div>
 
-                {/* Action Button: Join OR Chat (if already participating) */}
-                {isParticipating ? (
+                {/* Action Buttons based on user role */}
+                {isOwner ? (
+                  /* Owner: Show Edit Activity as Primary Action + Chat */
+                  <div className="space-y-3">
+                    <Button
+                      onClick={handleEditActivity}
+                      variant="default"
+                      className="w-full text-lg py-6"
+                      size="lg"
+                    >
+                      <Pencil className="mr-2 h-5 w-5" />
+                      {t('activityDetail.editActivity')}
+                    </Button>
+                    <ActivityChatDrawer
+                      activityId={activity.id}
+                      activityTitle={getTranslatedTitle(activity)}
+                      participantCount={realParticipantCount}
+                      currentUserId={userId}
+                      isParticipant={true}
+                      initialOpen={shouldOpenChat}
+                      triggerVariant="outline"
+                      triggerSize="lg"
+                    />
+                  </div>
+                ) : isParticipating ? (
                   /* Participating: Show Chat as Primary Action */
                   <>
                     <ActivityChatDrawer
@@ -623,6 +657,16 @@ export default function ActivityDetail() {
         </div>
         </div>
       </PageTransition>
+
+      {/* Edit Activity Dialog (only rendered for owners) */}
+      {isOwner && (
+        <CreateActivityDialog
+          activityToEdit={activity}
+          isOpen={isEditDialogOpen}
+          onClose={() => setIsEditDialogOpen(false)}
+          onActivityCreated={handleActivityUpdated}
+        />
+      )}
     </div>
   );
 }

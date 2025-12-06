@@ -8,7 +8,7 @@ import {
   Heart, 
   Bell, 
   Settings, 
-  Calendar,
+  CalendarDays,
   LogOut,
   Star,
   CalendarCheck,
@@ -208,22 +208,22 @@ export default function MyAccount() {
             </CardContent>
           </Card>
 
-          {/* Actividades */}
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/actividades')}>
+          {/* Mis Creaciones - Actividades que he organizado */}
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/mis-creaciones')}>
             <CardHeader>
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Calendar className="w-6 h-6 text-primary" />
+                  <CalendarDays className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <CardTitle>{t('myAccount.activities')}</CardTitle>
-                  <CardDescription>{t('myAccount.exploreActivities')}</CardDescription>
+                  <CardTitle>{t('myAccount.myCreations')}</CardTitle>
+                  <CardDescription>{t('myAccount.manageEvents')}</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                {t('myAccount.activitiesDesc')}
+                {t('myAccount.myCreationsDesc')}
               </p>
             </CardContent>
           </Card>

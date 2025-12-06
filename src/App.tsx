@@ -24,6 +24,7 @@ import Favorites from "./pages/Favorites";
 import MyAccount from "./pages/MyAccount";
 import MyActivities from "./pages/MyActivities";
 import Notifications from "./pages/Notifications";
+import MyCreations from "./pages/MyCreations";
 import NotificationSettings from "./pages/NotificationSettings";
 import TTSCostDashboard from "./pages/TTSCostDashboard";
 import VoiceQualityDashboard from "./pages/VoiceQualityDashboard";
@@ -35,6 +36,7 @@ import EmailTemplates from "./pages/EmailTemplates";
 import AdminLayout from "./layouts/AdminLayout";
 import { UserLocationProvider } from "@/hooks/useUserLocation";
 import { initAnalytics, track } from "@/lib/analytics";
+import { RealtimeNotificationsProvider } from "@/components/RealtimeNotificationsProvider";
 
 // Lazy load Analytics Dashboard (heavy component)
 const AnalyticsDashboard = lazy(() => import("./pages/admin/AnalyticsDashboard"));
@@ -78,6 +80,7 @@ const AppContent = () => {
           <Route path="/auth" element={<Auth />} />
           <Route path="/mi-cuenta" element={<MyAccount />} />
           <Route path="/mis-actividades" element={<MyActivities />} />
+          <Route path="/mis-creaciones" element={<MyCreations />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/perfil" element={<Profile />} />
           <Route path="/favoritos" element={<Favorites />} />
@@ -212,6 +215,7 @@ const App = () => {
           <CookieConsentComponent />
           <Toaster />
           <Sonner />
+          <RealtimeNotificationsProvider />
           <BrowserRouter>
             <AppContent />
           </BrowserRouter>

@@ -28,6 +28,61 @@ interface Translations {
   description_de: string;
 }
 
+// Timeout for OpenAI API calls (45 seconds for longer texts)
+const OPENAI_TIMEOUT_MS = 45000;
+// Max retries
+const MAX_RETRIES = 1;
+
+async function callOpenAI(
+  apiKey: string,
+  systemPrompt: string,
+  userPrompt: string,
+  maxTokens: number,
+  retryCount = 0
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), OPENAI_TIMEOUT_MS);
+
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        temperature: 0.3,
+        max_tokens: maxTokens,
+        response_format: { type: "json_object" },
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.error(`OpenAI request timed out (attempt ${retryCount + 1}/${MAX_RETRIES + 1})`);
+      
+      if (retryCount < MAX_RETRIES) {
+        console.log(`Retrying OpenAI request...`);
+        return callOpenAI(apiKey, systemPrompt, userPrompt, maxTokens, retryCount + 1);
+      }
+      
+      throw new Error('Translation request timed out. Please try again.');
+    }
+    
+    throw error;
+  }
+}
+
 serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -56,58 +111,44 @@ serve(async (req: Request) => {
       );
     }
 
-    console.log('Translating activity:', { title, description: description?.slice(0, 50) });
+    // Truncate description to prevent extremely long translations
+    // But allow enough for a good activity description
+    const maxDescLength = 800;
+    const truncatedDescription = description 
+      ? description.slice(0, maxDescLength) + (description.length > maxDescLength ? '...' : '')
+      : '';
 
-    // System prompt for consistent translations
-    const systemPrompt = `You are a professional translator specializing in event and activity content.
-Your task is to translate Spanish text into English, Catalan, French, Italian, and German.
+    const descLength = truncatedDescription.length;
+    
+    // Calculate max tokens based on content length
+    // Each language needs roughly the same characters, plus JSON structure
+    // Approximate: (title + description) * 5 languages * 1.5 (for other languages being longer) + 500 for JSON
+    const estimatedTokens = Math.min(4000, Math.max(1500, Math.ceil((title.length + descLength) * 5 * 1.5 / 4) + 500));
 
-Rules:
-- Maintain the friendly and engaging tone of the original
-- Keep the same meaning, style, and any emojis
-- Preserve formatting and punctuation style
-- Return ONLY a valid JSON object, no markdown code blocks
-- If description is empty or "No description provided", translate that phrase appropriately`;
-
-    // User prompt with the content to translate
-    const userPrompt = `Translate this Spanish activity content to 5 languages.
-
-Original Spanish:
-Title: ${title}
-Description: ${description || 'No description provided'}
-
-Return this exact JSON structure:
-{
-  "title_en": "English title",
-  "title_ca": "Catalan title", 
-  "title_fr": "French title",
-  "title_it": "Italian title",
-  "title_de": "German title",
-  "description_en": "English description",
-  "description_ca": "Catalan description",
-  "description_fr": "French description",
-  "description_it": "Italian description",
-  "description_de": "German description"
-}`;
-
-    // Call OpenAI API directly (no Lovable gateway)
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.3,
-        max_tokens: 1000,
-        response_format: { type: "json_object" },
-      }),
+    console.log('Translating activity:', { 
+      title, 
+      descriptionLength: description?.length || 0,
+      truncatedLength: descLength,
+      estimatedTokens
     });
+
+    // Simplified prompt for better JSON output
+    const systemPrompt = `Translate Spanish to EN, CA, FR, IT, DE. Output valid JSON only. Keep emojis.`;
+
+    const userPrompt = truncatedDescription 
+      ? `{"title":"${title.replace(/"/g, '\\"')}","desc":"${truncatedDescription.replace(/"/g, '\\"').replace(/\n/g, '\\n')}"}`
+      : `{"title":"${title.replace(/"/g, '\\"')}"}`;
+
+    const fullPrompt = `Translate this Spanish content to 5 languages. Return JSON with keys: title_en, title_ca, title_fr, title_it, title_de${truncatedDescription ? ', description_en, description_ca, description_fr, description_it, description_de' : ''}
+
+Input: ${userPrompt}`;
+
+    console.log('Calling OpenAI API with', estimatedTokens, 'max tokens...');
+    const startTime = Date.now();
+
+    const response = await callOpenAI(OPENAI_API_KEY, systemPrompt, fullPrompt, estimatedTokens);
+
+    console.log(`OpenAI responded in ${Date.now() - startTime}ms`);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -141,15 +182,15 @@ Return this exact JSON structure:
     const translatedText = data.choices?.[0]?.message?.content;
 
     if (!translatedText) {
+      console.error('No content in OpenAI response:', JSON.stringify(data));
       throw new Error('No translation received from OpenAI');
     }
 
-    console.log('Raw AI response received, parsing...');
+    console.log('Parsing AI response, length:', translatedText.length);
 
     // Parse the JSON response
     let translations: Translations;
     try {
-      // Clean up any potential markdown formatting
       const cleanedText = translatedText
         .replace(/```json\n?/g, '')
         .replace(/```\n?/g, '')
@@ -157,21 +198,34 @@ Return this exact JSON structure:
       
       translations = JSON.parse(cleanedText);
     } catch (parseError) {
-      console.error('Failed to parse AI response:', translatedText);
-      throw new Error('Invalid JSON response from OpenAI');
+      console.error('Failed to parse AI response. Raw text:', translatedText.slice(0, 500));
+      throw new Error('Invalid JSON response from OpenAI. The text may be too long.');
     }
 
-    // Validate the response has all required fields
-    const requiredFields: (keyof Translations)[] = [
-      'title_en', 'title_ca', 'title_fr', 'title_it', 'title_de',
-      'description_en', 'description_ca', 'description_fr', 'description_it', 'description_de'
-    ];
-
-    for (const field of requiredFields) {
+    // Validate required title fields
+    const titleFields: (keyof Translations)[] = ['title_en', 'title_ca', 'title_fr', 'title_it', 'title_de'];
+    for (const field of titleFields) {
       if (!translations[field]) {
         console.error('Missing field in translation:', field);
         throw new Error(`Missing translation field: ${field}`);
       }
+    }
+
+    // For descriptions, provide empty string fallback if not present
+    if (truncatedDescription) {
+      const descFields: (keyof Translations)[] = ['description_en', 'description_ca', 'description_fr', 'description_it', 'description_de'];
+      for (const field of descFields) {
+        if (!translations[field]) {
+          translations[field] = '';
+        }
+      }
+    } else {
+      // No description provided, set empty strings
+      translations.description_en = '';
+      translations.description_ca = '';
+      translations.description_fr = '';
+      translations.description_it = '';
+      translations.description_de = '';
     }
 
     console.log('Successfully translated activity to 5 languages');
@@ -186,12 +240,14 @@ Return this exact JSON structure:
 
   } catch (error) {
     console.error('Error in translate-activity function:', error);
+    
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    const isTimeout = errorMessage.includes('timed out');
+    
     return new Response(
-      JSON.stringify({ 
-        error: error instanceof Error ? error.message : 'Unknown error occurred' 
-      }),
+      JSON.stringify({ error: errorMessage }),
       { 
-        status: 500, 
+        status: isTimeout ? 504 : 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );

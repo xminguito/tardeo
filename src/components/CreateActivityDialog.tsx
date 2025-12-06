@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, DragEvent } from 'react';
+import React, { useState, useRef, useCallback, useEffect, DragEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLoadScript, Autocomplete } from '@react-google-maps/api';
 import {
@@ -446,16 +446,61 @@ function GalleryUploadGrid({
 // Libraries for Google Maps
 const libraries: ("places")[] = ["places"];
 
-interface CreateActivityDialogProps {
-  onActivityCreated?: () => void;
+// Activity type for edit mode
+interface ActivityToEdit {
+  id: string;
+  title: string;
+  description: string | null;
+  category: string;
+  location: string;
+  city?: string | null;
+  province?: string | null;
+  country?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  date: string;
+  time: string;
+  cost: number;
+  max_participants: number;
+  image_url?: string | null;
+  secondary_images?: string[] | null;
 }
 
-export default function CreateActivityDialog({ onActivityCreated }: CreateActivityDialogProps) {
+interface CreateActivityDialogProps {
+  onActivityCreated?: () => void;
+  // Edit mode props
+  activityToEdit?: ActivityToEdit | null;
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export default function CreateActivityDialog({ 
+  onActivityCreated, 
+  activityToEdit,
+  isOpen: controlledOpen,
+  onClose 
+}: CreateActivityDialogProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
+  
+  // Determine if this is edit mode
+  const isEditMode = !!activityToEdit;
+  
+  // Support both controlled and uncontrolled open state
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = (value: boolean) => {
+    if (controlledOpen !== undefined && onClose && !value) {
+      onClose();
+    } else {
+      setInternalOpen(value);
+    }
+  };
+  
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
+  
+  // Form data initialization - will be set via useEffect when editing
+  const getInitialFormData = () => ({
     title: '',
     description: '',
     category: '',
@@ -469,10 +514,65 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
     latitude: null as number | null,
     longitude: null as number | null,
   });
+  
+  const [formData, setFormData] = useState(getInitialFormData);
   const [mainImage, setMainImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [secondaryImages, setSecondaryImages] = useState<File[]>([]);
   const [secondaryPreviews, setSecondaryPreviews] = useState<string[]>([]);
+  
+  // Track if images have changed (to avoid re-uploading existing ones)
+  const [mainImageChanged, setMainImageChanged] = useState(false);
+  const [existingMainImageUrl, setExistingMainImageUrl] = useState<string | null>(null);
+  const [existingSecondaryUrls, setExistingSecondaryUrls] = useState<string[]>([]);
+
+  // Initialize form with activity data when editing
+  useEffect(() => {
+    if (activityToEdit && open) {
+      setFormData({
+        title: activityToEdit.title || '',
+        description: activityToEdit.description || '',
+        category: activityToEdit.category || '',
+        location: activityToEdit.location || '',
+        city: activityToEdit.city || '',
+        province: activityToEdit.province || '',
+        date: activityToEdit.date || '',
+        time: activityToEdit.time?.slice(0, 5) || '18:00',
+        cost: activityToEdit.cost || 0,
+        maxParticipants: activityToEdit.max_participants || 20,
+        latitude: activityToEdit.latitude || null,
+        longitude: activityToEdit.longitude || null,
+      });
+      
+      // Set location input value for display
+      setLocationInputValue(activityToEdit.location || '');
+      setIsPlaceSelected(!!activityToEdit.latitude && !!activityToEdit.longitude);
+      
+      // Handle existing images
+      if (activityToEdit.image_url) {
+        setExistingMainImageUrl(activityToEdit.image_url);
+        setImagePreview(activityToEdit.image_url);
+        setMainImageChanged(false);
+      }
+      
+      if (activityToEdit.secondary_images && activityToEdit.secondary_images.length > 0) {
+        setExistingSecondaryUrls(activityToEdit.secondary_images);
+        setSecondaryPreviews(activityToEdit.secondary_images);
+      }
+    } else if (!open) {
+      // Reset form when dialog closes
+      setFormData(getInitialFormData());
+      setMainImage(null);
+      setImagePreview(null);
+      setSecondaryImages([]);
+      setSecondaryPreviews([]);
+      setLocationInputValue('');
+      setIsPlaceSelected(false);
+      setMainImageChanged(false);
+      setExistingMainImageUrl(null);
+      setExistingSecondaryUrls([]);
+    }
+  }, [activityToEdit, open]);
 
   // Image compression states
   const [isCompressingMain, setIsCompressingMain] = useState(false);
@@ -645,8 +745,8 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
 
   // Main image handlers with compression
   const handleMainImageSelect = useCallback(async (file: File) => {
-    // Revoke previous URL to prevent memory leak
-    if (imagePreview) {
+    // Revoke previous URL to prevent memory leak (only if it's a blob URL, not an existing image URL)
+    if (imagePreview && imagePreview.startsWith('blob:')) {
       URL.revokeObjectURL(imagePreview);
     }
 
@@ -657,6 +757,7 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
       const optimizedFile = await compressImage(file, GALLERY_OPTIONS);
       setMainImage(optimizedFile);
       setImagePreview(URL.createObjectURL(optimizedFile));
+      setMainImageChanged(true); // Mark as changed for edit mode
 
       // Show success toast with size reduction info
       const originalSizeMB = (file.size / 1024 / 1024).toFixed(2);
@@ -675,17 +776,20 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
       // Fallback to original file
       setMainImage(file);
       setImagePreview(URL.createObjectURL(file));
+      setMainImageChanged(true);
     } finally {
       setIsCompressingMain(false);
     }
   }, [imagePreview, t, toast]);
 
   const handleMainImageRemove = useCallback(() => {
-    if (imagePreview) {
+    if (imagePreview && imagePreview.startsWith('blob:')) {
       URL.revokeObjectURL(imagePreview);
     }
     setMainImage(null);
     setImagePreview(null);
+    setMainImageChanged(true); // Mark as changed (removed)
+    setExistingMainImageUrl(null);
   }, [imagePreview]);
 
   // Secondary images handlers with compression
@@ -751,11 +855,11 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
         return;
       }
 
-      let imageUrl: string | null = null;
-      const secondaryImageUrls: string[] = [];
+      let imageUrl: string | null = isEditMode ? existingMainImageUrl : null;
+      let secondaryImageUrls: string[] = isEditMode ? [...existingSecondaryUrls] : [];
 
-      // Upload main image if provided
-      if (mainImage) {
+      // Upload main image only if it changed (new file selected)
+      if (mainImage && mainImageChanged) {
         const fileExt = mainImage.name.split('.').pop();
         const fileName = `${user.id}-${Date.now()}.${fileExt}`;
         const filePath = `${fileName}`;
@@ -779,9 +883,12 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
           .getPublicUrl(filePath);
 
         imageUrl = publicUrl;
+      } else if (!mainImage && !imagePreview) {
+        // Image was removed
+        imageUrl = null;
       }
 
-      // Upload secondary images if provided
+      // Upload new secondary images if any
       if (secondaryImages.length > 0) {
         for (let i = 0; i < secondaryImages.length; i++) {
           const file = secondaryImages[i];
@@ -803,6 +910,31 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
             .getPublicUrl(filePath);
 
           secondaryImageUrls.push(publicUrl);
+        }
+      }
+
+      // For edit mode, use existing previews that weren't removed
+      // Secondary previews now contains the current state (existing URLs + new blob URLs)
+      if (isEditMode) {
+        // Filter out blob URLs and only keep existing URLs that are still in previews
+        secondaryImageUrls = secondaryPreviews.filter(url => !url.startsWith('blob:'));
+        // Add newly uploaded URLs
+        for (let i = 0; i < secondaryImages.length; i++) {
+          const file = secondaryImages[i];
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${user.id}-${Date.now()}-secondary-edit-${i}.${fileExt}`;
+          const filePath = `${fileName}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from('activity-images')
+            .upload(filePath, file);
+
+          if (!uploadError) {
+            const { data: { publicUrl } } = supabase.storage
+              .from('activity-images')
+              .getPublicUrl(filePath);
+            secondaryImageUrls.push(publicUrl);
+          }
         }
       }
 
@@ -836,8 +968,8 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
       const latitude = formData.latitude;
       const longitude = formData.longitude;
 
-      // Insert activity with all translations
-      const { error: insertError } = await supabase.from('activities').insert({
+      // Prepare activity data
+      const activityData = {
         title: formData.title,
         description: formData.description,
         category: formData.category,
@@ -851,9 +983,8 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
         time: formData.time,
         cost: formData.cost,
         max_participants: formData.maxParticipants,
-        created_by: user.id,
         image_url: imageUrl,
-        secondary_images: secondaryImageUrls,
+        secondary_images: secondaryImageUrls.length > 0 ? secondaryImageUrls : null,
         // Spanish (original)
         title_es: formData.title,
         description_es: formData.description,
@@ -868,48 +999,69 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
         description_fr: translations.description_fr,
         description_it: translations.description_it,
         description_de: translations.description_de,
-      });
+      };
 
-      if (insertError) {
-        console.error('Insert error:', insertError);
+      if (isEditMode && activityToEdit) {
+        // UPDATE existing activity
+        const { error: updateError } = await supabase
+          .from('activities')
+          .update(activityData)
+          .eq('id', activityToEdit.id);
+
+        if (updateError) {
+          console.error('Update error:', updateError);
+          toast({
+            title: t('common.error'),
+            description: t('activities.edit.updateError'),
+            variant: 'destructive',
+          });
+          return;
+        }
+
         toast({
-          title: t('common.error'),
-          description: t('activities.create.createError'),
-          variant: 'destructive',
+          title: t('common.success'),
+          description: t('activities.edit.updated'),
         });
-        return;
+      } else {
+        // INSERT new activity
+        const { error: insertError } = await supabase.from('activities').insert({
+          ...activityData,
+          created_by: user.id,
+        });
+
+        if (insertError) {
+          console.error('Insert error:', insertError);
+          toast({
+            title: t('common.error'),
+            description: t('activities.create.createError'),
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        toast({
+          title: t('common.success'),
+          description: t('activities.create.created'),
+        });
       }
 
-      toast({
-        title: t('common.success'),
-        description: t('activities.create.created'),
-      });
-
       setOpen(false);
-      setFormData({
-        title: '',
-        description: '',
-        category: '',
-        location: '',
-        city: '',
-        province: '',
-        date: '',
-        time: '18:00',
-        cost: 0,
-        maxParticipants: 20,
-        latitude: null,
-        longitude: null,
-      });
+      
+      // Reset form state
+      setFormData(getInitialFormData());
       setMainImage(null);
       setImagePreview(null);
       setSecondaryImages([]);
       setSecondaryPreviews([]);
       setLocationInputValue('');
       setIsPlaceSelected(false);
+      setMainImageChanged(false);
+      setExistingMainImageUrl(null);
+      setExistingSecondaryUrls([]);
 
       onActivityCreated?.();
     } catch (error) {
-      console.error('Error creating activity:', error);
+      console.error('Error saving activity:', error);
       toast({
         title: t('common.error'),
         description: t('activities.create.unexpectedError'),
@@ -922,13 +1074,16 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm" className="md:size-default">
-          <Plus className="mr-1 md:mr-2 h-4 w-4 md:h-5 md:w-5" />
-          <span className="hidden sm:inline">{t('home.createActivity')}</span>
-          <span className="sm:hidden">{t('common.create')}</span>
-        </Button>
-      </DialogTrigger>
+      {/* Only show trigger in create mode (uncontrolled) */}
+      {controlledOpen === undefined && (
+        <DialogTrigger asChild>
+          <Button size="sm" className="md:size-default">
+            <Plus className="mr-1 md:mr-2 h-4 w-4 md:h-5 md:w-5" />
+            <span className="hidden sm:inline">{t('home.createActivity')}</span>
+            <span className="sm:hidden">{t('common.create')}</span>
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent 
         className="max-w-2xl max-h-[90vh] overflow-y-auto"
         onPointerDownOutside={(event) => {
@@ -954,9 +1109,11 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
         }}
       >
         <DialogHeader>
-          <DialogTitle>{t('activities.create.title')}</DialogTitle>
+          <DialogTitle>
+            {isEditMode ? t('activities.edit.title') : t('activities.create.title')}
+          </DialogTitle>
           <DialogDescription>
-            {t('activities.create.description')}
+            {isEditMode ? t('activities.edit.description') : t('activities.create.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -1211,7 +1368,10 @@ export default function CreateActivityDialog({ onActivityCreated }: CreateActivi
             </Button>
             <Button type="submit" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {loading ? t('activities.create.creating') : t('activities.create.create')}
+              {loading 
+                ? (isEditMode ? t('activities.edit.saving') : t('activities.create.creating'))
+                : (isEditMode ? t('activities.edit.saveChanges') : t('activities.create.create'))
+              }
             </Button>
           </div>
         </form>

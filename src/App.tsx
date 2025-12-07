@@ -55,18 +55,21 @@ const SiteSettings = lazy(() => import("./pages/admin/SiteSettings"));
 // ============================================
 // Onboarding Guard Hook
 // ============================================
-const useOnboardingCheck = () => {
+const useOnboardingCheck = (pathname: string) => {
   const [needsOnboarding, setNeedsOnboarding] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
 
+    // Block UI immediately while we check - prevents stale redirects
+    setLoading(true);
+
     const checkOnboarding = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (!user) {
+        if (!session) {
           if (mounted) {
             setNeedsOnboarding(false);
             setLoading(false);
@@ -77,12 +80,12 @@ const useOnboardingCheck = () => {
         const { data: profile } = await supabase
           .from("profiles")
           .select("onboarding_completed")
-          .eq("id", user.id)
+          .eq("id", session.user.id)
           .single();
 
         if (mounted) {
           // User needs onboarding if they don't have onboarding_completed = true
-          setNeedsOnboarding(profile?.onboarding_completed !== true);
+          setNeedsOnboarding(!!profile && profile.onboarding_completed !== true);
           setLoading(false);
         }
       } catch (error) {
@@ -98,6 +101,9 @@ const useOnboardingCheck = () => {
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (mounted) {
+        setLoading(true);
+      }
       if (session?.user) {
         checkOnboarding();
       } else {
@@ -112,7 +118,7 @@ const useOnboardingCheck = () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [pathname]); // Re-check when route changes
 
   return { needsOnboarding, loading };
 };
@@ -122,7 +128,7 @@ const useOnboardingCheck = () => {
 // ============================================
 const OnboardingGuard = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
-  const { needsOnboarding, loading } = useOnboardingCheck();
+  const { needsOnboarding, loading } = useOnboardingCheck(location.pathname);
 
   // Skip guard for certain routes
   const excludedRoutes = ['/auth', '/onboarding', '/admin'];

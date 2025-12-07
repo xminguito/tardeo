@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
+import type { User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -53,7 +54,7 @@ export default function MyCreations() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [participantCounts, setParticipantCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);

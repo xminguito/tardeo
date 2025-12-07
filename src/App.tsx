@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { useVoiceActivityTools } from "@/features/activities/hooks/useVoiceActivityTools";
 import VoiceAssistant from "@/components/VoiceAssistant";
 import PWAInstallPrompt from "@/components/pwa/PWAInstallPrompt";
@@ -35,9 +35,11 @@ import TTSAnalytics from "./pages/TTSAnalytics";
 import EmailTester from "./pages/EmailTester";
 import EmailTemplates from "./pages/EmailTemplates";
 import AdminLayout from "./layouts/AdminLayout";
+import Onboarding from "./pages/Onboarding";
 import { UserLocationProvider } from "@/hooks/useUserLocation";
 import { initAnalytics, track } from "@/lib/analytics";
 import { RealtimeNotificationsProvider } from "@/components/RealtimeNotificationsProvider";
+import { supabase } from "@/integrations/supabase/client";
 
 // Lazy load Analytics Dashboard (heavy component)
 const AnalyticsDashboard = lazy(() => import("./pages/admin/AnalyticsDashboard"));
@@ -50,6 +52,99 @@ const ExploreProfiles = lazy(() => import("./features/social/pages/ExploreProfil
 const FileManager = lazy(() => import("./pages/admin/FileManager"));
 const SiteSettings = lazy(() => import("./pages/admin/SiteSettings"));
 
+// ============================================
+// Onboarding Guard Hook
+// ============================================
+const useOnboardingCheck = () => {
+  const [needsOnboarding, setNeedsOnboarding] = useState<boolean | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const checkOnboarding = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          if (mounted) {
+            setNeedsOnboarding(false);
+            setLoading(false);
+          }
+          return;
+        }
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("onboarding_completed")
+          .eq("id", user.id)
+          .single();
+
+        if (mounted) {
+          // User needs onboarding if they don't have onboarding_completed = true
+          setNeedsOnboarding(profile?.onboarding_completed !== true);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("Error checking onboarding status:", error);
+        if (mounted) {
+          setNeedsOnboarding(false);
+          setLoading(false);
+        }
+      }
+    };
+
+    checkOnboarding();
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        checkOnboarding();
+      } else {
+        if (mounted) {
+          setNeedsOnboarding(false);
+          setLoading(false);
+        }
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  return { needsOnboarding, loading };
+};
+
+// ============================================
+// Onboarding Route Guard Component
+// ============================================
+const OnboardingGuard = ({ children }: { children: React.ReactNode }) => {
+  const location = useLocation();
+  const { needsOnboarding, loading } = useOnboardingCheck();
+
+  // Skip guard for certain routes
+  const excludedRoutes = ['/auth', '/onboarding', '/admin'];
+  const isExcluded = excludedRoutes.some(route => location.pathname.startsWith(route));
+
+  // Show nothing while loading (or you could show a loader)
+  if (loading) {
+    return null;
+  }
+
+  // If user needs onboarding and not on excluded route, redirect
+  if (needsOnboarding && !isExcluded) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  // If user is on /onboarding but already completed, redirect to home
+  if (!needsOnboarding && location.pathname === '/onboarding') {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+};
  
 const queryClient = new QueryClient();
  
@@ -75,10 +170,11 @@ const AppContent = () => {
 
   return (
     <UserLocationProvider>
-      <>
+      <OnboardingGuard>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/mi-cuenta" element={<MyAccount />} />
           <Route path="/mis-actividades" element={<MyActivities />} />
           <Route path="/mis-creaciones" element={<MyCreations />} />
@@ -164,7 +260,7 @@ const AppContent = () => {
         </Routes>
         <VoiceAssistant clientTools={voiceTools} />
         <PWAInstallPrompt />
-      </>
+      </OnboardingGuard>
     </UserLocationProvider>
   );
 };

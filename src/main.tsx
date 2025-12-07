@@ -3,24 +3,28 @@ import App from "./App.tsx";
 import "./index.css";
 import './lib/i18n';
 
-// EMERGENCY: Unregister any existing service workers to fix loading issues
-// This is needed to clean up "zombie" SWs from a previous PWA configuration
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then((registrations) => {
-    if (registrations.length > 0) {
-      console.log('🧹 Found', registrations.length, 'Service Worker(s) to unregister');
-      registrations.forEach((registration) => {
-        console.log('🧹 Unregistering Service Worker:', registration.scope);
-        registration.unregister().then((success) => {
-          if (success) {
-            console.log('✅ Service Worker unregistered successfully');
-          }
-        });
-      });
-    }
-  }).catch((error) => {
-    console.error('❌ Error unregistering Service Workers:', error);
-  });
-}
+// 🚨 FORCE CLEANUP: Kill any lingering Service Workers
+// Runs IMMEDIATELY (sync) + on LOAD (async) for maximum effectiveness
+const killZombieSW = () => {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (const registration of registrations) {
+        console.log('🧹 Killing Zombie SW:', registration.scope);
+        registration.unregister();
+      }
+      if (registrations.length > 0) {
+        console.log('✅ Killed', registrations.length, 'Service Worker(s)');
+      }
+    }).catch((error) => {
+      console.error('❌ Error killing Service Workers:', error);
+    });
+  }
+};
+
+// Run immediately when script loads
+killZombieSW();
+
+// Also run on window load (catches late-registering SWs)
+window.addEventListener('load', killZombieSW);
 
 createRoot(document.getElementById("root")!).render(<App />);

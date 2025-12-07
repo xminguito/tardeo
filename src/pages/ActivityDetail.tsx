@@ -24,6 +24,8 @@ import type { ActivityFilters } from '@/features/activities/types/activity.types
 import { extractIdFromSlug } from '@/lib/utils';
 import { useAnalytics } from '@/lib/analytics/useAnalytics';
 import CreateActivityDialog from '@/components/CreateActivityDialog';
+import ManageParticipantsDialog from '@/components/ManageParticipantsDialog';
+import LeaveActivityDialog from '@/components/LeaveActivityDialog';
 
 interface Activity {
   id: string;
@@ -91,6 +93,8 @@ export default function ActivityDetail() {
   const [organizer, setOrganizer] = useState<Organizer | null>(null);
   const [realParticipantCount, setRealParticipantCount] = useState<number>(0);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isManageParticipantsOpen, setIsManageParticipantsOpen] = useState(false);
+  const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false);
   const { favorites } = useFavorites(userId);
   
   // Check if chat should auto-open from URL param
@@ -388,6 +392,13 @@ export default function ActivityDetail() {
     loadActivity();
   };
 
+  const handleLeftActivity = () => {
+    setIsLeaveDialogOpen(false);
+    setIsParticipating(false);
+    // Refresh activity data to update participant count
+    loadActivity();
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header 
@@ -587,7 +598,7 @@ export default function ActivityDetail() {
 
                 {/* Action Buttons based on user role */}
                 {isOwner ? (
-                  /* Owner: Show Edit Activity as Primary Action + Chat */
+                  /* Owner: Show Edit Activity + Manage Participants + Chat */
                   <div className="space-y-3">
                     <Button
                       onClick={handleEditActivity}
@@ -597,6 +608,15 @@ export default function ActivityDetail() {
                     >
                       <Pencil className="mr-2 h-5 w-5" />
                       {t('activityDetail.editActivity')}
+                    </Button>
+                    <Button
+                      onClick={() => setIsManageParticipantsOpen(true)}
+                      variant="outline"
+                      className="w-full"
+                      size="lg"
+                    >
+                      <Users className="mr-2 h-5 w-5" />
+                      {t('activityDetail.manageParticipants')}
                     </Button>
                     <ActivityChatDrawer
                       activityId={activity.id}
@@ -610,8 +630,8 @@ export default function ActivityDetail() {
                     />
                   </div>
                 ) : isParticipating ? (
-                  /* Participating: Show Chat as Primary Action */
-                  <>
+                  /* Participating: Show Chat as Primary Action + Cancel Option */
+                  <div className="space-y-3">
                     <ActivityChatDrawer
                       activityId={activity.id}
                       activityTitle={getTranslatedTitle(activity)}
@@ -625,7 +645,14 @@ export default function ActivityDetail() {
                     <p className="text-center text-sm text-muted-foreground">
                       {t('activityDetail.reminderText')}
                     </p>
-                  </>
+                    <Button
+                      variant="ghost"
+                      className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => setIsLeaveDialogOpen(true)}
+                    >
+                      {t('activityDetail.cancelReservation')}
+                    </Button>
+                  </div>
                 ) : (
                   /* Not Participating: Show Join Button */
                   <Button
@@ -665,6 +692,30 @@ export default function ActivityDetail() {
           isOpen={isEditDialogOpen}
           onClose={() => setIsEditDialogOpen(false)}
           onActivityCreated={handleActivityUpdated}
+        />
+      )}
+
+      {/* Manage Participants Dialog (only rendered for owners) */}
+      {isOwner && (
+        <ManageParticipantsDialog
+          activityId={activity.id}
+          activityTitle={getTranslatedTitle(activity)}
+          maxParticipants={activity.max_participants}
+          isOpen={isManageParticipantsOpen}
+          onClose={() => setIsManageParticipantsOpen(false)}
+          onParticipantRemoved={loadActivity}
+        />
+      )}
+
+      {/* Leave Activity Dialog (for participants) */}
+      {isParticipating && userId && (
+        <LeaveActivityDialog
+          activityId={activity.id}
+          activityTitle={getTranslatedTitle(activity)}
+          userId={userId}
+          isOpen={isLeaveDialogOpen}
+          onClose={() => setIsLeaveDialogOpen(false)}
+          onLeft={handleLeftActivity}
         />
       )}
     </div>

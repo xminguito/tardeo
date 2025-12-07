@@ -487,6 +487,15 @@ export default {
     errorSending: "Could not send the message",
     errorLoading: "Could not load the conversation",
   },
+  pwa: {
+    installTitle: "Install Tardeo",
+    installDescription: "Quick access from your home screen",
+    installButton: "Install",
+    iosTitle: "Install Tardeo on your iPhone",
+    iosInstructions: "Add Tardeo to your home screen for the full experience",
+    iosTapShare: "Share",
+    iosAddHome: "Add to Home",
+  },
   globalSearch: {
     button: "Search...",
     placeholder: "Search activities, people...",

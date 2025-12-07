@@ -507,6 +507,15 @@ export default {
     errorSending: "No se pudo enviar el mensaje",
     errorLoading: "No se pudo cargar la conversación",
   },
+  pwa: {
+    installTitle: "Instala Tardeo",
+    installDescription: "Accede más rápido desde tu pantalla de inicio",
+    installButton: "Instalar",
+    iosTitle: "Instala Tardeo en tu iPhone",
+    iosInstructions: "Añade Tardeo a tu pantalla de inicio para una experiencia completa",
+    iosTapShare: "Compartir",
+    iosAddHome: "Añadir a inicio",
+  },
   globalSearch: {
     button: "Buscar...",
     placeholder: "Buscar actividades, personas...",

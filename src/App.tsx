@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { useVoiceActivityTools } from "@/features/activities/hooks/useVoiceActivityTools";
 import VoiceAssistant from "@/components/VoiceAssistant";
+import PWAInstallPrompt from "@/components/pwa/PWAInstallPrompt";
 import { CookieConsentComponent } from "@/components/CookieConsent";
 import { useComingSoon } from "@/hooks/useComingSoon";
 import ComingSoon from "./pages/ComingSoon";
@@ -162,6 +163,7 @@ const AppContent = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
         <VoiceAssistant clientTools={voiceTools} />
+        <PWAInstallPrompt />
       </>
     </UserLocationProvider>
   );

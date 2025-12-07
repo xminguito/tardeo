@@ -737,7 +737,7 @@ serve(async (req) => {
               success: true,
               event_count: events.length,
               sample_events: events.slice(0, 5),
-              unique_event_types: [...new Set(events.map(e => e.event))],
+              unique_event_types: Array.from(new Set(events.map(e => e.event))),
             }),
             {
               status: 200,
@@ -774,10 +774,11 @@ serve(async (req) => {
         data = await fetchRetentionData();
         break;
 
-      case "events_tail":
+      case "events_tail": {
         const limit = params?.limit || 100;
         data = await fetchRecentEvents(limit);
         break;
+      }
 
       default:
         return new Response(

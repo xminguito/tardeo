@@ -1,12 +1,14 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { User, Heart, Settings, LogIn, Users, MessageCircle } from 'lucide-react';
+import { User, Heart, Settings, LogIn, Users, MessageCircle, Search, Command } from 'lucide-react';
 import LanguageSelector from '@/components/LanguageSelector';
 import LocationSelector from '@/components/LocationSelector';
 import NotificationsDropdown from '@/components/NotificationsDropdown';
 import MobileNav from '@/components/MobileNav';
+import GlobalSearch from '@/components/GlobalSearch';
 
 interface HeaderProps {
   user: any;
@@ -17,6 +19,20 @@ interface HeaderProps {
 export default function Header({ user, isUserAdmin = false, favoritesCount = 0 }: HeaderProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  // Global keyboard shortcut for search (Cmd+K / Ctrl+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <header className="bg-gradient-to-r from-primary via-primary/90 to-primary/80 text-primary-foreground py-4 md:py-8 px-4 shadow-xl">
@@ -34,6 +50,16 @@ export default function Header({ user, isUserAdmin = false, favoritesCount = 0 }
             </div>
           </div>
           <div className="flex gap-1 md:gap-3 items-center flex-shrink-0">
+            {/* Search Button - Mobile */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSearchOpen(true)}
+              className="md:hidden text-primary-foreground hover:bg-primary-foreground/10"
+            >
+              <Search className="h-5 w-5" />
+            </Button>
+            
             <div className="hidden md:block">
               <LocationSelector />
             </div>
@@ -41,6 +67,19 @@ export default function Header({ user, isUserAdmin = false, favoritesCount = 0 }
               <LanguageSelector />
             </div>
             <div className="hidden md:flex gap-3 items-center flex-shrink-0">
+              {/* Search Button - Desktop */}
+              <Button
+                variant="secondary"
+                onClick={() => setSearchOpen(true)}
+                className="gap-2 min-w-[180px] justify-start text-muted-foreground hover:text-foreground"
+              >
+                <Search className="h-4 w-4" />
+                <span className="flex-1 text-left">{t('globalSearch.button')}</span>
+                <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
+                  <span className="text-xs">⌘</span>K
+                </kbd>
+              </Button>
+
               {user ? (
                 <>
                   {isUserAdmin && (
@@ -89,6 +128,9 @@ export default function Header({ user, isUserAdmin = false, favoritesCount = 0 }
           </div>
         </div>
       </div>
+
+      {/* Global Search Dialog */}
+      <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
     </header>
   );
 }

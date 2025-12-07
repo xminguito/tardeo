@@ -372,6 +372,44 @@ const VoiceAssistant = ({
       });
     });
   }, []);
+
+  // Listen for global search "Ask AI" events
+  useEffect(() => {
+    const handleOpenAI = (event: CustomEvent<{ query: string }>) => {
+      const query = event.detail?.query;
+      if (query) {
+        // Open the chat panel
+        setShowHistory(true);
+        
+        // Add welcome message if no messages exist
+        if (messages.length === 0) {
+          const welcomeMessage: Message = {
+            role: 'assistant',
+            content: t('voice.welcome', 'Hola, ¿en qué puedo ayudarte? Puedes hablar o escribir un mensaje.'),
+            timestamp: Date.now()
+          };
+          setMessages([welcomeMessage]);
+        }
+        
+        // Send the query as a text message after a short delay
+        setTimeout(() => {
+          handleSendTextMessage(query);
+        }, 500);
+        
+        // Analytics
+        track('assistant_invoked', {
+          mode: 'text',
+          source: 'global_search'
+        });
+      }
+    };
+
+    window.addEventListener('openAIAssistant', handleOpenAI as EventListener);
+    return () => {
+      window.removeEventListener('openAIAssistant', handleOpenAI as EventListener);
+    };
+  }, [messages.length, t, track]);
+
   const startConversation = async () => {
     try {
       setIsConnecting(true);

@@ -467,6 +467,58 @@ export default {
     createNew: "Crear actividad",
     errorLoading: "Error al cargar tus creaciones",
   },
+  organizerDashboard: {
+    // Stats
+    upcomingEvents: "Próximos eventos",
+    totalAttendees: "Total asistentes",
+    averageOccupancy: "Ocupación media",
+    // Tabs
+    myActivities: "Mis Actividades",
+    manageBookings: "Gestión de Reservas",
+    // Bookings Table
+    participant: "Participante",
+    activity: "Actividad",
+    eventDate: "Fecha evento",
+    status: "Estado",
+    actions: "Acciones",
+    confirmed: "Confirmado",
+    anonymous: "Usuario anónimo",
+    noBookings: "Sin reservas",
+    noBookingsDesc: "Aún no hay reservas en tus próximos eventos",
+    errorLoadingBookings: "Error al cargar las reservas",
+    // Actions
+    viewProfile: "Ver perfil",
+    sendMessage: "Enviar mensaje",
+    cancelBooking: "Cancelar reserva",
+    // Remove confirmation
+    confirmRemoveTitle: "¿Cancelar esta reserva?",
+    confirmRemoveDescription: "¿Estás seguro de que quieres cancelar la reserva de {{userName}} en {{activityTitle}}? Esta acción no se puede deshacer.",
+    removeButton: "Cancelar reserva",
+    participantRemoved: "Reserva cancelada correctamente",
+    errorRemovingParticipant: "Error al cancelar la reserva",
+  },
+  directChat: {
+    yesterday: "Ayer",
+    unknown: "Usuario desconocido",
+    anonymous: "Usuario anónimo",
+    startConversation: "Inicia la conversación",
+    sendFirstMessage: "Envía un mensaje a {{name}}",
+    typeMessage: "Escribe un mensaje...",
+    errorSending: "No se pudo enviar el mensaje",
+    errorLoading: "No se pudo cargar la conversación",
+  },
+  globalSearch: {
+    button: "Buscar...",
+    placeholder: "Buscar actividades, personas...",
+    startTyping: "Escribe para buscar",
+    searching: "Buscando...",
+    noResults: "No se encontraron resultados directos",
+    aiAssistant: "Asistente Inteligente",
+    askAI: "Preguntar a la IA sobre:",
+    activities: "Actividades",
+    users: "Personas",
+    anonymous: "Usuario anónimo",
+  },
   admin: {
     title: "Panel de Administración",
     description:

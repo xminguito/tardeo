@@ -14,7 +14,6 @@ import {
   Pencil,
   LayoutGrid,
   ClipboardList,
-  TrendingUp,
   Calendar,
   Percent
 } from 'lucide-react';
@@ -26,7 +25,7 @@ import Header from '@/components/Header';
 import PageTransition from '@/components/PageTransition';
 import CreateActivityDialog from '@/components/CreateActivityDialog';
 import BookingsTable from '@/components/BookingsTable';
-import { format } from 'date-fns';
+import { format, Locale } from 'date-fns';
 import { es } from 'date-fns/locale/es';
 import { ca } from 'date-fns/locale/ca';
 import { enUS } from 'date-fns/locale/en-US';

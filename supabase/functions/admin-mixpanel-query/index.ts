@@ -25,8 +25,19 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-// Simple in-memory cache
-const cache = new Map<string, { data: any; expires: number }>();
+// ============================================
+// Type Definitions
+// ============================================
+
+interface CacheEntry {
+  data: unknown;
+  expires: number;
+}
+
+interface QueryParams {
+  dateRange?: string;
+  limit?: number;
+}
 
 interface QueryRequest {
   type:
@@ -36,17 +47,77 @@ interface QueryRequest {
     | "events_tail"
     | "kpi"
     | "debug_mixpanel";
-  params?: Record<string, any>;
+  params?: QueryParams;
+}
+
+interface MixpanelEventProperties {
+  time: number;
+  distinct_id: string;
+  tool_name?: string;
+  duration_ms?: number;
+  [key: string]: string | number | boolean | undefined;
 }
 
 interface MixpanelEvent {
   event: string;
-  properties: {
-    time: number;
-    distinct_id: string;
-    [key: string]: any;
-  };
+  properties: MixpanelEventProperties;
 }
+
+interface LiveEvent {
+  id: string;
+  timestamp: string;
+  eventName: string;
+  userId: string;
+  properties: Record<string, unknown>;
+}
+
+interface KPIMetrics {
+  dau: number;
+  wau: number;
+  totalReservations: number;
+  pageViews?: number;
+  totalEvents?: number;
+  ttsCostBurnRate: number;
+  _dataSource: string;
+  _dauRange?: string;
+  _wauRange?: string;
+  _error?: string;
+}
+
+interface FunnelStep {
+  step: string;
+  count: number;
+  conversionRate?: number;
+}
+
+interface FunnelData {
+  steps: FunnelStep[];
+  totalConversion: number;
+  dateRange: string;
+  _dataSource: string;
+  _eventCounts?: Record<string, number>;
+}
+
+interface AssistantMetrics {
+  invocationsPerDay: Array<{ date: string; count: number }>;
+  topTools: Array<{ tool: string; count: number }>;
+  avgDuration: number;
+  errorRate: number;
+  totalInvocations?: number;
+  _dataSource: string;
+  _error?: string;
+}
+
+interface RetentionCohort {
+  cohort: string;
+  users: number;
+  d1: number;
+  d7: number;
+  d30: number;
+}
+
+// Simple in-memory cache
+const cache = new Map<string, CacheEntry>();
 
 /**
  * Check if user is admin
@@ -124,12 +195,12 @@ async function queryMixpanelExport(fromDate: string, toDate: string): Promise<Mi
 /**
  * Fetch recent events from DB
  */
-async function fetchRecentEvents(limit = 100): Promise<any[]> {
+async function fetchRecentEvents(limit = 100): Promise<LiveEvent[]> {
   const cacheKey = `events_tail_${limit}`;
   const cached = cache.get(cacheKey);
 
   if (cached && cached.expires > Date.now()) {
-    return cached.data;
+    return cached.data as LiveEvent[];
   }
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -166,13 +237,13 @@ async function fetchRecentEvents(limit = 100): Promise<any[]> {
  * - DAU: Unique users TODAY (from midnight in project timezone)
  * - WAU: Unique users in PAST 7 DAYS (not including today)
  */
-async function fetchKPIMetrics(): Promise<any> {
+async function fetchKPIMetrics(): Promise<KPIMetrics> {
   const cacheKey = "kpi_metrics";
   const cached = cache.get(cacheKey);
 
   if (cached && cached.expires > Date.now()) {
     console.log('[fetchKPIMetrics] Returning cached data');
-    return cached.data;
+    return cached.data as KPIMetrics;
   }
 
   console.log("[fetchKPIMetrics] Querying Mixpanel Export API...");
@@ -289,13 +360,13 @@ async function fetchKPIMetrics(): Promise<any> {
 /**
  * Fetch funnel data from Mixpanel Export API
  */
-async function fetchFunnelData(params: any): Promise<any> {
+async function fetchFunnelData(params?: QueryParams): Promise<FunnelData> {
   const dateRange = params?.dateRange || "7d";
   const cacheKey = `funnel_${dateRange}`;
   const cached = cache.get(cacheKey);
 
   if (cached && cached.expires > Date.now()) {
-    return cached.data;
+    return cached.data as FunnelData;
   }
 
   const daysMap: Record<string, number> = { "7d": 7, "30d": 30, "90d": 90 };
@@ -403,12 +474,12 @@ async function fetchFunnelData(params: any): Promise<any> {
 /**
  * Fetch assistant metrics from Mixpanel
  */
-async function fetchAssistantMetrics(): Promise<any> {
+async function fetchAssistantMetrics(): Promise<AssistantMetrics> {
   const cacheKey = "assistant_metrics";
   const cached = cache.get(cacheKey);
 
   if (cached && cached.expires > Date.now()) {
-    return cached.data;
+    return cached.data as AssistantMetrics;
   }
 
   const today = new Date().toISOString().split("T")[0];
@@ -496,12 +567,12 @@ async function fetchAssistantMetrics(): Promise<any> {
 /**
  * Fetch retention data
  */
-async function fetchRetentionData(): Promise<any> {
+async function fetchRetentionData(): Promise<RetentionCohort[]> {
   const cacheKey = "retention_data";
   const cached = cache.get(cacheKey);
 
   if (cached && cached.expires > Date.now()) {
-    return cached.data;
+    return cached.data as RetentionCohort[];
   }
 
   const today = new Date().toISOString().split("T")[0];
@@ -651,7 +722,7 @@ serve(async (req) => {
     const body: QueryRequest = await req.json();
     const { type, params } = body;
 
-    let data: any;
+    let data: KPIMetrics | FunnelData | AssistantMetrics | RetentionCohort[] | LiveEvent[] | unknown;
 
     switch (type) {
       case "debug_mixpanel": {

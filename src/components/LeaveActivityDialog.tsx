@@ -23,6 +23,15 @@ interface LeaveActivityDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onLeft: () => void;
+  // Optional props for organizer notification
+  organizerId?: string | null;
+  organizerName?: string;
+  participantName?: string;
+  activityDate?: string;
+  activityTime?: string;
+  activityLocation?: string;
+  currentParticipants?: number;
+  maxParticipants?: number;
 }
 
 export default function LeaveActivityDialog({
@@ -32,6 +41,14 @@ export default function LeaveActivityDialog({
   isOpen,
   onClose,
   onLeft,
+  organizerId,
+  organizerName,
+  participantName,
+  activityDate,
+  activityTime,
+  activityLocation,
+  currentParticipants,
+  maxParticipants,
 }: LeaveActivityDialogProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -53,6 +70,30 @@ export default function LeaveActivityDialog({
       if (reason.trim()) {
         console.log('Cancellation reason:', reason);
         // Future: await supabase.from('activity_cancellations').insert({ ... })
+      }
+
+      // Send notification email to organizer (if not leaving own activity)
+      if (organizerId && organizerId !== userId) {
+        try {
+          await supabase.functions.invoke('send-activity-notification', {
+            body: {
+              type: 'organizer_participant_left',
+              recipientUserId: organizerId,
+              recipientName: organizerName || 'Organizador',
+              participantName: participantName || 'Un usuario',
+              activityTitle,
+              activityDate: activityDate || '',
+              activityTime: activityTime || '',
+              activityLocation: activityLocation || '',
+              activityUrl: window.location.href,
+              currentParticipants: Math.max(0, (currentParticipants || 1) - 1),
+              maxParticipants: maxParticipants || 20,
+            },
+          });
+        } catch (emailError) {
+          console.error('Error sending organizer notification email:', emailError);
+          // Don't show error to user, email is secondary
+        }
       }
 
       toast({

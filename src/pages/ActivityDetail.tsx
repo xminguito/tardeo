@@ -288,7 +288,7 @@ export default function ActivityDetail() {
       // Get user email
       const { data: { user: userDetails } } = await supabase.auth.getUser();
 
-      // Send confirmation email
+      // Send confirmation email to participant
       if (userDetails?.email) {
         try {
           await supabase.functions.invoke('send-activity-notification', {
@@ -307,6 +307,30 @@ export default function ActivityDetail() {
         } catch (emailError) {
           console.error('Error sending confirmation email:', emailError);
           // No mostrar error al usuario, el email es secundario
+        }
+      }
+
+      // Send notification email to organizer (if not joining own activity)
+      if (activity.created_by && activity.created_by !== userId) {
+        try {
+          await supabase.functions.invoke('send-activity-notification', {
+            body: {
+              type: 'organizer_new_participant',
+              recipientUserId: activity.created_by,
+              recipientName: organizer?.full_name || organizer?.username || 'Organizador',
+              participantName: profile?.full_name || 'Un usuario',
+              activityTitle: getTranslatedTitle(activity),
+              activityDate: format(new Date(activity.date), 'PPP', { locale: getDateLocale() }),
+              activityTime: activity.time.slice(0, 5),
+              activityLocation: activity.location,
+              activityUrl: window.location.href,
+              currentParticipants: realParticipantCount + 1,
+              maxParticipants: activity.max_participants,
+            },
+          });
+        } catch (emailError) {
+          console.error('Error sending organizer notification email:', emailError);
+          // Don't show error to user, email is secondary
         }
       }
 
@@ -716,6 +740,15 @@ export default function ActivityDetail() {
           isOpen={isLeaveDialogOpen}
           onClose={() => setIsLeaveDialogOpen(false)}
           onLeft={handleLeftActivity}
+          // Props for organizer notification
+          organizerId={activity.created_by}
+          organizerName={organizer?.full_name || organizer?.username || 'Organizador'}
+          participantName={user?.user_metadata?.full_name || 'Un usuario'}
+          activityDate={format(new Date(activity.date), 'PPP', { locale: getDateLocale() })}
+          activityTime={activity.time.slice(0, 5)}
+          activityLocation={activity.location}
+          currentParticipants={realParticipantCount}
+          maxParticipants={activity.max_participants}
         />
       )}
     </div>

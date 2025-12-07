@@ -9,11 +9,12 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-type EmailType = "confirmation" | "reminder" | "cancellation" | "new_activity";
+type EmailType = "confirmation" | "reminder" | "cancellation" | "new_activity" | "organizer_new_participant" | "organizer_participant_left";
 
 interface BaseEmailRequest {
   type: EmailType;
-  recipientEmail: string;
+  recipientEmail?: string;  // Optional: can be looked up via recipientUserId
+  recipientUserId?: string; // Optional: used to look up email from auth.users
   recipientName: string;
 }
 
@@ -57,7 +58,33 @@ interface NewActivityEmailData extends BaseEmailRequest {
   activityUrl: string;
 }
 
-type EmailRequest = ConfirmationEmailData | ReminderEmailData | CancellationEmailData | NewActivityEmailData;
+// Organizer notification when someone joins their activity
+interface OrganizerNewParticipantData extends BaseEmailRequest {
+  type: "organizer_new_participant";
+  participantName: string;
+  activityTitle: string;
+  activityDate: string;
+  activityTime: string;
+  activityLocation: string;
+  activityUrl: string;
+  currentParticipants: number;
+  maxParticipants: number;
+}
+
+// Organizer notification when someone leaves their activity
+interface OrganizerParticipantLeftData extends BaseEmailRequest {
+  type: "organizer_participant_left";
+  participantName: string;
+  activityTitle: string;
+  activityDate: string;
+  activityTime: string;
+  activityLocation: string;
+  activityUrl: string;
+  currentParticipants: number;
+  maxParticipants: number;
+}
+
+type EmailRequest = ConfirmationEmailData | ReminderEmailData | CancellationEmailData | NewActivityEmailData | OrganizerNewParticipantData | OrganizerParticipantLeftData;
 
 // Function to replace template variables
 function replaceVariables(template: string, data: Record<string, string>): string {
@@ -76,14 +103,30 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const emailData: EmailRequest = await req.json();
-    const { type, recipientEmail, recipientName } = emailData;
+    const { type, recipientEmail: providedEmail, recipientUserId, recipientName } = emailData;
 
-    console.log(`Processing ${type} email for ${recipientEmail}`);
-
-    // Initialize Supabase client
+    // Initialize Supabase client first (needed for email lookup)
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Resolve recipient email - either provided directly or looked up via user ID
+    let recipientEmail = providedEmail;
+    if (!recipientEmail && recipientUserId) {
+      console.log(`Looking up email for user ID: ${recipientUserId}`);
+      const { data: userData, error: userError } = await supabase.auth.admin.getUserById(recipientUserId);
+      if (userError || !userData.user?.email) {
+        console.error('Failed to look up user email:', userError);
+        throw new Error(`Could not find email for user: ${recipientUserId}`);
+      }
+      recipientEmail = userData.user.email;
+    }
+
+    if (!recipientEmail) {
+      throw new Error('No recipient email provided and could not look up from user ID');
+    }
+
+    console.log(`Processing ${type} email for ${recipientEmail}`);
 
     // Fetch the template from database
     const { data: template, error: templateError } = await supabase
@@ -145,6 +188,42 @@ const handler = async (req: Request): Promise<Response> => {
         activity_location: data.activityLocation,
         activity_cost: data.activityCost,
         activity_url: data.activityUrl,
+      };
+    } else if (type === "organizer_new_participant") {
+      const data = emailData as OrganizerNewParticipantData;
+      const spotsLeft = Math.max(0, data.maxParticipants - data.currentParticipants);
+      variables = {
+        ...variables,
+        organizer_name: recipientName,
+        user_name: data.participantName,
+        participant_name: data.participantName,
+        user_initial: data.participantName.charAt(0).toUpperCase(),
+        activity_title: data.activityTitle,
+        activity_date: data.activityDate,
+        activity_time: data.activityTime,
+        activity_location: data.activityLocation,
+        activity_url: data.activityUrl,
+        current_participants: data.currentParticipants.toString(),
+        max_participants: data.maxParticipants.toString(),
+        spots_left: spotsLeft.toString(),
+      };
+    } else if (type === "organizer_participant_left") {
+      const data = emailData as OrganizerParticipantLeftData;
+      const spotsLeft = Math.max(0, data.maxParticipants - data.currentParticipants);
+      variables = {
+        ...variables,
+        organizer_name: recipientName,
+        user_name: data.participantName,
+        participant_name: data.participantName,
+        user_initial: data.participantName.charAt(0).toUpperCase(),
+        activity_title: data.activityTitle,
+        activity_date: data.activityDate,
+        activity_time: data.activityTime,
+        activity_location: data.activityLocation,
+        activity_url: data.activityUrl,
+        current_participants: data.currentParticipants.toString(),
+        max_participants: data.maxParticipants.toString(),
+        spots_left: spotsLeft.toString(),
       };
     }
 

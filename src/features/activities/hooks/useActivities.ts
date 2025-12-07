@@ -47,7 +47,7 @@ async function enrichActivitiesWithParticipants(
   });
 
   // Fetch profiles for preview
-  let profilesMap = new Map<string, ParticipantPreview>();
+  const profilesMap = new Map<string, ParticipantPreview>();
   if (userIdsToFetch.size > 0) {
     const { data: profiles } = await supabase
       .from('profiles')

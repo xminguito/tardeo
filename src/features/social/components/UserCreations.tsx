@@ -92,7 +92,7 @@ export default function UserCreations({ userId, isPublic = true }: UserCreations
       });
 
       // Check if current user is participating in any of these activities
-      let userParticipationMap: Record<string, boolean> = {};
+      const userParticipationMap: Record<string, boolean> = {};
       if (currentUserId) {
         const { data: userParticipations } = await supabase
           .from("activity_participants")

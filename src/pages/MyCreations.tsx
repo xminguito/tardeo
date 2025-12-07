@@ -377,8 +377,8 @@ export default function MyCreations() {
 
       {/* Create Activity Dialog */}
       <CreateActivityDialog
-        open={showCreateDialog}
-        onOpenChange={setShowCreateDialog}
+        isOpen={showCreateDialog}
+        onClose={() => setShowCreateDialog(false)}
         onActivityCreated={handleActivityCreated}
       />
     </div>

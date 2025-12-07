@@ -409,14 +409,7 @@ export default function UserDashboardHero({
     api?.scrollNext();
   }, [api]);
 
-  // Safety check
-  if (!activities || activities.length === 0) {
-    return null;
-  }
-
-  const currentActivity = activities[current] || activities[0];
-
-  // Countdown labels based on language
+  // Countdown labels based on language - MUST be before early return (React hooks rules)
   const countdownLabels = useMemo(() => {
     const lang = i18n.language;
     const labels: Record<string, { days: string; hours: string; minutes: string; seconds: string }> = {
@@ -453,6 +446,13 @@ export default function UserDashboardHero({
       default: return es;
     }
   }, [i18n.language]);
+
+  // Safety check - AFTER all hooks
+  if (!activities || activities.length === 0) {
+    return null;
+  }
+
+  const currentActivity = activities[current] || activities[0];
 
   // Use current activity's image or fallback gradient
   const backgroundStyle = currentActivity.image_url

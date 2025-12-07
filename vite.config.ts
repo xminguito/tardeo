@@ -14,11 +14,11 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === "development" && componentTagger(),
     VitePWA({
-      // SAFE MODE: Unregister any existing broken service workers
+      // RECOVERY MODE: Deploy self-destroying SW to replace broken ones
       selfDestroying: true,
       registerType: "autoUpdate",
-      // Disable SW injection - manifest only mode
-      injectRegister: false,
+      // Enable SW injection so browser fetches new sw.js and replaces broken one
+      injectRegister: 'auto',
       includeAssets: [
         "favicon.ico",
         "apple-touch-icon.png",

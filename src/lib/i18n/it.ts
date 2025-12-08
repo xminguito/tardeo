@@ -27,6 +27,7 @@ export default {
     rights: "Tutti i diritti riservati.",
     navigation: "Navigazione",
     explore: "Esplora Attività",
+    aboutUs: "Chi Siamo",
     legal: "Legale",
     privacy: "Informativa sulla Privacy",
     terms: "Termini di Servizio",

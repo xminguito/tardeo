@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Search, User, Instagram, Twitter, Github } from 'lucide-react';
+import {Home, Search, User, Instagram, Twitter, Github, Info} from 'lucide-react';
 
 export default function Footer() {
   const { t } = useTranslation();
@@ -59,6 +59,13 @@ export default function Footer() {
               >
                 <User className="h-4 w-4" />
                 {t('nav.profile', 'Mi Perfil')}
+              </Link>
+              <Link
+                to="/about"
+                className="text-sm text-muted-foreground hover:text-primary transition-colors inline-flex items-center justify-center md:justify-start gap-2"
+                >
+                <Info className="h-4 w-4" />
+                {t('footer.aboutUs', 'Sobre Nosotros')}
               </Link>
             </nav>
           </div>

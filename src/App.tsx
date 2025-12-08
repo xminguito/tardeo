@@ -37,6 +37,7 @@ import EmailTemplates from "./pages/EmailTemplates";
 import AdminLayout from "./layouts/AdminLayout";
 import Onboarding from "./pages/Onboarding";
 import BottomNav from "./components/BottomNav";
+import Footer from "./components/Footer";
 import { UserLocationProvider } from "@/hooks/useUserLocation";
 import { initAnalytics, track } from "@/lib/analytics";
 import { RealtimeNotificationsProvider } from "@/components/RealtimeNotificationsProvider";
@@ -281,6 +282,10 @@ const AppContent = () => {
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        
+        {/* Footer - Hidden on auth, onboarding, and admin routes (handled internally) */}
+        <Footer />
+        
         <VoiceAssistant clientTools={voiceTools} />
         <PWAInstallPrompt />
         

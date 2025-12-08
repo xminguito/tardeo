@@ -91,7 +91,7 @@ export default function LocationSelector() {
       <PopoverTrigger asChild>
         <Button 
           variant="secondary" 
-          className="gap-2 hover:bg-secondary/80 transition-colors"
+          className="gap-1 hover:bg-secondary/80 transition-colors"
         >
           <MapPin className="h-4 w-4" />
           <span className="hidden md:inline">

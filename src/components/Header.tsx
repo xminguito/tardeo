@@ -47,10 +47,10 @@ export default function Header({ user, isUserAdmin = false, favoritesCount = 0 }
             />
             <div className="min-w-0 flex-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/')}>
               <img src={tardeoLogo} alt="Tardeo" className="h-10 md:h-16 w-auto" />
-              <p className="text-sm md:text-xl opacity-90 truncate">{t('home.subtitle')}</p>
+              <p className="text-sm pl-3.5 opacity-90 truncate">{t('home.subtitle')}</p>
             </div>
           </div>
-          <div className="flex gap-1 md:gap-3 items-center flex-shrink-0">
+          <div className="flex gap-1 md:gap-3 items-center flex-shrink-0 pr-4">
             {/* Search Button - Mobile */}
             <Button
               variant="ghost"
@@ -60,37 +60,34 @@ export default function Header({ user, isUserAdmin = false, favoritesCount = 0 }
             >
               <Search className="h-5 w-5" />
             </Button>
-            
-            <div className="hidden md:block">
-              <LocationSelector />
-            </div>
+
             <div className="hidden md:block">
               <LanguageSelector />
+            </div>
+            <div className="hidden md:block">
+              <LocationSelector />
             </div>
             <div className="hidden md:flex gap-3 items-center flex-shrink-0">
               {/* Search Button - Desktop */}
               <Button
                 variant="secondary"
                 onClick={() => setSearchOpen(true)}
-                className="gap-2 min-w-[180px] justify-start text-muted-foreground hover:text-foreground"
+                className="gap-1 min-w-36 justify-start text-muted-foreground hover:text-foreground"
               >
-                <Search className="h-4 w-4" />
-                <span className="flex-1 text-left">{t('globalSearch.button')}</span>
-                <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
-                  <span className="text-xs">⌘</span>K
-                </kbd>
+                <Search className="h-4 w-4 text-white" />
+                <span className="flex-1 text-left text-white">{t('globalSearch.button')}</span>
               </Button>
 
               {user ? (
                 <>
                   {isUserAdmin && (
                     <Button variant="secondary" onClick={() => navigate("/admin")}>
-                      <Settings className="mr-2 h-5 w-5" />
+                      <Settings className="mr-1 h-5 w-5" />
                       Admin
                     </Button>
                   )}
                   <Button variant="secondary" onClick={() => navigate("/mi-cuenta")}>
-                    <User className="mr-2 h-5 w-5" />
+                    <User className="mr-1 h-5 w-5" />
                     {t('home.profile')}
                   </Button>
                   <Button 
@@ -120,7 +117,7 @@ export default function Header({ user, isUserAdmin = false, favoritesCount = 0 }
                 </>
               ) : (
                 <Button variant="secondary" onClick={() => navigate("/auth")}>
-                  <LogIn className="mr-2 h-5 w-5" />
+                  <LogIn className="mr-1 h-5 w-5" />
                   {t('home.login')}
                 </Button>
               )}

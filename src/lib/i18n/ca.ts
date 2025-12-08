@@ -22,6 +22,18 @@ export default {
     notifications: 'Avisos',
     profile: 'Perfil',
   },
+  footer: {
+    slogan: "Troba el teu pla ideal",
+    rights: "Tots els drets reservats.",
+    navigation: "Navegació",
+    explore: "Explorar Activitats",
+    legal: "Legal",
+    privacy: "Política de Privacitat",
+    terms: "Termes de Servei",
+    cookies: "Política de Cookies",
+    madeWith: "Fet amb",
+    inSpain: "a Espanya",
+  },
   cookies: {
     modal: {
       title: "🍪 Utilitzem cookies",

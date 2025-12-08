@@ -339,10 +339,11 @@ function CarouselDots({ count, current, onDotClick }: CarouselDotsProps) {
           key={index}
           onClick={() => onDotClick(index)}
           className={cn(
-            "h-2 rounded-full transition-all duration-300",
+            // Override global button styles from index.css
+            "!h-2 !min-h-0 !p-0 !text-base rounded-full transition-all duration-300 border-0",
             index === current
-              ? "bg-white w-5"
-              : "bg-white/40 hover:bg-white/60 w-2"
+              ? "bg-white !w-5"
+              : "bg-white/40 hover:bg-white/60 !w-2"
           )}
           aria-label={`Go to slide ${index + 1}`}
           aria-current={index === current ? 'true' : 'false'}
@@ -488,6 +489,7 @@ export default function UserDashboardHero({
         {/* Carousel Container */}
         <div className="relative">
           {/* Navigation Arrows - visible, subtle, centered on edges */}
+          {/* Note: Using explicit !important overrides to counter global button styles in index.css */}
           {showNavigation && (
             <>
               <button
@@ -495,28 +497,28 @@ export default function UserDashboardHero({
                 disabled={!canScrollPrev}
                 className={cn(
                   "absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:-translate-x-4 z-20",
-                  "h-8 w-8 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm",
-                  "flex items-center justify-center text-white transition-all",
+                  "!h-8 !w-8 !min-h-0 !p-0 !rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm",
+                  "flex items-center justify-center transition-all border-0",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white",
                   !canScrollPrev && "opacity-30 cursor-not-allowed"
                 )}
                 aria-label="Previous activity"
               >
-                <ChevronLeft className="h-5 w-5" />
+                <ChevronLeft className="!h-5 !w-5 text-white" />
               </button>
               <button
                 onClick={handleNext}
                 disabled={!canScrollNext}
                 className={cn(
                   "absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-4 z-20",
-                  "h-8 w-8 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm",
-                  "flex items-center justify-center text-white transition-all",
+                  "!h-8 !w-8 !min-h-0 !p-0 !rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm",
+                  "flex items-center justify-center transition-all border-0",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white",
                   !canScrollNext && "opacity-30 cursor-not-allowed"
                 )}
                 aria-label="Next activity"
               >
-                <ChevronRight className="h-5 w-5" />
+                <ChevronRight className="!h-5 !w-5 text-white" />
               </button>
             </>
           )}

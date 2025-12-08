@@ -22,6 +22,18 @@ export default {
     notifications: 'Alertes',
     profile: 'Profil',
   },
+  footer: {
+    slogan: "Trouvez votre plan idéal",
+    rights: "Tous droits réservés.",
+    navigation: "Navigation",
+    explore: "Explorer les Activités",
+    legal: "Mentions légales",
+    privacy: "Politique de Confidentialité",
+    terms: "Conditions d'Utilisation",
+    cookies: "Politique de Cookies",
+    madeWith: "Fait avec",
+    inSpain: "en Espagne",
+  },
   cookies: {
     modal: {
       title: "🍪 Nous utilisons des cookies",

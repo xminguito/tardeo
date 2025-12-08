@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import tardeoLogo from '@/assets/tardeo-logo.jpg';
 import { Badge } from '@/components/ui/badge';
 import { User, Heart, Settings, LogIn, Users, MessageCircle, Search, Command } from 'lucide-react';
 import LanguageSelector from '@/components/LanguageSelector';
@@ -45,7 +46,7 @@ export default function Header({ user, isUserAdmin = false, favoritesCount = 0 }
               favoritesCount={favoritesCount}
             />
             <div className="min-w-0 flex-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/')}>
-              <h1 className="text-2xl md:text-5xl font-bold mb-1 md:mb-2 truncate">{t('home.title')}</h1>
+              <img src={tardeoLogo} alt="Tardeo" className="h-10 md:h-16 w-auto" />
               <p className="text-sm md:text-xl opacity-90 truncate">{t('home.subtitle')}</p>
             </div>
           </div>

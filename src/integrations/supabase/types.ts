@@ -690,6 +690,9 @@ export type Database = {
           id: string
           is_online: boolean | null
           last_seen_at: string | null
+          latitude: number | null
+          longitude: number | null
+          onboarding_completed: boolean | null
           profile_visibility: string | null
           updated_at: string | null
           username: string | null
@@ -709,6 +712,9 @@ export type Database = {
           id: string
           is_online?: boolean | null
           last_seen_at?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          onboarding_completed?: boolean | null
           profile_visibility?: string | null
           updated_at?: string | null
           username?: string | null
@@ -728,6 +734,9 @@ export type Database = {
           id?: string
           is_online?: boolean | null
           last_seen_at?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          onboarding_completed?: boolean | null
           profile_visibility?: string | null
           updated_at?: string | null
           username?: string | null

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,13 +16,16 @@ import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
 import HeroSlider from "@/components/HeroSlider";
 import UserDashboardHero from "@/components/UserDashboardHero";
+import { Plus } from "lucide-react";
 
 const Index = () => {
   const [user, setUser] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<{ full_name: string | null } | null>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -43,6 +46,31 @@ const Index = () => {
   useEffect(() => {
     checkUser();
   }, []);
+
+  // Check if we should open the create dialog (coming back from auth)
+  useEffect(() => {
+    if (!user) return;
+    
+    // Check for state (password/magic link login)
+    if (location.state?.openCreateDialog) {
+      setIsCreateDialogOpen(true);
+      // Clear the state to prevent reopening on refresh
+      window.history.replaceState({}, document.title);
+      return;
+    }
+    
+    // Check for URL param (OAuth login)
+    const params = new URLSearchParams(location.search);
+    if (params.get('openCreate') === 'true') {
+      setIsCreateDialogOpen(true);
+      // Clear the URL param to prevent reopening on refresh
+      params.delete('openCreate');
+      const newUrl = params.toString() 
+        ? `${window.location.pathname}?${params.toString()}`
+        : window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, [user, location.state, location.search]);
 
   const checkUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -106,6 +134,16 @@ const Index = () => {
     queryClient.invalidateQueries({ queryKey: ACTIVITIES_QUERY_KEY });
   };
 
+  const handleCreateClick = () => {
+    if (user) {
+      // User is logged in - open the dialog
+      setIsCreateDialogOpen(true);
+    } else {
+      // Guest - redirect to auth with return state
+      navigate("/auth", { state: { from: "create-activity" } });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       <Header 
@@ -153,13 +191,25 @@ const Index = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
             <h2 className="text-2xl md:text-3xl font-semibold">{t('home.featuredActivities')}</h2>
             <div className="flex gap-2 md:gap-3 flex-shrink-0">
-              {user && (
-                  <CreateActivityDialog onActivityCreated={handleActivityCreated} />
-              )}
+              <Button 
+                size="sm" 
+                className="md:size-default gap-2"
+                onClick={handleCreateClick}
+              >
+                <Plus className="h-4 w-4" />
+                {t('home.createActivity')}
+              </Button>
               <Button variant="outline" size="sm" className="md:size-default bg-secondary text-white" onClick={() => navigate("/actividades")}>
                 {t('home.viewAll')}
               </Button>
             </div>
+            
+            {/* Create Activity Dialog - Controlled mode */}
+            <CreateActivityDialog 
+              onActivityCreated={handleActivityCreated}
+              isOpen={isCreateDialogOpen}
+              onClose={() => setIsCreateDialogOpen(false)}
+            />
           </div>
           {loading ? (
             <p className="text-muted-foreground text-lg">{t('common.loading')}</p>

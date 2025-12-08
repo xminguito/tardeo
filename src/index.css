@@ -206,3 +206,19 @@ All colors MUST be HSL.
 .pac-container .pac-matched {
   font-weight: 700;
 }
+
+/* Safe Area Support for iPhone X+ and notched devices */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Ensure body has bottom padding on mobile for bottom nav */
+@media (max-width: 767px) {
+  body {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}

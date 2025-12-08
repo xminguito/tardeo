@@ -36,6 +36,7 @@ import EmailTester from "./pages/EmailTester";
 import EmailTemplates from "./pages/EmailTemplates";
 import AdminLayout from "./layouts/AdminLayout";
 import Onboarding from "./pages/Onboarding";
+import BottomNav from "./components/BottomNav";
 import { UserLocationProvider } from "@/hooks/useUserLocation";
 import { initAnalytics, track } from "@/lib/analytics";
 import { RealtimeNotificationsProvider } from "@/components/RealtimeNotificationsProvider";
@@ -158,8 +159,24 @@ const AppContent = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [filters, setFilters] = useState<ActivityFilters>({});
+  const [user, setUser] = useState<any>(null);
   const voiceTools = useVoiceActivityTools(setFilters, filters, navigate);
   const { settings, loading: comingSoonLoading, shouldShowComingSoon, grantAccess } = useComingSoon();
+
+  // Get current user for BottomNav
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user || null);
+    };
+    getUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
  
   // Track page navigation
   useEffect(() => {
@@ -266,6 +283,13 @@ const AppContent = () => {
         </Routes>
         <VoiceAssistant clientTools={voiceTools} />
         <PWAInstallPrompt />
+        
+        {/* Bottom Navigation - Hide on auth, onboarding, and admin routes */}
+        {!location.pathname.startsWith('/auth') && 
+         !location.pathname.startsWith('/onboarding') && 
+         !location.pathname.startsWith('/admin') && (
+          <BottomNav user={user} />
+        )}
       </OnboardingGuard>
     </UserLocationProvider>
   );

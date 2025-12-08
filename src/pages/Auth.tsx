@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -47,14 +47,19 @@ const Auth = () => {
   const [authMethod, setAuthMethod] = useState<"magic" | "password">("password");
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { t } = useTranslation();
+  
+  // Check if user came from create-activity flow
+  const fromCreateActivity = (location.state as { from?: string })?.from === "create-activity";
 
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate("/");
+        // Redirect with state if coming from create-activity
+        navigate("/", fromCreateActivity ? { state: { openCreateDialog: true } } : undefined);
       }
     };
     checkUser();
@@ -65,12 +70,13 @@ const Auth = () => {
           title: t('auth.welcomeBack'),
           description: t('auth.loginSuccess'),
         });
-        navigate("/");
+        // Redirect with state if coming from create-activity
+        navigate("/", fromCreateActivity ? { state: { openCreateDialog: true } } : undefined);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, toast, t]);
+  }, [navigate, toast, t, fromCreateActivity]);
 
   const emailSchema = z.object({
     email: z.string()
@@ -89,10 +95,15 @@ const Auth = () => {
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
     try {
+      // Add query param if coming from create-activity flow
+      const redirectUrl = fromCreateActivity 
+        ? `${window.location.origin}/?openCreate=true`
+        : `${window.location.origin}/`;
+        
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: redirectUrl,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

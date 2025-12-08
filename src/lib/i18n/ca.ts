@@ -15,6 +15,13 @@ export default {
     confirm: 'Confirmar',
     create: 'Crear',
   },
+  nav: {
+    home: 'Inici',
+    explore: 'Explorar',
+    create: 'Crear',
+    notifications: 'Avisos',
+    profile: 'Perfil',
+  },
   cookies: {
     modal: {
       title: "🍪 Utilitzem cookies",

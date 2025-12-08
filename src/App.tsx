@@ -36,6 +36,7 @@ import EmailTester from "./pages/EmailTester";
 import EmailTemplates from "./pages/EmailTemplates";
 import AdminLayout from "./layouts/AdminLayout";
 import Onboarding from "./pages/Onboarding";
+import About from "./pages/About";
 import BottomNav from "./components/BottomNav";
 import Footer from "./components/Footer";
 import { UserLocationProvider } from "@/hooks/useUserLocation";
@@ -208,6 +209,7 @@ const AppContent = () => {
           <Route path="/notificaciones" element={<Notifications />} />
           <Route path="/actividades" element={<ActivitiesCalendar />} />
           <Route path="/actividades/:slug" element={<ActivityDetail />} />
+          <Route path="/sobre-tardeo" element={<About />} />
           
           {/* Social Routes */}
           <Route path="/chat" element={

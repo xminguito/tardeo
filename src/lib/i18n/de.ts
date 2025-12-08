@@ -35,6 +35,47 @@ export default {
     madeWith: "Gemacht mit",
     inSpain: "in Spanien",
   },
+  about: {
+    hero: {
+      title: "Mehr als eine App, eine Bewegung.",
+      subtitle: "Die Magie des persönlichen Kennenlernens zurückbringen.",
+    },
+    video: {
+      fallback: "Ihr Browser unterstützt keine Videowiedergabe.",
+      caption: "Entdecken Sie, wie Tardeo die Art und Weise verändert, wie wir uns verbinden.",
+    },
+    mission: {
+      title: "Unsere Mission",
+      p1: "In einer digital immer stärker vernetzten Welt fühlen wir uns paradoxerweise einsamer denn je. Tardeo entstand aus einer einfachen, aber kraftvollen Idee: den Menschen die Freude zurückzugeben, sich im echten Leben zu treffen.",
+      p2: "Wir glauben, dass die besten Freundschaften, die wertvollsten Erinnerungen und die bereicherndsten Erfahrungen entstehen, wenn wir das Handy weglegen und es wagen, den gegenwärtigen Moment von Angesicht zu Angesicht mit anderen zu leben.",
+      p3: "Tardeo ist Ihre Brücke zu einer lebendigen Gemeinschaft von Menschen, die wie Sie nach mehr suchen: authentische Pläne, echte Gespräche und Verbindungen, die über den Bildschirm hinaus bestehen.",
+    },
+    values: {
+      title: "Was uns ausmacht",
+      connection: {
+        title: "Echte Verbindung",
+        description: "Wir glauben an die Kraft authentischer menschlicher Verbindungen, jenseits der Bildschirme.",
+      },
+      community: {
+        title: "Lokale Gemeinschaft",
+        description: "Wir fördern Treffen in Ihrer Stadt mit Menschen, die Ihre Interessen teilen.",
+      },
+      experiences: {
+        title: "Einzigartige Erlebnisse",
+        description: "Jede Aktivität ist eine Gelegenheit, unvergessliche Erinnerungen zu schaffen.",
+      },
+      magic: {
+        title: "Die Magie des Persönlichen",
+        description: "Wir bringen die Aufregung zurück, neue Menschen von Angesicht zu Angesicht zu treffen.",
+      },
+    },
+    cta: {
+      title: "Bereit, sich zu verbinden?",
+      description: "Schließen Sie sich Tausenden von Menschen an, die bereits unvergessliche Erinnerungen schaffen.",
+      explore: "Aktivitäten entdecken",
+      join: "Konto erstellen",
+    },
+  },
   cookies: {
     modal: {
       title: "🍪 Wir verwenden Cookies",

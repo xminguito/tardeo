@@ -61,7 +61,7 @@ export default function Footer() {
                 {t('nav.profile', 'Mi Perfil')}
               </Link>
               <Link
-                to="/about"
+                to="/sobre-tardeo"
                 className="text-sm text-muted-foreground hover:text-primary transition-colors inline-flex items-center justify-center md:justify-start gap-2"
                 >
                 <Info className="h-4 w-4" />

@@ -35,6 +35,47 @@ export default {
     madeWith: "Fait avec",
     inSpain: "en Espagne",
   },
+  about: {
+    hero: {
+      title: "Plus qu'une app, un mouvement.",
+      subtitle: "Retrouver la magie de se rencontrer en personne.",
+    },
+    video: {
+      fallback: "Votre navigateur ne supporte pas la lecture vidéo.",
+      caption: "Découvrez comment Tardeo change notre façon de se connecter.",
+    },
+    mission: {
+      title: "Notre Mission",
+      p1: "Dans un monde de plus en plus connecté numériquement, nous nous sentons paradoxalement plus seuls que jamais. Tardeo est né d'une idée simple mais puissante : redonner aux gens la joie de se rencontrer dans la vraie vie.",
+      p2: "Nous croyons que les meilleures amitiés, les souvenirs les plus précieux et les expériences les plus enrichissantes arrivent quand nous posons notre téléphone et osons vivre le moment présent, face à face, avec d'autres personnes.",
+      p3: "Tardeo est votre pont vers une communauté vibrante de personnes qui, comme vous, cherchent quelque chose de plus : des plans authentiques, des conversations réelles et des connexions qui perdurent au-delà de l'écran.",
+    },
+    values: {
+      title: "Ce qui nous définit",
+      connection: {
+        title: "Connexion Réelle",
+        description: "Nous croyons au pouvoir des connexions humaines authentiques, au-delà des écrans.",
+      },
+      community: {
+        title: "Communauté Locale",
+        description: "Nous favorisons les rencontres dans votre ville, avec des personnes qui partagent vos intérêts.",
+      },
+      experiences: {
+        title: "Expériences Uniques",
+        description: "Chaque activité est une opportunité de créer des souvenirs inoubliables.",
+      },
+      magic: {
+        title: "La Magie du Présentiel",
+        description: "Nous retrouvons l'émotion de rencontrer de nouvelles personnes face à face.",
+      },
+    },
+    cta: {
+      title: "Prêt à vous connecter ?",
+      description: "Rejoignez des milliers de personnes qui créent déjà des souvenirs inoubliables.",
+      explore: "Explorer les Activités",
+      join: "Créer un Compte",
+    },
+  },
   cookies: {
     modal: {
       title: "🍪 Nous utilisons des cookies",

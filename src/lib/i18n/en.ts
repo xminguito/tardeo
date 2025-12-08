@@ -35,6 +35,47 @@ export default {
     madeWith: "Made with",
     inSpain: "in Spain",
   },
+  about: {
+    hero: {
+      title: "More than an app, a movement.",
+      subtitle: "Bringing back the magic of meeting in person.",
+    },
+    video: {
+      fallback: "Your browser does not support video playback.",
+      caption: "Discover how Tardeo is changing the way we connect.",
+    },
+    mission: {
+      title: "Our Mission",
+      p1: "In a world increasingly connected digitally, we paradoxically feel lonelier than ever. Tardeo was born from a simple but powerful idea: to bring back the joy of meeting people in real life.",
+      p2: "We believe the best friendships, the most valuable memories, and the most enriching experiences happen when we put down our phones and dare to live the present moment, face to face, with others.",
+      p3: "Tardeo is your bridge to a vibrant community of people who, like you, are looking for something more: authentic plans, real conversations, and connections that last beyond the screen.",
+    },
+    values: {
+      title: "What defines us",
+      connection: {
+        title: "Real Connection",
+        description: "We believe in the power of authentic human connections, beyond screens.",
+      },
+      community: {
+        title: "Local Community",
+        description: "We foster meetups in your city with people who share your interests.",
+      },
+      experiences: {
+        title: "Unique Experiences",
+        description: "Every activity is an opportunity to create unforgettable memories.",
+      },
+      magic: {
+        title: "The Magic of In-Person",
+        description: "We bring back the excitement of meeting new people face to face.",
+      },
+    },
+    cta: {
+      title: "Ready to connect?",
+      description: "Join thousands of people already creating unforgettable memories.",
+      explore: "Explore Activities",
+      join: "Create Account",
+    },
+  },
   cookies: {
     modal: {
       title: "🍪 We use cookies",

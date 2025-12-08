@@ -35,6 +35,47 @@ export default {
     madeWith: "Hecho con",
     inSpain: "en España",
   },
+  about: {
+    hero: {
+      title: "Más que una app, un movimiento.",
+      subtitle: "Recuperando la magia de conocerse en persona.",
+    },
+    video: {
+      fallback: "Tu navegador no soporta la reproducción de vídeos.",
+      caption: "Descubre cómo Tardeo está cambiando la forma de conectar.",
+    },
+    mission: {
+      title: "Nuestra Misión",
+      p1: "En un mundo cada vez más conectado digitalmente, paradójicamente nos sentimos más solos que nunca. Tardeo nació de una idea simple pero poderosa: devolver a las personas la alegría de conocerse en la vida real.",
+      p2: "Creemos que las mejores amistades, los recuerdos más valiosos y las experiencias más enriquecedoras suceden cuando dejamos el móvil y nos atrevemos a vivir el momento presente, cara a cara, con otras personas.",
+      p3: "Tardeo es tu puente hacia una comunidad vibrante de personas que, como tú, buscan algo más: planes auténticos, conversaciones reales y conexiones que perduran más allá de la pantalla.",
+    },
+    values: {
+      title: "Lo que nos define",
+      connection: {
+        title: "Conexión Real",
+        description: "Creemos en el poder de las conexiones humanas auténticas, más allá de las pantallas.",
+      },
+      community: {
+        title: "Comunidad Local",
+        description: "Fomentamos encuentros en tu ciudad, con personas que comparten tus intereses.",
+      },
+      experiences: {
+        title: "Experiencias Únicas",
+        description: "Cada actividad es una oportunidad para crear recuerdos inolvidables.",
+      },
+      magic: {
+        title: "La Magia de lo Presencial",
+        description: "Recuperamos la emoción de conocer gente nueva cara a cara.",
+      },
+    },
+    cta: {
+      title: "¿Listo para conectar?",
+      description: "Únete a miles de personas que ya están creando recuerdos inolvidables.",
+      explore: "Explorar Actividades",
+      join: "Crear Cuenta",
+    },
+  },
   cookies: {
     modal: {
       title: "🍪 Usamos cookies",

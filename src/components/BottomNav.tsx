@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '@/integrations/supabase/client';
-import { Home, Search, Plus, Bell, User } from 'lucide-react';
+import { Home, Search, Plus, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CreateActivityDialog from '@/components/CreateActivityDialog';
 import GlobalSearch from '@/components/GlobalSearch';
@@ -19,48 +18,8 @@ export default function BottomNav({ user }: BottomNavProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   
-  const [unreadCount, setUnreadCount] = useState(0);
   const [searchOpen, setSearchOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-
-  // Load unread notifications count
-  useEffect(() => {
-    if (!user?.id) {
-      setUnreadCount(0);
-      return;
-    }
-
-    const loadUnreadCount = async () => {
-      const { count } = await supabase
-        .from('notifications')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('read', false);
-      
-      setUnreadCount(count || 0);
-    };
-
-    loadUnreadCount();
-
-    // Subscribe to realtime changes
-    const channel = supabase
-      .channel('bottom-nav-notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`,
-        },
-        () => loadUnreadCount()
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id]);
 
   const handleActivityCreated = () => {
     queryClient.invalidateQueries({ queryKey: ACTIVITIES_QUERY_KEY });
@@ -71,14 +30,6 @@ export default function BottomNav({ user }: BottomNavProps) {
       setCreateDialogOpen(true);
     } else {
       navigate("/auth", { state: { from: "create-activity" } });
-    }
-  };
-
-  const handleNotificationsClick = () => {
-    if (user) {
-      navigate('/notificaciones');
-    } else {
-      navigate('/auth');
     }
   };
 
@@ -102,29 +53,20 @@ export default function BottomNav({ user }: BottomNavProps) {
     label, 
     onClick, 
     active = false,
-    badge = 0,
   }: { 
     icon: typeof Home; 
     label: string; 
     onClick: () => void; 
     active?: boolean;
-    badge?: number;
   }) => (
     <button
       onClick={onClick}
       className={cn(
-        "flex flex-col items-center justify-center gap-0.5 flex-1 py-2 transition-colors relative",
+        "flex flex-col items-center justify-center gap-0.5 flex-1 py-2 transition-colors",
         active ? "text-primary" : "text-muted-foreground"
       )}
     >
-      <div className="relative">
-        <Icon className={cn("h-5 w-5", active && "stroke-[2.5px]")} />
-        {badge > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground text-[10px] font-bold min-w-[16px] h-4 rounded-full flex items-center justify-center px-1">
-            {badge > 99 ? '99+' : badge}
-          </span>
-        )}
-      </div>
+      <Icon className={cn("h-5 w-5", active && "stroke-[2.5px]")} />
       <span className={cn(
         "text-[10px] font-medium",
         active && "font-semibold"
@@ -158,21 +100,12 @@ export default function BottomNav({ user }: BottomNavProps) {
           <div className="flex items-center justify-center flex-1">
             <div
               onClick={handleCreateClick}
-              className="flex items-center justify-center w-14 h-14 -mt-5 bg-primary rounded-full shadow-lg active:scale-95 transition-transform border-4 border-background"
+              className="flex items-center justify-center w-14 h-14 -mt-5 bg-primary rounded-full shadow-lg active:scale-95 transition-transform border-4 border-background cursor-pointer"
               aria-label={t('nav.create', 'Crear')}
             >
               <Plus className="h-7 w-7 text-white stroke-[3px]" />
             </div>
           </div>
-
-          {/* Notifications */}
-          <NavItem
-            icon={Bell}
-            label={t('nav.notifications', 'Avisos')}
-            onClick={handleNotificationsClick}
-            active={isActive('/notificaciones')}
-            badge={unreadCount}
-          />
 
           {/* Profile */}
           <NavItem

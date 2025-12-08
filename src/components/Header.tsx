@@ -36,7 +36,7 @@ export default function Header({ user, isUserAdmin = false, favoritesCount = 0 }
 
   return (
     <header className="bg-gradient-to-r from-primary via-primary/90 to-primary/80 text-primary-foreground py-4 md:py-8 px-4 shadow-xl">
-      <div className="container mx-auto max-w-full">
+      <div className="container mx-auto px-0 max-w-full">
         <div className="flex items-center justify-between gap-2 md:gap-4 mb-4">
           <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
             <MobileNav 

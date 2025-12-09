@@ -1,10 +1,11 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Heart, Users, MapPin, Sparkles } from 'lucide-react';
+import { Heart, Users, MapPin, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import Header from '@/components/Header';
 import PageTransition from '@/components/PageTransition';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 export default function About() {
   const { t } = useTranslation();
@@ -35,16 +36,17 @@ export default function About() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-background">
-        <Header />
+        <Header user={null} />
         
         <main className="container mx-auto px-4 py-8 max-w-4xl">
-          {/* Back Button */}
-          <Link to="/">
-            <Button variant="ghost" size="sm" className="mb-6 gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              {t('common.back', 'Volver')}
-            </Button>
-          </Link>
+          {/* Breadcrumbs */}
+          <div className="mb-6">
+            <Breadcrumbs 
+              items={[
+                { label: t('about.breadcrumb', 'Sobre Tardeo') }
+              ]} 
+            />
+          </div>
 
           {/* Hero Section */}
           <section className="text-center mb-12">

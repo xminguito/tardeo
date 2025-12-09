@@ -625,8 +625,8 @@ const VoiceAssistant = ({
   return <>
       <ConversationHistory messages={messages} isVisible={showHistory || conversation.status === 'connected'} onClose={() => setShowHistory(false)} onSendTextMessage={handleSendTextMessage} isTextMessageLoading={isTextMessageLoading} />
       
-      {/* Position above BottomNav on mobile (bottom-20 = 5rem = 80px), normal on desktop */}
-      <div className="fixed bottom-20 md:bottom-4 left-4 z-[60] flex items-center gap-2 items-end">
+      {/* Position above BottomNav on mobile with safe area support, normal on desktop */}
+      <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-4 left-4 z-[60] flex items-center gap-2 items-end">
         {/* Botón para activar voz cuando el chat está abierto */}
         {showHistory && !isConnected && !isConnecting && <Button onClick={startConversation} size="sm" variant="outline" className="text-xs bg-background/90 px-3 py-2 rounded-full shadow-lg border hover:bg-primary hover:text-primary-foreground transition-colors">
             💬 Modo texto · Presiona 🎙️ para voz

@@ -79,8 +79,8 @@ export default function BottomNav({ user }: BottomNavProps) {
   return (
     <>
       {/* Bottom Navigation Bar - Mobile Only */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border safe-area-bottom">
-        <div className="grid grid-cols-4 items-center h-16">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border pb-[env(safe-area-inset-bottom)]">
+        <div className="grid grid-cols-4 items-center min-h-16 h-auto">
           {/* Home */}
           <NavItem
             icon={Home}

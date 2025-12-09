@@ -37,6 +37,7 @@ import EmailTemplates from "./pages/EmailTemplates";
 import AdminLayout from "./layouts/AdminLayout";
 import Onboarding from "./pages/Onboarding";
 import About from "./pages/About";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import BottomNav from "./components/BottomNav";
 import Footer from "./components/Footer";
 import { UserLocationProvider } from "@/hooks/useUserLocation";
@@ -54,6 +55,10 @@ const UserProfile = lazy(() => import("./features/social/pages/UserProfile"));
 const ExploreProfiles = lazy(() => import("./features/social/pages/ExploreProfiles"));
 const FileManager = lazy(() => import("./pages/admin/FileManager"));
 const SiteSettings = lazy(() => import("./pages/admin/SiteSettings"));
+const PagesManager = lazy(() => import("./pages/admin/PagesManager"));
+
+// Dynamic Page renderer (for CMS pages)
+import DynamicPage from "./pages/DynamicPage";
 
 // ============================================
 // Onboarding Guard Hook
@@ -210,6 +215,7 @@ const AppContent = () => {
           <Route path="/actividades" element={<ActivitiesCalendar />} />
           <Route path="/actividades/:slug" element={<ActivityDetail />} />
           <Route path="/sobre-tardeo" element={<About />} />
+          <Route path="/privacidad" element={<PrivacyPolicy />} />
           
           {/* Social Routes */}
           <Route path="/chat" element={
@@ -279,7 +285,16 @@ const AppContent = () => {
             <Route path="plantillas-email" element={<EmailTemplates />} />
             <Route path="update-agent" element={<UpdateAgent />} />
             <Route path="traducir-actividades" element={<TranslateActivities />} />
+            <Route path="paginas" element={
+              <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><p className="text-lg text-muted-foreground">Loading...</p></div>}>
+                <PagesManager />
+              </Suspense>
+            } />
           </Route>
+          
+          {/* Dynamic CMS Pages - MUST be before the catch-all 404 route */}
+          {/* This catches root-level slugs like /privacidad, /terminos, etc. */}
+          <Route path="/:slug" element={<DynamicPage />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

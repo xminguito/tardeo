@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Loader2, Bot } from "lucide-react";
@@ -26,6 +26,13 @@ const VoiceAssistant = ({
   const [showHistory, setShowHistory] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isTextMessageLoading, setIsTextMessageLoading] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
+  const [isInteracting, setIsInteracting] = useState(false);
+  
+  // Peekaboo animation timers
+  const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const peekIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const peekTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const {
     toast
   } = useToast();
@@ -373,6 +380,80 @@ const VoiceAssistant = ({
     });
   }, []);
 
+  // Peekaboo animation logic
+  const isActive = conversation.status === 'connected' || isConnecting || showHistory || isInteracting;
+  
+  const clearAllTimers = useCallback(() => {
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current);
+      hideTimeoutRef.current = null;
+    }
+    if (peekIntervalRef.current) {
+      clearInterval(peekIntervalRef.current);
+      peekIntervalRef.current = null;
+    }
+    if (peekTimeoutRef.current) {
+      clearTimeout(peekTimeoutRef.current);
+      peekTimeoutRef.current = null;
+    }
+  }, []);
+
+  const startPeekabooAnimation = useCallback(() => {
+    // Don't hide if active
+    if (isActive) {
+      setIsHidden(false);
+      return;
+    }
+
+    // Initial hide after 2 seconds
+    hideTimeoutRef.current = setTimeout(() => {
+      if (!isActive) {
+        setIsHidden(true);
+      }
+    }, 2000);
+
+    // Peek every 10 seconds
+    peekIntervalRef.current = setInterval(() => {
+      if (!isActive) {
+        // Show (peek)
+        setIsHidden(false);
+        
+        // Hide again after 2 seconds
+        peekTimeoutRef.current = setTimeout(() => {
+          if (!isActive) {
+            setIsHidden(true);
+          }
+        }, 2000);
+      }
+    }, 10000);
+  }, [isActive]);
+
+  useEffect(() => {
+    // If active, always show and clear timers
+    if (isActive) {
+      setIsHidden(false);
+      clearAllTimers();
+      return;
+    }
+
+    // Start peekaboo animation when not active
+    startPeekabooAnimation();
+
+    // Cleanup on unmount or when becoming active
+    return () => {
+      clearAllTimers();
+    };
+  }, [isActive, clearAllTimers, startPeekabooAnimation]);
+
+  const handleInteractionStart = () => {
+    setIsInteracting(true);
+    setIsHidden(false);
+  };
+
+  const handleInteractionEnd = () => {
+    setIsInteracting(false);
+  };
+
   // Listen for global search "Ask AI" events
   useEffect(() => {
     const handleOpenAI = (event: CustomEvent<{ query: string }>) => {
@@ -626,7 +707,17 @@ const VoiceAssistant = ({
       <ConversationHistory messages={messages} isVisible={showHistory || conversation.status === 'connected'} onClose={() => setShowHistory(false)} onSendTextMessage={handleSendTextMessage} isTextMessageLoading={isTextMessageLoading} />
       
       {/* Position above BottomNav on mobile with safe area support, normal on desktop */}
-      <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-4 left-4 z-[60] flex items-center gap-2 items-end">
+      {/* Peekaboo animation: slides left when hidden, fades slightly */}
+      <div 
+        className={`
+          fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-4 left-4 z-50 
+          flex gap-2 items-end transition-all duration-500 ease-in-out
+          ${isHidden ? '-translate-x-[90%] opacity-60' : 'translate-x-0 opacity-100'}
+        `}
+        onMouseEnter={handleInteractionStart}
+        onMouseLeave={handleInteractionEnd}
+        onTouchStart={handleInteractionStart}
+      >
         {/* Botón para activar voz cuando el chat está abierto */}
         {showHistory && !isConnected && !isConnecting && <Button onClick={startConversation} size="sm" variant="outline" className="text-xs bg-background/90 px-3 py-2 rounded-full shadow-lg border hover:bg-primary hover:text-primary-foreground transition-colors">
             💬 Modo texto · Presiona 🎙️ para voz

@@ -62,7 +62,7 @@ export default function BottomNav({ user }: BottomNavProps) {
     <button
       onClick={onClick}
       className={cn(
-        "flex flex-col items-center justify-center gap-0.5 flex-1 py-2 transition-colors",
+        "w-full h-full flex flex-col items-center justify-center gap-0.5 transition-colors",
         active ? "text-primary" : "text-muted-foreground"
       )}
     >
@@ -80,7 +80,7 @@ export default function BottomNav({ user }: BottomNavProps) {
     <>
       {/* Bottom Navigation Bar - Mobile Only */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border safe-area-bottom">
-        <div className="flex items-center justify-around h-16 px-2">
+        <div className="grid grid-cols-4 items-center h-16">
           {/* Home */}
           <NavItem
             icon={Home}
@@ -97,7 +97,7 @@ export default function BottomNav({ user }: BottomNavProps) {
           />
 
           {/* Create - Center Prominent Button */}
-          <div className="flex items-center justify-center flex-1">
+          <div className="w-full h-full flex items-center justify-center overflow-visible">
             <div
               onClick={handleCreateClick}
               className="flex items-center justify-center w-14 h-14 -mt-5 bg-primary rounded-full shadow-lg active:scale-95 transition-transform border-4 border-background cursor-pointer"

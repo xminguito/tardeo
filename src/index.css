@@ -158,7 +158,7 @@ All colors MUST be HSL.
   }
 
   button {
-    @apply text-xl md:text-2xl py-4 px-8 min-h-12 rounded-full;
+    @apply text-xl md:text-2xl py-4 px-8 rounded-full;
   }
 }
 

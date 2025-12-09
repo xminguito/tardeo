@@ -47,7 +47,7 @@ export default function Header({ user, isUserAdmin = false, favoritesCount = 0 }
             />
             <div className="min-w-0 flex-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/')}>
               <img src={tardeoLogo} alt="Tardeo" className="h-10 md:h-16 w-auto" />
-              <p className="text-sm pl-3.5 opacity-90 truncate">{t('home.subtitle')}</p>
+              <p className="hidden md:inline-block text-sm pl-3.5 opacity-90 truncate">{t('home.subtitle')}</p>
             </div>
           </div>
           <div className="flex gap-1 md:gap-3 items-center flex-shrink-0 pr-4">

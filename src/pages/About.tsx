@@ -135,12 +135,19 @@ export default function About() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link to="/actividades">
-                  <Button size="lg" variant="secondary" className="w-full sm:w-auto">
+                  <Button 
+                    size="lg" 
+                    className="w-full sm:w-auto bg-white text-primary hover:bg-white/90 shadow-lg font-semibold"
+                  >
                     {t('about.cta.explore', 'Explorar Actividades')}
                   </Button>
                 </Link>
                 <Link to="/auth">
-                  <Button size="lg" variant="outline" className="w-full sm:w-auto border-white/30 text-white hover:bg-white/10">
+                  <Button 
+                    size="lg" 
+                    variant="outline" 
+                    className="w-full sm:w-auto bg-transparent border-2 border-white text-white hover:text-white hover:bg-white/10"
+                  >
                     {t('about.cta.join', 'Crear Cuenta')}
                   </Button>
                 </Link>

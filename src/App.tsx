@@ -56,6 +56,8 @@ const ExploreProfiles = lazy(() => import("./features/social/pages/ExploreProfil
 const FileManager = lazy(() => import("./pages/admin/FileManager"));
 const SiteSettings = lazy(() => import("./pages/admin/SiteSettings"));
 const PagesManager = lazy(() => import("./pages/admin/PagesManager"));
+const CommunitiesList = lazy(() => import("./features/communities/pages/CommunitiesList"));
+const CommunityDetail = lazy(() => import("./features/communities/pages/CommunityDetail"));
 
 // Dynamic Page renderer (for CMS pages)
 import DynamicPage from "./pages/DynamicPage";
@@ -214,6 +216,8 @@ const AppContent = () => {
           <Route path="/notificaciones" element={<Notifications />} />
           <Route path="/actividades" element={<ActivitiesCalendar />} />
           <Route path="/actividades/:slug" element={<ActivityDetail />} />
+          <Route path="/communities" element={<Suspense fallback={<div>Loading...</div>}><CommunitiesList /></Suspense>} />
+          <Route path="/communities/:slug" element={<Suspense fallback={<div>Loading...</div>}><CommunityDetail /></Suspense>} />
           <Route path="/sobre-tardeo" element={<About />} />
           <Route path="/privacidad" element={<PrivacyPolicy />} />
           

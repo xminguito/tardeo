@@ -60,6 +60,22 @@ const tools = [
         required: ["activityTitle"]
       }
     }
+  },
+  {
+    type: "function",
+    function: {
+      name: "searchCommunities",
+      description: "Busca comunidades o grupos disponibles en la plataforma. Usa esta herramienta cuando el usuario pregunte por comunidades, grupos, clubes, o colectivos organizados.",
+      parameters: {
+        type: "object",
+        properties: {
+          query: {
+            type: "string",
+            description: "Texto de búsqueda (nombre de comunidad, tema, interés)"
+          }
+        }
+      }
+    }
   }
 ];
 
@@ -180,6 +196,36 @@ ${toonRows}`;
 ${activity.title},${activity.category},${formatDate(activity.date)},${activity.time},${activity.city},${cost},${spots},${activity.max_participants},${activity.description?.slice(0, 100) || 'Sin descripción'}
 [NAVIGATE:${`/actividades/${generateSlug(activity.title, activity.id)}`}]`;
     }
+    
+    if (toolName === "searchCommunities") {
+      const { data: communities, error } = await supabaseClient
+        .from('communities')
+        .select('id, name, slug, description, member_count, category, tags')
+        .eq('is_public', true)
+        .or(`name.ilike.%${args.query}%,description.ilike.%${args.query}%`)
+        .order('member_count', { ascending: false })
+        .limit(10);
+
+      if (error) {
+        console.error('Communities search error:', error);
+        return "Error al buscar comunidades. Por favor, intenta de nuevo.";
+      }
+
+      if (!communities || communities.length === 0) {
+        return `No encontré comunidades relacionadas con "${args.query}". ¿Quieres buscar otra cosa?`;
+      }
+
+      // TOON format for communities
+      if (communities.length === 1) {
+        const c = communities[0];
+        return `com{nombre,miembros,cat}:\n${c.name},${c.member_count},${c.category || 'general'}\n\n[NAVIGATE:/communities/${c.slug}]`;
+      } else {
+        const rows = communities.map(c => 
+          `${c.name},${c.member_count} miembros,${c.category || 'general'}`
+        ).join('\n');
+        return `coms[${communities.length}]{nombre,miembros,cat}:\n${rows}`;
+      }
+    }
 
     return "Herramienta no reconocida.";
   } catch (error) {
@@ -250,28 +296,36 @@ serve(async (req) => {
       throw new Error("OPENAI_API_KEY is not configured");
     }
 
-    const systemPrompt = `Eres un asistente amigable para Tardeo, ayudando a personas mayores a encontrar actividades.
+    const systemPrompt = `Eres un asistente amigable para Tardeo, ayudando a personas mayores a encontrar actividades Y comunidades.
 
 REGLAS:
 1. Sin emojis, solo texto
 2. Respuestas cortas (2-3 frases)
-3. OBLIGATORIO: Usa searchActivities para CUALQUIER consulta de actividades
-4. NO inventes datos. Solo usa resultados de searchActivities
-5. [NAVIGATE:...] activa navegación automática
+3. OBLIGATORIO: Usa searchActivities para consultas de actividades
+4. OBLIGATORIO: Usa searchCommunities para consultas de grupos, comunidades o clubes
+5. NO inventes datos. Solo usa resultados de las herramientas
+6. [NAVIGATE:...] activa navegación automática
+
+HERRAMIENTAS:
+- searchActivities: buscar eventos, talleres, clases
+- searchCommunities: buscar grupos, comunidades, clubes organizados
+- getActivityDetails: detalles de una actividad específica
 
 FORMATO TOON:
 Los resultados vienen en TOON (Token-Oriented Object Notation):
-- act{campos}: fila → 1 actividad
-- acts[N]{campos}: filas → N actividades
-Campos: titulo,cat,fecha,hora,lugar,precio,plazas
+- act{campos}: 1 actividad
+- acts[N]{campos}: N actividades
+- com{campos}: 1 comunidad
+- coms[N]{campos}: N comunidades
 
-EJEMPLO de interpretación TOON:
-Input: act{titulo,cat,fecha,hora,lugar,precio,plazas}:
-Yoga Suave,Deporte,lun 27 oct,18:00,Barcelona,Gratis,20
+EJEMPLOS:
+Usuario: "¿Hay grupos de yoga?"
+→ Usa searchCommunities({query: "yoga"})
 
-Output: He encontrado "Yoga Suave", una actividad de Deporte el lunes 27 de octubre a las 18:00 en Barcelona. Es gratis y hay 20 plazas.
+Usuario: "Muéstrame actividades de baile"
+→ Usa searchActivities({query: "baile"})
 
-USA searchActivities SIEMPRE para consultas de actividades.`;
+USA LAS HERRAMIENTAS CORRECTAS según lo que pida el usuario.`;
 
     // First API call - may include tool calls
     const initialResponse = await fetch("https://api.openai.com/v1/chat/completions", {

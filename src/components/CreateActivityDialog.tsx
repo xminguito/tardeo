@@ -521,6 +521,7 @@ export default function CreateActivityDialog({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [secondaryImages, setSecondaryImages] = useState<File[]>([]);
   const [secondaryPreviews, setSecondaryPreviews] = useState<string[]>([]);
+  const [userCommunities, setUserCommunities] = useState<Array<{id: string; name: string}>>([]);
   
   // Track if images have changed (to avoid re-uploading existing ones)
   const [mainImageChanged, setMainImageChanged] = useState(false);
@@ -560,6 +561,7 @@ export default function CreateActivityDialog({
         setExistingSecondaryUrls(activityToEdit.secondary_images);
         setSecondaryPreviews(activityToEdit.secondary_images);
       }
+    }
     } else if (!open) {
       // Reset form when dialog closes
       setFormData(getInitialFormData());
@@ -574,6 +576,40 @@ export default function CreateActivityDialog({
       setExistingSecondaryUrls([]);
     }
   }, [activityToEdit, open]);
+
+  // Fetch user's communities where they are admin
+  useEffect(() => {
+    const fetchUserCommunities = async () => {
+      if (!open) return;
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      const { data } = await (supabase as any)
+        .from('community_members')
+        .select(`
+          community_id,
+          communities:community_id (
+            id,
+            name
+          )
+        `)
+        .eq('user_id', user.id)
+        .in('role', ['admin', 'moderator']);
+      
+      if (data) {
+        const communities = data
+          .filter((item: any) => item.communities)
+          .map((item: any) => ({
+            id: item.communities.id,
+            name: item.communities.name
+          }));
+        setUserCommunities(communities);
+      }
+    };
+    
+    fetchUserCommunities();
+  }, [open]);
 
   // Image compression states
   const [isCompressingMain, setIsCompressingMain] = useState(false);
@@ -1214,6 +1250,44 @@ export default function CreateActivityDialog({
               </SelectContent>
             </Select>
             </div>
+
+          {/* Community Select (Optional - only if user is admin/moderator of any) */}
+          {userCommunities.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="community">
+                {t('activities.create.community')}
+                <span className="text-muted-foreground text-xs ml-2">
+                  ({t('activities.create.optional')})
+                </span>
+              </Label>
+              <Select
+                value={formData.community_id || 'none'}
+                onValueChange={(value) => 
+                  setFormData({ 
+                    ...formData, 
+                    community_id: value === 'none' ? null : value 
+                  })
+                }
+              >
+                <SelectTrigger id="community">
+                  <SelectValue placeholder={t('activities.create.communityPlaceholder')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">
+                    {t('activities.create.noCommunity')}
+                  </SelectItem>
+                  {userCommunities.map((community) => (
+                    <SelectItem key={community.id} value={community.id}>
+                      {community.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {t('activities.create.communityHelp')}
+              </p>
+            </div>
+          )}
 
           {/* Google Places Autocomplete for Location */}
           <div className="space-y-2">

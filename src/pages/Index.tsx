@@ -16,7 +16,7 @@ import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
 import HeroSlider from "@/components/HeroSlider";
 import UserDashboardHero from "@/components/UserDashboardHero";
-import { Plus } from "lucide-react";
+import { Plus, UsersRound } from "lucide-react";
 
 const Index = () => {
   const [user, setUser] = useState<any>(null);
@@ -175,6 +175,50 @@ const Index = () => {
         </div>
 
         <main className="container mx-auto px-4 py-12">
+        {/* Communities CTA Section */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 p-1 mb-12 animate-fade-in">
+          <div className="bg-background rounded-[calc(1.5rem-4px)] p-8 md:p-12">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+              <div className="flex-1 text-center md:text-left">
+                <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-purple-600 via-pink-500 to-orange-400 bg-clip-text text-transparent">
+                  {t('home.findYourTribe')}
+                </h2>
+                <p className="text-lg text-muted-foreground mb-6">
+                  {t('home.findYourTribeDesc')}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
+                  <Button 
+                    size="lg" 
+                    onClick={() => navigate("/communities")}
+                    className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white border-0"
+                  >
+                    <UsersRound className="mr-2 h-5 w-5" />
+                    {t('home.exploreCommunities')}
+                  </Button>
+                  {user && (
+                    <Button 
+                      size="lg" 
+                      variant="outline"
+                      onClick={() => navigate("/communities")}
+                      className="border-2"
+                    >
+                      {t('home.createYourOwn')}
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <div className="flex-shrink-0">
+                <div className="relative w-48 h-48 md:w-64 md:h-64">
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-3xl"></div>
+                  <div className="relative flex items-center justify-center h-full">
+                    <UsersRound className="w-32 h-32 md:w-40 md:h-40 text-purple-500/30" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {!user && (
           <div className="bg-secondary/20 border-2 border-secondary rounded-2xl p-8 mb-12 text-center">
             <h2 className="text-3xl font-semibold mb-4">{t('home.joinCommunity')}</h2>

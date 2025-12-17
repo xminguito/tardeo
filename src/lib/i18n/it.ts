@@ -21,6 +21,7 @@ export default {
     create: "Crea",
     notifications: "Notifiche",
     profile: "Profilo",
+    communities: "Comunità",
   },
   footer: {
     slogan: "Trova il tuo piano ideale",
@@ -152,6 +153,10 @@ export default {
     heroSlide3Desc: "Organizza eventi e conosci nuove persone",
     exploreActivities: "Esplora Attività",
     joinNow: "Unisciti Ora",
+    findYourTribe: "Trova la Tua Tribù",
+    findYourTribeDesc: "Unisciti a comunità di persone che condividono i tuoi interessi",
+    exploreCommunities: "Esplora Comunità",
+    createYourOwn: "o crea la tua",
     dashboard: {
       greeting: 'Il tuo prossimo piano',
       headline: 'Ciao {{name}}, hai dei piani!',
@@ -614,6 +619,12 @@ export default {
       slugRequired: "L'URL è obbligatorio",
       slugInvalid: "Solo lettere minuscole, numeri e trattini",
       categoryRequired: "Seleziona una categoria",
+      aiMagic: "✨ Genera con l'IA",
+      aiTopic: "Tema o Idea",
+      aiTopicPlaceholder: "es: Escursionismo a Madrid",
+      aiGenerating: "Generazione...",
+      aiSuccess: "Dettagli generati!",
+      aiError: "Errore nella generazione",
     },
     card: {
       organizedBy: "Organizzato da {{name}}",

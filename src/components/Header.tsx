@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import tardeoLogo from '@/assets/tardeo-logo.jpg';
 import { Badge } from '@/components/ui/badge';
-import { User, Heart, Settings, LogIn, Users, MessageCircle, Search, Command } from 'lucide-react';
+import { User, Heart, Settings, LogIn, Users, MessageCircle, Search, Command, UsersRound } from 'lucide-react';
 import LanguageSelector from '@/components/LanguageSelector';
 import LocationSelector from '@/components/LocationSelector';
 import NotificationsDropdown from '@/components/NotificationsDropdown';
@@ -101,6 +101,13 @@ export default function Header({ user, isUserAdmin = false, favoritesCount = 0 }
                         {favoritesCount}
                       </Badge>
                     )}
+                  </Button>
+                  <Button 
+                    variant="secondary" 
+                    onClick={() => navigate("/communities")}
+                    title={t('nav.communities')}
+                  >
+                    <UsersRound className="h-5 w-5" />
                   </Button>
                   <Button 
                     variant="secondary" 

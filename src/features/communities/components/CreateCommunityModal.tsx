@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Upload, X } from 'lucide-react';
+import { Loader2, Upload, X, Sparkles } from 'lucide-react';
 import { COMMUNITY_CATEGORIES } from '../types/community.types';
 import { compressImage } from '@/lib/utils/imageCompression';
 
@@ -61,6 +61,10 @@ export default function CreateCommunityModal({ open, onClose }: CreateCommunityM
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  
+  // AI Magic Fill state
+  const [aiTopic, setAiTopic] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const {
     register,
@@ -162,6 +166,69 @@ export default function CreateCommunityModal({ open, onClose }: CreateCommunityM
     setCoverImagePreview(null);
   };
 
+  // AI Magic Fill - Generate community details
+  const handleGenerateWithAI = async () => {
+    if (!aiTopic.trim()) {
+      toast({
+        title: t('common.error'),
+        description: t('communities.createForm.aiTopicPlaceholder'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase.functions.invoke('generate-community-details', {
+        body: { 
+          topic: aiTopic,
+          language: t('common.language') || 'es'
+        },
+      });
+
+      if (error) throw error;
+      
+      if (data?.name && data?.description && data?.category) {
+        // Fill the form with AI-generated data
+        setValue('name', data.name);
+        setValue('description', data.description);
+        setValue('category', data.category);
+        
+        // Auto-generate slug from AI-generated name
+        const slug = data.name
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '') // Remove accents
+          .replace(/[^\w\s-]/g, '') // Remove special chars
+          .replace(/\s+/g, '-') // Replace spaces with hyphens
+          .replace(/-+/g, '-') // Remove duplicate hyphens
+          .trim();
+        
+        setValue('slug', slug);
+        
+        toast({
+          title: t('communities.createForm.aiSuccess'),
+          description: t('common.success'),
+        });
+      } else {
+        throw new Error('Invalid response from AI');
+      }
+    } catch (error) {
+      console.error('AI generation error:', error);
+      toast({
+        title: t('communities.createForm.aiError'),
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   // Create community mutation
   const createCommunityMutation = useMutation({
     mutationFn: async (data: CreateCommunityFormData) => {
@@ -259,6 +326,8 @@ export default function CreateCommunityModal({ open, onClose }: CreateCommunityM
       reset();
       setCoverImage(null);
       setCoverImagePreview(null);
+      setAiTopic('');
+      setIsGenerating(false);
       onClose();
     }
   };
@@ -274,6 +343,52 @@ export default function CreateCommunityModal({ open, onClose }: CreateCommunityM
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* AI Magic Fill Section */}
+          <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 rounded-lg p-6 border-2 border-purple-200 dark:border-purple-800">
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className="h-5 w-5 text-purple-600" />
+              <h3 className="font-semibold text-purple-900 dark:text-purple-100">
+                {t('communities.createForm.aiMagic')}
+              </h3>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              {t('communities.createForm.description')}
+            </p>
+            <div className="flex gap-2">
+              <Input
+                placeholder={t('communities.createForm.aiTopicPlaceholder')}
+                value={aiTopic}
+                onChange={(e) => setAiTopic(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleGenerateWithAI();
+                  }
+                }}
+                disabled={isGenerating}
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                onClick={handleGenerateWithAI}
+                disabled={isGenerating || !aiTopic.trim()}
+                className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white border-0 gap-2"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {t('communities.createForm.aiGenerating')}
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    {t('communities.createForm.aiMagic')}
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+
           {/* Preview Card */}
           {(watchName || coverImagePreview) && (
             <div className="border rounded-lg overflow-hidden bg-muted/20">

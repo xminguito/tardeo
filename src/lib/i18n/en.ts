@@ -21,6 +21,7 @@ export default {
     create: "Create",
     notifications: "Alerts",
     profile: "Profile",
+    communities: "Communities",
   },
   footer: {
     slogan: "Find your perfect plan",
@@ -172,6 +173,10 @@ export default {
     heroSlide2Desc: "Thousands already enjoy new experiences",
     heroSlide3Title: "Create your own activities",
     heroSlide3Desc: "Organize events and meet new people",
+    findYourTribe: "Find Your Tribe",
+    findYourTribeDesc: "Join communities of people who share your interests",
+    exploreCommunities: "Explore Communities",
+    createYourOwn: "or create yours",
     exploreActivities: "Explore Activities",
     joinNow: "Join Now",
     dashboard: {
@@ -854,6 +859,12 @@ export default {
       slugRequired: "URL is required",
       slugInvalid: "Only lowercase letters, numbers and hyphens",
       categoryRequired: "Select a category",
+      aiMagic: "✨ Generate with AI",
+      aiTopic: "Topic or Idea",
+      aiTopicPlaceholder: "e.g. Hiking in Madrid",
+      aiGenerating: "Generating...",
+      aiSuccess: "Details generated!",
+      aiError: "Error generating details",
     },
     card: {
       organizedBy: "Organized by {{name}}",

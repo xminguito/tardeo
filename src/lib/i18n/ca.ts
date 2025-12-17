@@ -21,6 +21,7 @@ export default {
     create: 'Crear',
     notifications: 'Avisos',
     profile: 'Perfil',
+    communities: 'Comunitats',
   },
   footer: {
     slogan: "Troba el teu pla ideal",
@@ -150,6 +151,10 @@ export default {
     heroSlide3Title: 'Crea les teves pròpies activitats',
     heroSlide3Desc: 'Organitza esdeveniments i coneix gent nova',
     exploreActivities: 'Explorar Activitats',
+    findYourTribe: 'Troba la teva Tribu',
+    findYourTribeDesc: "Uneix-te a comunitats de persones que comparteixen els teus interessos",
+    exploreCommunities: 'Explorar Comunitats',
+    createYourOwn: 'o crea la teva',
     joinNow: 'Uneix-te Ara',
     dashboard: {
       greeting: 'El teu pròxim pla',
@@ -604,6 +609,12 @@ export default {
       slugRequired: "La URL és obligatòria",
       slugInvalid: "Només lletres minúscules, números i guions",
       categoryRequired: "Selecciona una categoria",
+      aiMagic: "✨ Generar amb IA",
+      aiTopic: "Tema o Idea",
+      aiTopicPlaceholder: "ex: Senderisme a Madrid",
+      aiGenerating: "Generant...",
+      aiSuccess: "Detalls generats!",
+      aiError: "Error en generar detalls",
     },
     card: {
       organizedBy: "Organitzat per {{name}}",

@@ -21,6 +21,7 @@ export default {
     create: 'Erstellen',
     notifications: 'Benachrichtigungen',
     profile: 'Profil',
+    communities: 'Gemeinschaften',
   },
   footer: {
     slogan: "Finde deinen perfekten Plan",
@@ -151,6 +152,10 @@ export default {
     heroSlide3Desc: 'Organisieren Sie Veranstaltungen und lernen Sie neue Leute kennen',
     exploreActivities: 'Aktivitäten Erkunden',
     joinNow: 'Jetzt Beitreten',
+    findYourTribe: 'Finden Sie Ihren Stamm',
+    findYourTribeDesc: "Treten Sie Gemeinschaften von Menschen bei, die Ihre Interessen teilen",
+    exploreCommunities: 'Gemeinschaften Erkunden',
+    createYourOwn: 'oder erstellen Sie Ihre eigene',
     dashboard: {
       greeting: 'Dein nächster Plan',
       headline: 'Hallo {{name}}, du hast Pläne!',
@@ -604,6 +609,12 @@ export default {
       slugRequired: "Die URL ist erforderlich",
       slugInvalid: "Nur Kleinbuchstaben, Zahlen und Bindestriche",
       categoryRequired: "Wählen Sie eine Kategorie",
+      aiMagic: "✨ Mit KI generieren",
+      aiTopic: "Thema oder Idee",
+      aiTopicPlaceholder: "z.B. Wandern in Madrid",
+      aiGenerating: "Generierung...",
+      aiSuccess: "Details generiert!",
+      aiError: "Fehler bei der Generierung",
     },
     card: {
       organizedBy: "Organisiert von {{name}}",

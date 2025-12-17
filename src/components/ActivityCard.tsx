@@ -165,6 +165,29 @@ export default function ActivityCard({ activity, onReserve, isFavorite = false, 
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <h3 className="text-xl font-bold leading-tight">{getTranslatedTitle()}</h3>
+            {/* Community Badge */}
+            {activity.community && (
+              <Badge 
+                variant="secondary" 
+                className="mt-2 flex items-center gap-1.5 w-fit"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/communities/${activity.community?.slug}`);
+                }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    navigate(`/communities/${activity.community?.slug}`);
+                  }
+                }}
+              >
+                <Users className="h-3 w-3" aria-hidden="true" />
+                <span className="text-xs">{activity.community.name}</span>
+              </Badge>
+            )}
           </div>
           <div className="flex items-center gap-2">
             {onToggleFavorite && (

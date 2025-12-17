@@ -19,6 +19,14 @@ export interface Activity {
   created_by?: string | null;
   created_at?: string;
   updated_at?: string;
+  // Community relationship (optional)
+  community_id?: string | null;
+  community?: {
+    id: string;
+    name: string;
+    slug: string;
+    image_url: string | null;
+  } | null;
   // Multilingual fields
   title_es?: string | null;
   title_en?: string | null;

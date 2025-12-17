@@ -1,22 +1,30 @@
 import { useEditor, EditorContent, Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
+import Youtube from '@tiptap/extension-youtube';
+import TextAlign from '@tiptap/extension-text-align';
 import { Button } from '@/components/ui/button';
 import { 
   Bold, 
   Italic, 
   Heading1, 
-  Heading2, 
+  Heading2,
+  Heading3,
   List, 
   ListOrdered,
   Image as ImageIcon,
   Undo,
   Redo,
   Quote,
-  Minus
+  Minus,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Youtube as YoutubeIcon,
+  Code,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 interface RichTextEditorProps {
   content: string;
@@ -53,11 +61,22 @@ const MenuButton = ({
   </Button>
 );
 
-const MenuBar = ({ editor }: { editor: Editor | null }) => {
+const Divider = () => (
+  <div className="w-px h-6 bg-border mx-1 self-center" />
+);
+
+const MenuBar = ({ editor, onToggleHtml }: { editor: Editor | null; onToggleHtml: () => void }) => {
   const addImage = useCallback(() => {
-    const url = prompt('Enter image URL:');
+    const url = window.prompt('Enter image URL:');
     if (url && editor) {
       editor.chain().focus().setImage({ src: url }).run();
+    }
+  }, [editor]);
+
+  const addYoutubeVideo = useCallback(() => {
+    const url = window.prompt('Enter YouTube URL (e.g., https://www.youtube.com/watch?v=...):');
+    if (url && editor) {
+      editor.chain().focus().setYoutubeVideo({ src: url }).run();
     }
   }, [editor]);
 
@@ -65,6 +84,7 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
 
   return (
     <div className="flex flex-wrap gap-1 p-2 border-b border-border bg-muted/30">
+      {/* Text Formatting */}
       <MenuButton
         onClick={() => editor.chain().focus().toggleBold().run()}
         isActive={editor.isActive('bold')}
@@ -81,8 +101,9 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
         <Italic className="h-4 w-4" />
       </MenuButton>
 
-      <div className="w-px h-6 bg-border mx-1 self-center" />
+      <Divider />
 
+      {/* Headings */}
       <MenuButton
         onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
         isActive={editor.isActive('heading', { level: 1 })}
@@ -99,8 +120,44 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
         <Heading2 className="h-4 w-4" />
       </MenuButton>
 
-      <div className="w-px h-6 bg-border mx-1 self-center" />
+      <MenuButton
+        onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+        isActive={editor.isActive('heading', { level: 3 })}
+        title="Heading 3"
+      >
+        <Heading3 className="h-4 w-4" />
+      </MenuButton>
 
+      <Divider />
+
+      {/* Text Alignment */}
+      <MenuButton
+        onClick={() => editor.chain().focus().setTextAlign('left').run()}
+        isActive={editor.isActive({ textAlign: 'left' })}
+        title="Align Left"
+      >
+        <AlignLeft className="h-4 w-4" />
+      </MenuButton>
+
+      <MenuButton
+        onClick={() => editor.chain().focus().setTextAlign('center').run()}
+        isActive={editor.isActive({ textAlign: 'center' })}
+        title="Align Center"
+      >
+        <AlignCenter className="h-4 w-4" />
+      </MenuButton>
+
+      <MenuButton
+        onClick={() => editor.chain().focus().setTextAlign('right').run()}
+        isActive={editor.isActive({ textAlign: 'right' })}
+        title="Align Right"
+      >
+        <AlignRight className="h-4 w-4" />
+      </MenuButton>
+
+      <Divider />
+
+      {/* Lists */}
       <MenuButton
         onClick={() => editor.chain().focus().toggleBulletList().run()}
         isActive={editor.isActive('bulletList')}
@@ -132,8 +189,9 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
         <Minus className="h-4 w-4" />
       </MenuButton>
 
-      <div className="w-px h-6 bg-border mx-1 self-center" />
+      <Divider />
 
+      {/* Media */}
       <MenuButton
         onClick={addImage}
         title="Insert Image"
@@ -141,8 +199,26 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
         <ImageIcon className="h-4 w-4" />
       </MenuButton>
 
-      <div className="w-px h-6 bg-border mx-1 self-center" />
+      <MenuButton
+        onClick={addYoutubeVideo}
+        title="Insert YouTube Video"
+      >
+        <YoutubeIcon className="h-4 w-4" />
+      </MenuButton>
 
+      <Divider />
+
+      {/* HTML Mode */}
+      <MenuButton
+        onClick={onToggleHtml}
+        title="View/Edit HTML"
+      >
+        <Code className="h-4 w-4" />
+      </MenuButton>
+
+      <Divider />
+
+      {/* Undo/Redo */}
       <MenuButton
         onClick={() => editor.chain().focus().undo().run()}
         disabled={!editor.can().undo()}
@@ -167,6 +243,9 @@ export default function RichTextEditor({
   onChange,
   placeholder = 'Start writing...'
 }: RichTextEditorProps) {
+  const [showHtml, setShowHtml] = useState(false);
+  const [htmlContent, setHtmlContent] = useState(content);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -179,10 +258,22 @@ export default function RichTextEditor({
           class: 'rounded-lg max-w-full h-auto',
         },
       }),
+      Youtube.configure({
+        HTMLAttributes: {
+          class: 'w-full aspect-video rounded-lg',
+        },
+        width: 640,
+        height: 360,
+      }),
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+      }),
     ],
     content,
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      const html = editor.getHTML();
+      onChange(html);
+      setHtmlContent(html);
     },
     editorProps: {
       attributes: {
@@ -191,13 +282,71 @@ export default function RichTextEditor({
     },
   });
 
+  const handleHtmlChange = (newHtml: string) => {
+    setHtmlContent(newHtml);
+  };
+
+  const applyHtmlChanges = () => {
+    if (editor) {
+      editor.commands.setContent(htmlContent);
+      onChange(htmlContent);
+    }
+    setShowHtml(false);
+  };
+
+  const toggleHtmlMode = () => {
+    if (showHtml) {
+      applyHtmlChanges();
+    } else {
+      if (editor) {
+        setHtmlContent(editor.getHTML());
+      }
+      setShowHtml(true);
+    }
+  };
+
   return (
     <div className="border border-border rounded-lg overflow-hidden bg-background">
-      <MenuBar editor={editor} />
-      <EditorContent 
-        editor={editor} 
-        placeholder={placeholder}
-      />
+      <MenuBar editor={editor} onToggleHtml={toggleHtmlMode} />
+      
+      {showHtml ? (
+        <div className="relative">
+          <textarea
+            value={htmlContent}
+            onChange={(e) => handleHtmlChange(e.target.value)}
+            className="w-full min-h-[300px] p-4 font-mono text-sm bg-muted/20 focus:outline-none resize-y"
+            placeholder="Edit HTML directly..."
+          />
+          <div className="flex justify-end gap-2 p-2 border-t border-border bg-muted/30">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                if (editor) {
+                  setHtmlContent(editor.getHTML());
+                }
+                setShowHtml(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              onClick={applyHtmlChanges}
+            >
+              Apply Changes
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <EditorContent 
+          editor={editor} 
+          placeholder={placeholder}
+        />
+      )}
     </div>
   );
 }

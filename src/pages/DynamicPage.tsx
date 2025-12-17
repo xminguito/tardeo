@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/Header';
 import PageTransition from '@/components/PageTransition';
@@ -20,7 +20,6 @@ interface Page {
 
 export default function DynamicPage() {
   const { slug } = useParams<{ slug: string }>();
-  const navigate = useNavigate();
   const [page, setPage] = useState<Page | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -93,7 +92,7 @@ export default function DynamicPage() {
     return <NotFound />;
   }
 
-  // Sanitize HTML content
+  // Sanitize HTML content - allow YouTube iframes and style attributes for alignment
   const sanitizedContent = page.content 
     ? DOMPurify.sanitize(page.content, {
         ALLOWED_TAGS: [
@@ -104,9 +103,19 @@ export default function DynamicPage() {
           'a', 'img',
           'blockquote', 'pre', 'code',
           'table', 'thead', 'tbody', 'tr', 'th', 'td',
-          'div', 'span'
+          'div', 'span',
+          'iframe' // For YouTube embeds
         ],
-        ALLOWED_ATTR: ['href', 'src', 'alt', 'class', 'target', 'rel'],
+        ALLOWED_ATTR: [
+          'href', 'src', 'alt', 'class', 'target', 'rel',
+          'style', // For text alignment
+          'width', 'height', 'frameborder', 'allow', 'allowfullscreen', // For iframes
+          'title', 'loading'
+        ],
+        // Only allow YouTube iframes
+        ALLOWED_URI_REGEXP: /^(?:(?:https?:)?\/\/(?:www\.)?(?:youtube\.com|youtube-nocookie\.com|youtu\.be)\/|data:|blob:|\/)/i,
+        ADD_TAGS: ['iframe'],
+        ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling'],
       })
     : '';
 
@@ -115,19 +124,7 @@ export default function DynamicPage() {
       <div className="min-h-screen bg-background">
         <Header user={null} />
         
-        {/* Hero Image */}
-        {page.featured_image && (
-          <div className="relative w-full h-64 md:h-96 overflow-hidden">
-            <img
-              src={page.featured_image}
-              alt={page.title}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
-          </div>
-        )}
-        
-        <main className="container mx-auto px-4 py-8 max-w-4xl">
+        <main className="container mx-auto p-6 max-w-4xl">
           {/* Breadcrumbs */}
           <Breadcrumbs
             items={[
@@ -135,22 +132,34 @@ export default function DynamicPage() {
             ]}
           />
 
+          {/* Hero Image */}
+          {page.featured_image && (
+            <img
+              src={page.featured_image}
+              alt={page.title}
+              className="w-full h-64 object-cover rounded-xl mt-4"
+            />
+          )}
+
           {/* Page Title */}
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-8 mt-4">
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-8 mt-6">
             {page.title}
           </h1>
 
-          {/* Page Content */}
+          {/* Page Content - prose class styles all HTML elements inside */}
           <article 
-            className="prose prose-lg dark:prose-invert max-w-none
+            className="prose prose-lg prose-pink dark:prose-invert max-w-none
               prose-headings:font-bold prose-headings:text-foreground
               prose-p:text-muted-foreground prose-p:leading-relaxed
               prose-a:text-primary prose-a:no-underline hover:prose-a:underline
               prose-img:rounded-xl prose-img:shadow-lg
               prose-blockquote:border-l-primary prose-blockquote:bg-muted/50 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg
-              prose-li:text-muted-foreground
+              prose-ul:list-disc prose-ol:list-decimal
+              prose-li:text-muted-foreground prose-li:marker:text-primary
               prose-strong:text-foreground
               prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
+              prose-hr:border-border
+              [&_iframe]:w-full [&_iframe]:aspect-video [&_iframe]:rounded-xl [&_iframe]:my-6
             "
             dangerouslySetInnerHTML={{ __html: sanitizedContent }}
           />

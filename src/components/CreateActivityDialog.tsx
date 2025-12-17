@@ -513,6 +513,7 @@ export default function CreateActivityDialog({
     maxParticipants: 20,
     latitude: null as number | null,
     longitude: null as number | null,
+    community_id: null as string | null,
   });
   
   const [formData, setFormData] = useState(getInitialFormData);
@@ -985,6 +986,7 @@ export default function CreateActivityDialog({
         max_participants: formData.maxParticipants,
         image_url: imageUrl,
         secondary_images: secondaryImageUrls.length > 0 ? secondaryImageUrls : null,
+        community_id: formData.community_id, // Link to community (optional)
         // Spanish (original)
         title_es: formData.title,
         description_es: formData.description,

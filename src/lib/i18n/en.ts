@@ -823,7 +823,7 @@ export default {
         about: "About",
       },
     },
-    create: {
+    createForm: {
       title: "Create New Community",
       description: "Create a space to bring together people with common interests",
       name: "Community name",

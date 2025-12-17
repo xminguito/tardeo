@@ -561,7 +561,6 @@ export default function CreateActivityDialog({
         setExistingSecondaryUrls(activityToEdit.secondary_images);
         setSecondaryPreviews(activityToEdit.secondary_images);
       }
-    }
     } else if (!open) {
       // Reset form when dialog closes
       setFormData(getInitialFormData());

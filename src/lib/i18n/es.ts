@@ -844,7 +844,7 @@ export default {
         about: "Información",
       },
     },
-    create: {
+    createForm: {
       title: "Crear Nueva Comunidad",
       description: "Crea un espacio para reunir personas con intereses comunes",
       name: "Nombre de la comunidad",

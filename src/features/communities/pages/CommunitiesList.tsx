@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Search, Filter } from 'lucide-react';
+import { Plus, Search, Filter, Users } from 'lucide-react';
 import Header from '@/components/Header';
 import PageTransition from '@/components/PageTransition';
 import { Button } from '@/components/ui/button';
@@ -15,12 +15,14 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCommunities } from '../hooks/useCommunities';
 import CommunityCard from '../components/CommunityCard';
+import CreateCommunityModal from '../components/CreateCommunityModal';
 import { COMMUNITY_CATEGORIES } from '../types/community.types';
 import type { CommunityFilters } from '../types/community.types';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function CommunitiesList() {
   const { t } = useTranslation();
+  const [createModalOpen, setCreateModalOpen] = useState(false);
   const [filters, setFilters] = useState<CommunityFilters>({
     search: '',
     category: null,
@@ -53,7 +55,11 @@ export default function CommunitiesList() {
               <p className="text-lg text-muted-foreground mb-6">
                 {t('communities.emptyDescription')}
               </p>
-              <Button size="lg" className="gap-2">
+              <Button 
+                size="lg" 
+                className="gap-2"
+                onClick={() => setCreateModalOpen(true)}
+              >
                 <Plus className="h-5 w-5" />
                 {t('communities.create')}
               </Button>
@@ -141,7 +147,10 @@ export default function CommunitiesList() {
               <p className="text-muted-foreground mb-6">
                 {t('communities.emptyDescription')}
               </p>
-              <Button className="gap-2">
+              <Button 
+                className="gap-2"
+                onClick={() => setCreateModalOpen(true)}
+              >
                 <Plus className="h-5 w-5" />
                 {t('communities.create')}
               </Button>
@@ -149,6 +158,12 @@ export default function CommunitiesList() {
           )}
         </div>
       </div>
+
+      {/* Create Community Modal */}
+      <CreateCommunityModal
+        open={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+      />
     </PageTransition>
   );
 }

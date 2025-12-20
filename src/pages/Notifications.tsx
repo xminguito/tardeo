@@ -226,7 +226,7 @@ export default function Notifications() {
         favoritesCount={favorites.size}
       />
       <PageTransition>
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
         <PageHeader
           title={t('notifications.pageTitle')}
           icon={<Bell className="h-8 w-8 text-primary" />}

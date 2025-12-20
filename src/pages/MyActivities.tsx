@@ -164,7 +164,7 @@ export default function MyActivities() {
         favoritesCount={favorites.size}
       />
       <PageTransition>
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
           <PageHeader
             title={t('myActivities.title')}
             icon={<Calendar className="h-8 w-8 text-primary" />}

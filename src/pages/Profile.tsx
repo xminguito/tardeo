@@ -684,7 +684,7 @@ const Profile = () => {
         favoritesCount={favorites.size}
       />
       <PageTransition>
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
         <PageHeader
           title={t('profile.title')}
           icon={<User className="h-8 w-8 text-primary" />}

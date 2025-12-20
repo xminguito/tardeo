@@ -431,7 +431,7 @@ export default function ActivityDetail() {
         favoritesCount={favorites.size}
       />
       <PageTransition>
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
         <PageHeader
           title={getTranslatedTitle(activity)}
           breadcrumbs={[

@@ -196,7 +196,7 @@ SELECT cron.schedule(
   if (loading) {
     return (
       <PageTransition>
-        <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
           <p className="text-muted-foreground">{t('common.loading')}</p>
         </div>
       </PageTransition>
@@ -205,7 +205,7 @@ SELECT cron.schedule(
 
   return (
     <PageTransition>
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
         <PageHeader
           title="Configuración de Notificaciones"
           icon={<Bell className="h-8 w-8 text-primary" />}

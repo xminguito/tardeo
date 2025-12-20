@@ -154,7 +154,7 @@ const Index = () => {
 
       <PageTransition>
         {/* Hero Section - Conditional based on user state */}
-        <div className="container mx-auto px-4 pt-8 pb-4 max-w-6xl">
+        <div className="container mx-auto px-4 pt-8 pb-4 max-w-7xl">
           {user && nextActivity && !upcomingLoading ? (
             /* State A: Active User Dashboard */
             <UserDashboardHero
@@ -174,7 +174,7 @@ const Index = () => {
           )}
         </div>
 
-        <main className="container mx-auto px-4 py-12 max-w-6xl">
+        <main className="container mx-auto px-4 py-12 max-w-7xl">
         {/* Communities CTA Section */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 p-1 mb-12 animate-fade-in">
           <div className="bg-background rounded-[calc(1.5rem-4px)] p-8 md:p-12">

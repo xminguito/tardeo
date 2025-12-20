@@ -152,7 +152,7 @@ export default function ActivitiesCalendarPage() {
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="text-center text-destructive">
           {t('activities.errorLoading')}
         </div>
@@ -168,7 +168,7 @@ export default function ActivitiesCalendarPage() {
         favoritesCount={favorites.size}
       />
       <PageTransition>
-        <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
         <PageHeader
           title={t('activities.title')}
           icon={<Calendar className="h-8 w-8 text-primary" />}

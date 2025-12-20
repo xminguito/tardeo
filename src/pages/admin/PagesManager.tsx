@@ -251,7 +251,7 @@ export default function PagesManager() {
   );
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
       <PageHeader
         title="Gestor de Páginas"
         icon={<FileText className="h-10 w-10 text-primary" />}

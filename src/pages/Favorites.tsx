@@ -136,7 +136,7 @@ export default function Favorites() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
           <p className="text-lg text-muted-foreground text-center">
             {t('common.loading')}
           </p>
@@ -153,7 +153,7 @@ export default function Favorites() {
         favoritesCount={favorites.size}
       />
       <PageTransition>
-        <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
         <PageHeader
           title={t('favorites.title')}
           icon={<Heart className="h-8 w-8 text-primary fill-primary" />}

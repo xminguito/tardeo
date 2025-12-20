@@ -230,7 +230,7 @@ export default function TTSAlertsConfig() {
   return (
     <div className="min-h-screen bg-background">
       <PageTransition>
-        <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
           <PageHeader
             title="Configuración de Alertas TTS"
             icon={<Bell className="h-8 w-8 text-primary" />}

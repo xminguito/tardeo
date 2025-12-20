@@ -74,7 +74,7 @@ export default function CommunityDetail() {
           </Button>
 
           {/* Community Info Card */}
-          <div className="max-w-6xl mx-auto">
+          <div className="max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row gap-6 items-start mb-8">
               {/* Avatar */}
               {community.image_url && (

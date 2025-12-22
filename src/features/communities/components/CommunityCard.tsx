@@ -4,11 +4,11 @@ import { Badge } from '@/components/ui/badge';
 import { Users, Calendar, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import type { CommunityWithMembership } from '../types/community.types';
+import type { CommunityListItem } from '../types/community.types';
 import { useJoinCommunity } from '../hooks/useJoinCommunity';
 
 interface CommunityCardProps {
-  community: CommunityWithMembership;
+  community: CommunityListItem;
 }
 
 export default function CommunityCard({ community }: CommunityCardProps) {

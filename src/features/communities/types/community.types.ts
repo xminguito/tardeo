@@ -40,6 +40,32 @@ export interface CommunityWithMembership extends Community {
 }
 
 /**
+ * Optimized community data for list views (CommunityCard)
+ * Only includes fields actually rendered in the card UI
+ * 
+ * Excluded fields for bandwidth optimization:
+ * - is_public (used in filter, not displayed)
+ * - created_by (not displayed in cards)
+ * - created_at (not displayed in cards)
+ * - updated_at (not displayed in cards)
+ */
+export interface CommunityListItem {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  category: string | null;
+  image_url: string | null;
+  cover_image_url: string | null;
+  tags: string[] | null;
+  member_count: number;
+  // Computed fields
+  is_member: boolean;
+  user_role?: 'admin' | 'moderator' | 'member';
+  activities_count: number;
+}
+
+/**
  * Minimal community info for embedding in other objects (e.g., activities)
  */
 export interface CommunityPreview {

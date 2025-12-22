@@ -10,6 +10,11 @@ import de from './de';
 // Cargar idioma guardado o usar español por defecto
 const savedLanguage = localStorage.getItem('appLanguage') || 'es';
 
+// Update HTML lang attribute for accessibility
+function updateDocumentLang(lang: string) {
+  document.documentElement.lang = lang;
+}
+
 i18n.use(initReactI18next).init({
   resources: {
     es: { translation: es },
@@ -25,6 +30,12 @@ i18n.use(initReactI18next).init({
     escapeValue: false,
   },
 });
+
+// Set initial lang attribute
+updateDocumentLang(savedLanguage);
+
+// Listen for language changes
+i18n.on('languageChanged', updateDocumentLang);
 
 export default i18n;
 

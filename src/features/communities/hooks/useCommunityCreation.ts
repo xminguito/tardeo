@@ -320,35 +320,13 @@ export function useCommunityCreation(
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // 1. Upload cover image if present
-      let coverImageUrl: string | null = null;
-      if (coverImage.file) {
-        const fileExt = coverImage.file.name.split('.').pop() || 'webp';
-        const fileName = `${user.id}/${Date.now()}-cover.${fileExt}`;
-
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('community_images')
-          .upload(fileName, coverImage.file, {
-            cacheControl: '3600',
-            upsert: false,
-          });
-
-        if (uploadError) throw uploadError;
-
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from('community_images')
-          .getPublicUrl(uploadData.path);
-
-        coverImageUrl = publicUrl;
-      }
-
-      // 2. Parse tags
+      // 1. Parse tags
       const tagsArray = data.tags
         ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean)
         : [];
 
-      // 3. Insert community
+      // 2. Create community FIRST (without image)
+      // This ensures we have the community_id for the storage path
       const { data: community, error: insertError } = await supabase
         .from('communities')
         .insert({
@@ -357,7 +335,7 @@ export function useCommunityCreation(
           description: data.description,
           category: data.category,
           tags: tagsArray,
-          cover_image_url: coverImageUrl,
+          cover_image_url: null, // Will be updated after upload
           created_by: user.id,
           is_public: true,
         })
@@ -365,6 +343,45 @@ export function useCommunityCreation(
         .single();
 
       if (insertError) throw insertError;
+
+      // 3. Upload cover image if present (using community_id in path)
+      // This allows community admins/moderators to manage the image later
+      if (coverImage.file) {
+        const fileExt = coverImage.file.name.split('.').pop() || 'webp';
+        // NEW: Use community.id instead of user.id for folder structure
+        const fileName = `${community.id}/${Date.now()}-cover.${fileExt}`;
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('community_images')
+          .upload(fileName, coverImage.file, {
+            cacheControl: '3600',
+            upsert: false,
+          });
+
+        if (uploadError) {
+          // Rollback: delete the community if image upload fails
+          await supabase.from('communities').delete().eq('id', community.id);
+          throw uploadError;
+        }
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('community_images')
+          .getPublicUrl(uploadData.path);
+
+        // 4. Update community with cover image URL
+        const { error: updateError } = await supabase
+          .from('communities')
+          .update({ cover_image_url: publicUrl })
+          .eq('id', community.id);
+
+        if (updateError) {
+          console.error('Failed to update community with image URL:', updateError);
+          // Don't throw - community was created successfully, just without image
+        }
+
+        return { ...community, cover_image_url: publicUrl };
+      }
 
       return community;
     },

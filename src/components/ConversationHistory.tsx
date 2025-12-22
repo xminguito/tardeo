@@ -3,7 +3,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { User, Bot, X, Send, Loader2 } from "lucide-react";
+import { User, Bot, X, Send, Loader2, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 interface Message {
@@ -18,9 +18,10 @@ interface ConversationHistoryProps {
   onClose?: () => void;
   onSendTextMessage?: (text: string) => void;
   isTextMessageLoading?: boolean;
+  onClearHistory?: () => void;
 }
 
-const ConversationHistory = ({ messages, isVisible, onClose, onSendTextMessage, isTextMessageLoading }: ConversationHistoryProps) => {
+const ConversationHistory = ({ messages, isVisible, onClose, onSendTextMessage, isTextMessageLoading, onClearHistory }: ConversationHistoryProps) => {
   const { t } = useTranslation();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [textInput, setTextInput] = useState("");
@@ -51,11 +52,24 @@ const ConversationHistory = ({ messages, isVisible, onClose, onSendTextMessage, 
     <Card className="fixed bottom-32 right-8 z-40 w-96 h-[500px] flex flex-col shadow-2xl">
       <div className="p-4 border-b bg-primary/5 flex items-center justify-between">
         <h3 className="font-semibold text-sm">{t('voice.conversationHistory')}</h3>
-        {onClose && (
-          <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
-            <X className="h-4 w-4" />
-          </Button>
-        )}
+        <div className="flex items-center gap-1">
+          {onClearHistory && messages.length > 0 && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={onClearHistory} 
+              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+              title={t('voice.clearHistory', 'Borrar historial')}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+          {onClose && (
+            <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">

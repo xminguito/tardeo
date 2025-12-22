@@ -18,11 +18,17 @@ interface Message {
 interface VoiceAssistantProps {
   clientTools: VoiceToolsMap;
 }
+const STORAGE_KEY = 'tardeo_voice_history';
+
 const VoiceAssistant = ({
   clientTools
 }: VoiceAssistantProps) => {
   const [isConnecting, setIsConnecting] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    // Hydrate from localStorage on mount
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  });
   const [showHistory, setShowHistory] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isTextMessageLoading, setIsTextMessageLoading] = useState(false);
@@ -445,6 +451,23 @@ const VoiceAssistant = ({
     });
   }, []);
 
+  // Sync messages to localStorage
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    }
+  }, [messages]);
+
+  // Clear chat history
+  const clearHistory = useCallback(() => {
+    setMessages([]);
+    localStorage.removeItem(STORAGE_KEY);
+    toast({
+      title: t('voice.historyCleared', 'Historial borrado'),
+      description: t('voice.historyClearedDesc', 'La conversación ha sido eliminada'),
+    });
+  }, [toast, t]);
+
   // Peekaboo animation logic
   const isActive = conversation.status === 'connected' || isConnecting || showHistory || isInteracting;
   
@@ -769,7 +792,14 @@ const VoiceAssistant = ({
     });
   };
   return <>
-      <ConversationHistory messages={messages} isVisible={showHistory || conversation.status === 'connected'} onClose={() => setShowHistory(false)} onSendTextMessage={handleSendTextMessage} isTextMessageLoading={isTextMessageLoading} />
+      <ConversationHistory 
+        messages={messages} 
+        isVisible={showHistory || conversation.status === 'connected'} 
+        onClose={() => setShowHistory(false)} 
+        onSendTextMessage={handleSendTextMessage} 
+        isTextMessageLoading={isTextMessageLoading}
+        onClearHistory={clearHistory}
+      />
       
       {/* Position above BottomNav on mobile with safe area support, normal on desktop */}
       {/* Peekaboo animation: slides left when hidden, fades slightly */}

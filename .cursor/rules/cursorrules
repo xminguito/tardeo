@@ -140,6 +140,8 @@ Before committing AI-generated code, check:
 - [ ] Every line has a clear purpose
 - [ ] You understand every line fully
 
+locally pnpm run dev
+
 ## Remember
 
 > "Yes, we are using AI tools, but you must always check every line of code yourself. 
@@ -148,9 +150,6 @@ Before committing AI-generated code, check:
 > fail without notice." - Tech Lead
 
 ---
-
-Last updated: 2025-12-19
-Project: Veritas B2C Magento + Hyva Theme
 
 
 

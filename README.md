@@ -1,107 +1,53 @@
-# Welcome to your Lovable project
+# Tardeo: Social Network & AI Assistant for Active Aging
 
-## Project info
+Tardeo is a modern platform designed to connect people through social activities and communities, featuring an advanced conversational assistant (voice and text) powered by Artificial Intelligence.
 
-**URL**: https://lovable.dev/projects/28a6008a-4f93-4bad-97ab-37c33350fedf
+## 🚀 Technical Vision (Senior Overview)
 
-## How can I edit this code?
+Unlike conventional prototypes, Tardeo is built under robust software engineering principles to ensure scalability and performance:
 
-There are several ways of editing your application.
+* **Feature-Based Architecture**: Modular code organization by business domains (`activities`, `social`, `communities`) to maximize maintainability and decoupling.
+* **AI-Driven UX**: Hybrid conversational assistant utilizing **OpenAI Function Calling** to execute real-time business logic such as searches, bookings, and automated navigation.
+* **TOON Protocol**: Implementation of a Token-Oriented Object Notation serialization system to optimize latency and token consumption in assistant responses.
+* **Performance-First**: Strategic use of `React.lazy` and `Suspense` for deferred loading of heavy modules such as Analytics, Site Settings, and User Management, optimizing the LCP (Largest Contentful Paint) Core Web Vital.
+* **BaaS with Supabase**: Distributed backend logic via **Edge Functions** and data security guaranteed through strict RLS (Row Level Security) policies.
 
-**Use Lovable**
+## 🛠️ Tech Stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/28a6008a-4f93-4bad-97ab-37c33350fedf) and start prompting.
+* **Frontend**: React 18, Vite, TypeScript, Tailwind CSS.
+* **UI/UX**: shadcn/ui, Radix UI, Lucide Icons.
+* **AI & Voice**: ElevenLabs SDK for voice synthesis and OpenAI GPT-4o-mini for function orchestration.
+* **Backend & DB**: Supabase (PostgreSQL, Edge Functions, Auth, Storage).
+* **Testing & Analytics**: Vitest for unit testing and Mixpanel for observability and KPI tracking.
 
-Changes made via Lovable will be committed automatically to this repo.
+## ⚙️ Setup and Execution
 
-**Use your preferred IDE**
+1. **Cloning and Dependencies**:
+   ```bash
+   git clone [https://github.com/xminguito/tardeo.git](https://github.com/xminguito/tardeo.git)
+   cd tardeo
+   npm install
+Environment Variables: Configure your .env file with your Supabase credentials and Google Maps API Key (required for activity geolocating).
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Development Server:
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Bash
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
-```
+📚 Technical Documentation
+The project includes a detailed technical knowledge base in the /docs directory:
 
-## Environment Variables
+Analytics: Instrumentation guides and Mixpanel setup.
 
-This project requires the following environment variables to be configured in your `.env` file:
+Social System: Database specifications and social event triggers.
 
-### Required Variables
+Voice & TTS: Documentation on cost optimization, quality metrics, and rate limiting for the AI assistant.
 
-```env
-# Supabase Configuration
-VITE_SUPABASE_PROJECT_ID="your-project-id"
-VITE_SUPABASE_PUBLISHABLE_KEY="your-publishable-key"
-VITE_SUPABASE_URL="https://your-project-id.supabase.co"
+📈 Innovation Roadmap
+[ ] Implement Development Mode on Cloudflare for DNS optimization and advanced cache management.
 
-# Google Maps API (for location search)
-VITE_GOOGLE_MAPS_API_KEY="your-google-maps-api-key"
-```
+[ ] Expand assistant capabilities for autonomous community management.
 
-### How to Configure
+[ ] Enhance hearing accessibility systems for users with sensory impairments.
 
-1. **Supabase**: 
-   - Already configured if you're using Lovable Cloud
-   - For external Supabase projects, get these values from your Supabase project settings
-
-2. **Google Maps API Key**:
-   - Create a project in [Google Cloud Console](https://console.cloud.google.com/)
-   - Enable the following APIs:
-     - Maps JavaScript API
-     - Places API
-   - Create an API key with HTTP referrer restrictions:
-     - Add `*.lovable.app/*` (for Lovable hosting)
-     - Add your custom domain if applicable
-   - Copy the API key to `VITE_GOOGLE_MAPS_API_KEY`
-
-**Note**: The Google Maps API key is designed to be used in the client-side code. Its security comes from the HTTP referrer restrictions you configure in Google Cloud Console, not from keeping it secret.
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/28a6008a-4f93-4bad-97ab-37c33350fedf) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Developed with a relentless focus on Clean Code, Performance, and Accessibility.

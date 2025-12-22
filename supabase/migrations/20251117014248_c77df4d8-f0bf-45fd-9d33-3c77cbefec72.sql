@@ -1,14 +1,27 @@
 -- Crear cron job para verificar actividades favoritas próximas
 -- Se ejecuta diariamente a las 9:00 AM
-SELECT cron.schedule(
-  'check-upcoming-favorites-daily',
-  '0 9 * * *',
-  $$
-  select
-    net.http_post(
-        url:='https://kzcowengsnnuglyrjuto.supabase.co/functions/v1/check-upcoming-favorites',
-        headers:='{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6Y293ZW5nc25udWdseXJqdXRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjExNjkyNTAsImV4cCI6MjA3Njc0NTI1MH0.ZwhhjRJgTKl3NQuTXy0unk2DFIDDjxi7T4zLN8EVyi0"}'::jsonb,
-        body:=concat('{"time": "', now(), '"}')::jsonb
-    ) as request_id;
-  $$
-);
+--
+-- ⚠️ IMPORTANTE: Este cron job requiere configuración manual después de la migración.
+-- El service_role key debe configurarse como secret en Supabase Vault:
+--
+-- 1. Ve a Supabase Dashboard > Project Settings > Vault
+-- 2. Crea un secret llamado 'service_role_key' con tu service_role key
+-- 3. Ejecuta manualmente el siguiente SQL en el SQL Editor:
+--
+-- SELECT cron.schedule(
+--   'check-upcoming-favorites-daily',
+--   '0 9 * * *',
+--   $$
+--   select
+--     net.http_post(
+--         url:='https://kzcowengsnnuglyrjuto.supabase.co/functions/v1/check-upcoming-favorites',
+--         headers:=jsonb_build_object(
+--           'Content-Type', 'application/json',
+--           'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'service_role_key')
+--         ),
+--         body:=jsonb_build_object('time', now())
+--     ) as request_id;
+--   $$
+-- );
+--
+-- Alternativamente, configura la Edge Function con verify_jwt: false si solo se usa internamente.

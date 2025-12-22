@@ -126,10 +126,10 @@ export default function ExploreProfiles() {
   const { data: profiles, isLoading } = useQuery({
     queryKey: ["public-profiles", searchQuery],
     queryFn: async () => {
+      // Use public_profiles view for security (excludes GPS coordinates, birth_date, etc.)
       let query = supabase
-        .from("profiles")
+        .from("public_profiles")
         .select("*")
-        .eq("profile_visibility", "public")
         .order("created_at", { ascending: false })
         .limit(50);
 

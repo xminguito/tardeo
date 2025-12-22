@@ -91,14 +91,15 @@ export default function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) 
           .limit(5);
 
         // Search profiles by full_name OR username
+        // Use public_profiles view for security (excludes GPS, birth_date, etc.)
         const { data: profilesByName } = await supabase
-          .from('profiles')
+          .from('public_profiles')
           .select('id, full_name, username, avatar_url, city')
           .ilike('full_name', pattern)
           .limit(5);
 
         const { data: profilesByUsername } = await supabase
-          .from('profiles')
+          .from('public_profiles')
           .select('id, full_name, username, avatar_url, city')
           .ilike('username', pattern)
           .limit(5);

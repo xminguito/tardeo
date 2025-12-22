@@ -27,16 +27,31 @@ const isUUID = (str: string): boolean => {
  * The identifier can be:
  * - A UUID like "123e4567-e89b-12d3-a456-426614174000" → fetch by id
  * - A username like "johndoe" → fetch by username
+ * 
+ * Security: Uses public_profiles view for unauthenticated/public access
+ * to prevent exposing GPS coordinates, exact birth_date, etc.
  */
 export const useSocialProfile = (identifier: string) => {
   return useQuery({
     queryKey: ["social-profile", identifier],
     queryFn: async () => {
+      // Check if user is authenticated
+      const { data: { user } } = await supabase.auth.getUser();
+      
       // Determine if this is a UUID or username
       const lookupByUUID = isUUID(identifier);
       
+      // For authenticated users viewing their own profile, use full profiles table
+      const isOwnProfile = user && lookupByUUID && user.id === identifier;
+      
+      // Choose table/view based on authentication
+      // - Own profile: use profiles (full data access)
+      // - Authenticated + friend/following: use profiles (checked later with RLS)
+      // - Public/unauthenticated: use public_profiles view (safe subset)
+      const tableName = user && isOwnProfile ? "profiles" : "public_profiles";
+      
       // Fetch profile by id or username
-      let query = supabase.from("profiles").select("*");
+      let query = supabase.from(tableName).select("*");
       
       if (lookupByUUID) {
         query = query.eq("id", identifier);

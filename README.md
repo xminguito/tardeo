@@ -4,6 +4,13 @@
 
 Tardeo is a modern platform designed to connect people through social activities and communities, featuring an advanced conversational assistant (voice and text) powered by Artificial Intelligence.
 
+## ⚠️ Project Status: Active R&D
+
+This project is currently in an **Active Research & Development phase**.
+* **Infrastructure & Backend**: Core logic, AI orchestration (OpenAI/ElevenLabs), and database schemas are production-ready.
+* **Frontend/UI**: The user interface and some social features are under continuous iteration and may not reflect the final intended UX.
+* **Public Access**: The web platform is not yet open for public registration as we fine-tune performance and accessibility standards.
+
 ## 🚀 Technical Vision
 
 Built under robust software engineering principles for scalability and performance:

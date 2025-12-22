@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Upload, X, Sparkles } from 'lucide-react';
+import { Loader2, Upload, X, Sparkles, CheckCircle, XCircle } from 'lucide-react';
 import { COMMUNITY_CATEGORIES } from '../types/community.types';
 import { compressImage } from '@/lib/utils/imageCompression';
 
@@ -52,6 +52,21 @@ interface CreateCommunityModalProps {
   onClose: () => void;
 }
 
+// Debounce hook
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 export default function CreateCommunityModal({ open, onClose }: CreateCommunityModalProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -66,11 +81,17 @@ export default function CreateCommunityModal({ open, onClose }: CreateCommunityM
   const [aiTopic, setAiTopic] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // Slug availability state
+  const [slugAvailability, setSlugAvailability] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+  const lastCheckedSlug = useRef<string>('');
+
   const {
     register,
     handleSubmit,
     setValue,
     watch,
+    setError,
+    clearErrors,
     formState: { errors },
     reset,
   } = useForm<CreateCommunityFormData>({
@@ -89,6 +110,64 @@ export default function CreateCommunityModal({ open, onClose }: CreateCommunityM
   const watchDescription = watch('description');
   const watchCategory = watch('category');
 
+  // Debounced slug for availability check
+  const debouncedSlug = useDebounce(watchSlug, 500);
+
+  // Check slug availability
+  const checkSlugAvailability = useCallback(async (slug: string) => {
+    if (!slug || slug.length < 3 || lastCheckedSlug.current === slug) {
+      return;
+    }
+
+    // Validate format first
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+      setSlugAvailability('idle');
+      return;
+    }
+
+    lastCheckedSlug.current = slug;
+    setSlugAvailability('checking');
+
+    try {
+      const { data, error } = await supabase.rpc('is_community_slug_available', {
+        slug_to_check: slug,
+      });
+
+      if (error) throw error;
+
+      if (data) {
+        setSlugAvailability('available');
+        clearErrors('slug');
+      } else {
+        setSlugAvailability('taken');
+        setError('slug', {
+          type: 'manual',
+          message: 'communities.createForm.slugTaken',
+        });
+      }
+    } catch (error) {
+      console.error('Error checking slug:', error);
+      setSlugAvailability('idle');
+    }
+  }, [clearErrors, setError]);
+
+  // Effect to check slug availability when debounced value changes
+  useEffect(() => {
+    if (debouncedSlug && debouncedSlug.length >= 3) {
+      checkSlugAvailability(debouncedSlug);
+    } else {
+      setSlugAvailability('idle');
+    }
+  }, [debouncedSlug, checkSlugAvailability]);
+
+  // Reset slug availability when modal closes
+  useEffect(() => {
+    if (!open) {
+      setSlugAvailability('idle');
+      lastCheckedSlug.current = '';
+    }
+  }, [open]);
+
   // Auto-generate slug from name
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.value;
@@ -105,6 +184,7 @@ export default function CreateCommunityModal({ open, onClose }: CreateCommunityM
       .trim();
     
     setValue('slug', slug);
+    setSlugAvailability('idle'); // Reset availability when slug changes
   };
 
   // Handle cover image upload
@@ -209,6 +289,7 @@ export default function CreateCommunityModal({ open, onClose }: CreateCommunityM
           .trim();
         
         setValue('slug', slug);
+        setSlugAvailability('idle'); // Reset to trigger new check
         
         toast({
           title: t('communities.createForm.aiSuccess'),
@@ -264,7 +345,7 @@ export default function CreateCommunityModal({ open, onClose }: CreateCommunityM
         : [];
 
       // 3. Insert community
-      const { data: community, error: insertError } = await (supabase as any)
+      const { data: community, error: insertError } = await supabase
         .from('communities')
         .insert({
           name: data.name,
@@ -295,18 +376,20 @@ export default function CreateCommunityModal({ open, onClose }: CreateCommunityM
       reset();
       setCoverImage(null);
       setCoverImagePreview(null);
+      setSlugAvailability('idle');
       onClose();
       
       // Navigate to new community
       navigate(`/communities/${community.slug}`);
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Create community error:', error);
       
       let errorMessage = t('communities.createForm.error');
       
       if (error.message?.includes('duplicate key')) {
-        errorMessage = 'Slug already exists. Please choose a different one.';
+        errorMessage = t('communities.createForm.slugTaken');
+        setSlugAvailability('taken');
       }
       
       toast({
@@ -318,6 +401,15 @@ export default function CreateCommunityModal({ open, onClose }: CreateCommunityM
   });
 
   const onSubmit = (data: CreateCommunityFormData) => {
+    // Don't submit if slug is taken
+    if (slugAvailability === 'taken') {
+      toast({
+        title: t('common.error'),
+        description: t('communities.createForm.slugTaken'),
+        variant: 'destructive',
+      });
+      return;
+    }
     createCommunityMutation.mutate(data);
   };
 
@@ -328,13 +420,55 @@ export default function CreateCommunityModal({ open, onClose }: CreateCommunityM
       setCoverImagePreview(null);
       setAiTopic('');
       setIsGenerating(false);
+      setSlugAvailability('idle');
       onClose();
     }
   };
 
+  // Slug availability indicator
+  const SlugStatusIndicator = () => {
+    if (slugAvailability === 'idle' || !watchSlug || watchSlug.length < 3) {
+      return null;
+    }
+
+    if (slugAvailability === 'checking') {
+      return (
+        <div className="flex items-center gap-1 text-muted-foreground" aria-live="polite">
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          <span className="text-xs">{t('common.checking')}</span>
+        </div>
+      );
+    }
+
+    if (slugAvailability === 'available') {
+      return (
+        <div className="flex items-center gap-1 text-green-600" aria-live="polite">
+          <CheckCircle className="h-4 w-4" aria-hidden="true" />
+          <span className="text-xs">{t('communities.createForm.slugAvailable')}</span>
+        </div>
+      );
+    }
+
+    if (slugAvailability === 'taken') {
+      return (
+        <div className="flex items-center gap-1 text-destructive" role="alert" aria-live="assertive">
+          <XCircle className="h-4 w-4" aria-hidden="true" />
+          <span className="text-xs">{t('communities.createForm.slugTaken')}</span>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  const isFormBusy = createCommunityMutation.isPending || isUploading || isGenerating;
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent 
+        className="max-w-2xl max-h-[90vh] overflow-y-auto"
+        aria-busy={isFormBusy}
+      >
         <DialogHeader>
           <DialogTitle>{t('communities.createForm.title')}</DialogTitle>
           <DialogDescription>
@@ -342,11 +476,19 @@ export default function CreateCommunityModal({ open, onClose }: CreateCommunityM
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form 
+          onSubmit={handleSubmit(onSubmit)} 
+          className="space-y-6"
+          aria-label={t('communities.createForm.title')}
+        >
           {/* AI Magic Fill Section */}
-          <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 rounded-lg p-6 border-2 border-purple-200 dark:border-purple-800">
+          <div 
+            className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 rounded-lg p-6 border-2 border-purple-200 dark:border-purple-800"
+            role="region"
+            aria-label={t('communities.createForm.aiMagic')}
+          >
             <div className="flex items-center gap-2 mb-4">
-              <Sparkles className="h-5 w-5 text-purple-600" />
+              <Sparkles className="h-5 w-5 text-purple-600" aria-hidden="true" />
               <h3 className="font-semibold text-purple-900 dark:text-purple-100">
                 {t('communities.createForm.aiMagic')}
               </h3>
@@ -367,31 +509,37 @@ export default function CreateCommunityModal({ open, onClose }: CreateCommunityM
                 }}
                 disabled={isGenerating}
                 className="flex-1"
+                aria-label={t('communities.createForm.aiTopic')}
               />
               <Button
                 type="button"
                 onClick={handleGenerateWithAI}
                 disabled={isGenerating || !aiTopic.trim()}
                 className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white border-0 gap-2"
+                aria-busy={isGenerating}
               >
                 {isGenerating ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    {t('communities.createForm.aiGenerating')}
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    <span>{t('communities.createForm.aiGenerating')}</span>
                   </>
                 ) : (
                   <>
-                    <Sparkles className="h-4 w-4" />
-                    {t('communities.createForm.aiMagic')}
+                    <Sparkles className="h-4 w-4" aria-hidden="true" />
+                    <span>{t('communities.createForm.aiMagic')}</span>
                   </>
                 )}
               </Button>
             </div>
           </div>
 
-          {/* Preview Card */}
+          {/* Preview Card - aria-live only for critical changes */}
           {(watchName || coverImagePreview) && (
-            <div className="border rounded-lg overflow-hidden bg-muted/20">
+            <div 
+              className="border rounded-lg overflow-hidden bg-muted/20"
+              role="region"
+              aria-label="Preview"
+            >
               <div className="text-xs font-medium text-muted-foreground px-3 py-2 border-b">
                 Preview
               </div>
@@ -400,8 +548,9 @@ export default function CreateCommunityModal({ open, onClose }: CreateCommunityM
                   <div className="h-32 rounded-lg overflow-hidden mb-3">
                     <img
                       src={coverImagePreview}
-                      alt="Preview"
+                      alt=""
                       className="w-full h-full object-cover"
+                      aria-hidden="true"
                     />
                   </div>
                 )}
@@ -424,12 +573,12 @@ export default function CreateCommunityModal({ open, onClose }: CreateCommunityM
 
           {/* Cover Image Upload */}
           <div className="space-y-2">
-            <Label>{t('communities.createForm.coverImage')}</Label>
+            <Label htmlFor="cover-image">{t('communities.createForm.coverImage')}</Label>
             {coverImagePreview ? (
               <div className="relative">
                 <img
                   src={coverImagePreview}
-                  alt="Cover"
+                  alt={t('communities.createForm.coverImage')}
                   className="w-full h-48 object-cover rounded-lg"
                 />
                 <Button
@@ -438,13 +587,18 @@ export default function CreateCommunityModal({ open, onClose }: CreateCommunityM
                   size="icon"
                   className="absolute top-2 right-2"
                   onClick={removeCoverImage}
+                  aria-label={t('common.remove')}
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </div>
             ) : (
-              <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
-                <Upload className="h-10 w-10 text-muted-foreground mb-2" />
+              <label 
+                htmlFor="cover-image"
+                className="flex flex-col items-center justify-center h-48 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                aria-busy={isUploading}
+              >
+                <Upload className="h-10 w-10 text-muted-foreground mb-2" aria-hidden="true" />
                 <span className="text-sm text-muted-foreground">
                   {isUploading ? t('common.loading') : 'Click to upload cover image'}
                 </span>
@@ -452,14 +606,19 @@ export default function CreateCommunityModal({ open, onClose }: CreateCommunityM
                   JPG, PNG, WEBP (max 2MB)
                 </span>
                 <input
+                  id="cover-image"
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   onChange={handleCoverImageChange}
                   className="hidden"
                   disabled={isUploading}
+                  aria-describedby="cover-image-help"
                 />
               </label>
             )}
+            <span id="cover-image-help" className="sr-only">
+              Upload a cover image for your community. Accepted formats: JPG, PNG, WEBP. Maximum size: 2MB.
+            </span>
           </div>
 
           {/* Name */}
@@ -472,9 +631,13 @@ export default function CreateCommunityModal({ open, onClose }: CreateCommunityM
               placeholder={t('communities.createForm.namePlaceholder')}
               {...register('name')}
               onChange={handleNameChange}
+              aria-invalid={!!errors.name}
+              aria-describedby={errors.name ? 'name-error' : undefined}
             />
             {errors.name && (
-              <p className="text-sm text-destructive">{t(errors.name.message || '')}</p>
+              <p id="name-error" className="text-sm text-destructive" role="alert">
+                {t(errors.name.message || '')}
+              </p>
             )}
           </div>
 
@@ -483,16 +646,27 @@ export default function CreateCommunityModal({ open, onClose }: CreateCommunityM
             <Label htmlFor="slug">
               {t('communities.createForm.slug')} *
             </Label>
-            <Input
-              id="slug"
-              placeholder={t('communities.createForm.slugPlaceholder')}
-              {...register('slug')}
-            />
-            <p className="text-xs text-muted-foreground">
-              {t('communities.createForm.slugHelp').replace('{{slug}}', watchSlug || 'your-slug')}
-            </p>
+            <div className="relative">
+              <Input
+                id="slug"
+                placeholder={t('communities.createForm.slugPlaceholder')}
+                {...register('slug')}
+                aria-invalid={!!errors.slug || slugAvailability === 'taken'}
+                aria-describedby="slug-help slug-error"
+                className={slugAvailability === 'taken' ? 'border-destructive' : 
+                           slugAvailability === 'available' ? 'border-green-500' : ''}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <p id="slug-help" className="text-xs text-muted-foreground">
+                {t('communities.createForm.slugHelp').replace('{{slug}}', watchSlug || 'your-slug')}
+              </p>
+              <SlugStatusIndicator />
+            </div>
             {errors.slug && (
-              <p className="text-sm text-destructive">{t(errors.slug.message || '')}</p>
+              <p id="slug-error" className="text-sm text-destructive" role="alert">
+                {t(errors.slug.message || '')}
+              </p>
             )}
           </div>
 
@@ -505,7 +679,11 @@ export default function CreateCommunityModal({ open, onClose }: CreateCommunityM
               value={watchCategory}
               onValueChange={(value) => setValue('category', value)}
             >
-              <SelectTrigger>
+              <SelectTrigger 
+                id="category"
+                aria-invalid={!!errors.category}
+                aria-describedby={errors.category ? 'category-error' : undefined}
+              >
                 <SelectValue placeholder={t('communities.createForm.categoryPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
@@ -517,7 +695,9 @@ export default function CreateCommunityModal({ open, onClose }: CreateCommunityM
               </SelectContent>
             </Select>
             {errors.category && (
-              <p className="text-sm text-destructive">{t(errors.category.message || '')}</p>
+              <p id="category-error" className="text-sm text-destructive" role="alert">
+                {t(errors.category.message || '')}
+              </p>
             )}
           </div>
 
@@ -531,9 +711,13 @@ export default function CreateCommunityModal({ open, onClose }: CreateCommunityM
               placeholder={t('communities.createForm.descriptionPlaceholder')}
               {...register('description')}
               rows={4}
+              aria-invalid={!!errors.description}
+              aria-describedby={errors.description ? 'description-error' : undefined}
             />
             {errors.description && (
-              <p className="text-sm text-destructive">{errors.description.message}</p>
+              <p id="description-error" className="text-sm text-destructive" role="alert">
+                {errors.description.message}
+              </p>
             )}
           </div>
 
@@ -544,8 +728,9 @@ export default function CreateCommunityModal({ open, onClose }: CreateCommunityM
               id="tags"
               placeholder={t('communities.createForm.tagsPlaceholder')}
               {...register('tags')}
+              aria-describedby="tags-help"
             />
-            <p className="text-xs text-muted-foreground">
+            <p id="tags-help" className="text-xs text-muted-foreground">
               {t('communities.createForm.tagsHelp')}
             </p>
           </div>
@@ -562,12 +747,13 @@ export default function CreateCommunityModal({ open, onClose }: CreateCommunityM
             </Button>
             <Button
               type="submit"
-              disabled={createCommunityMutation.isPending || isUploading}
+              disabled={isFormBusy || slugAvailability === 'taken' || slugAvailability === 'checking'}
+              aria-busy={createCommunityMutation.isPending}
             >
               {createCommunityMutation.isPending ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t('communities.createForm.submitting')}
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                  <span>{t('communities.createForm.submitting')}</span>
                 </>
               ) : (
                 t('communities.createForm.submit')

@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           category: string
           city: string | null
+          community_id: string | null
           cost: number
           country: string | null
           created_at: string | null
@@ -52,6 +53,7 @@ export type Database = {
         Insert: {
           category: string
           city?: string | null
+          community_id?: string | null
           cost?: number
           country?: string | null
           created_at?: string | null
@@ -86,6 +88,7 @@ export type Database = {
         Update: {
           category?: string
           city?: string | null
+          community_id?: string | null
           cost?: number
           country?: string | null
           created_at?: string | null
@@ -117,7 +120,15 @@ export type Database = {
           title_it?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "activities_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       activity_messages: {
         Row: {
@@ -263,6 +274,86 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      communities: {
+        Row: {
+          category: string | null
+          cover_image_url: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_public: boolean
+          member_count: number
+          name: string
+          slug: string
+          tags: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_public?: boolean
+          member_count?: number
+          name: string
+          slug: string
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_public?: boolean
+          member_count?: number
+          name?: string
+          slug?: string
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      community_members: {
+        Row: {
+          community_id: string
+          id: string
+          joined_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          community_id: string
+          id?: string
+          joined_at?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          community_id?: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_members_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       conversations: {
         Row: {
@@ -1439,6 +1530,10 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_community_slug_available: {
+        Args: { slug_to_check: string }
+        Returns: boolean
+      }
       refresh_tts_monitoring_stats: { Args: never; Returns: undefined }
       refresh_voice_quality_stats: { Args: never; Returns: undefined }
     }

@@ -593,12 +593,6 @@ const VoiceAssistant = ({
 
     const currentLanguage = i18n.language || localStorage.getItem('appLanguage') || 'es';
 
-    // Dynamic first message for ElevenLabs audio
-    const isFirstGreeting = !hasGreetedRef.current;
-    const firstMessage = isFirstGreeting
-      ? '¡Hola! ¿En qué puedo ayudarte hoy? Puedo buscar actividades o comunidades para ti.'
-      : shortGreetings[Math.floor(Math.random() * shortGreetings.length)];
-
     const { data, error } = await supabase.functions.invoke('elevenlabs-signed-url');
     if (error || !data?.signedUrl) {
       setIsConnecting(false);
@@ -610,13 +604,11 @@ const VoiceAssistant = ({
       return;
     }
 
+    // No audio greeting - handled by onConnect with dynamic text
     await conversation.startSession({
       signedUrl: data.signedUrl,
       overrides: {
-        agent: {
-          language: currentLanguage,
-          firstMessage
-        }
+        agent: { language: currentLanguage }
       }
     });
   };

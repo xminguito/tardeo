@@ -324,7 +324,7 @@ Herramientas disponibles y cuándo usarlas:
 Recuerda: PRIMERO herramienta, DESPUÉS respuesta. No inventes información.`,
               tools: allTools,
             },
-            first_message: "¡Hola! ¿En qué puedo ayudarte hoy? Puedo buscar actividades o comunidades para ti.",
+            first_message: "", // Disabled - greeting handled by frontend for dynamic messages
           },
         },
       }),

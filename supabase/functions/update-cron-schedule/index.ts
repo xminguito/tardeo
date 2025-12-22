@@ -86,8 +86,9 @@ serve(async (req) => {
       }
 
       // Crear el nuevo cron job con el intervalo configurado
-      const url = 'https://kzcowengsnnuglyrjuto.supabase.co/functions/v1/send-activity-reminders';
-      const anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6Y293ZW5nc25udWdseXJqdXRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjExNjkyNTAsImV4cCI6MjA3Njc0NTI1MH0.ZwhhjRJgTKl3NQuTXy0unk2DFIDDjxi7T4zLN8EVyi0';
+      // Nota: La Edge Function tiene verify_jwt: false, no requiere Authorization header
+      const supabaseUrl = Deno.env.get('SUPABASE_URL');
+      const url = `${supabaseUrl}/functions/v1/send-activity-reminders`;
       
       const scheduleQuery = `
         SELECT cron.schedule(
@@ -97,8 +98,8 @@ serve(async (req) => {
           SELECT
             net.http_post(
                 url:='${url}',
-                headers:='{"Content-Type": "application/json", "Authorization": "Bearer ${anonKey}"}'::jsonb,
-                body:='{}'::jsonb
+                headers:='{"Content-Type": "application/json"}'::jsonb,
+                body:='{"source": "cron"}'::jsonb
             ) as request_id;
           $$
         );

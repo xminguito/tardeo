@@ -28,9 +28,3 @@ dist-ssr
 *.sln
 *.sw?
 .cursorrules
-
-
-# Supabase migrations
-supabase/migrations/*
-cleanup-tardeo/
-cleanup-tardeo.bfg-report/

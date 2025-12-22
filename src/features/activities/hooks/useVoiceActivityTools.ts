@@ -495,25 +495,32 @@ export function useVoiceActivityTools(
           return t('voice.communities.browseAll', 'Te muestro todas las comunidades disponibles.');
         }
 
-        // Search communities by name, description, or tags
-        const { data: communities, error } = await supabase
+        // Normalize query: remove accents, lowercase
+        const normalize = (s: string) => 
+          s.toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .trim();
+
+        const normalizedQuery = normalize(query);
+        
+        // Extract significant words (ignore common words)
+        const stopWords = ['de', 'del', 'la', 'el', 'los', 'las', 'en', 'para', 'con', 'y', 'a'];
+        const queryWords = normalizedQuery
+          .split(/\s+/)
+          .filter(w => w.length > 2 && !stopWords.includes(w));
+
+        // First try: search by slug (most precise for voice input)
+        const slugQuery = normalizedQuery.replace(/\s+/g, '-');
+        const { data: slugMatch } = await supabase
           .from('communities')
           .select('id, name, slug, description, member_count, category')
-          .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
+          .ilike('slug', `%${slugQuery}%`)
           .eq('is_public', true)
-          .order('member_count', { ascending: false })
-          .limit(5);
+          .limit(1);
 
-        if (error) throw error;
-
-        if (!communities || communities.length === 0) {
-          if (navigate) navigate('/communities');
-          return t('voice.communities.notFound', { query }, `No encontré comunidades sobre "${query}". ¿Te gustaría crear una?`);
-        }
-
-        // If exactly one match, navigate to it
-        if (communities.length === 1) {
-          const community = communities[0];
+        if (slugMatch && slugMatch.length === 1) {
+          const community = slugMatch[0];
           if (navigate) navigate(`/communities/${community.slug}`);
           return t('voice.communities.foundOne', { 
             name: community.name, 
@@ -521,13 +528,58 @@ export function useVoiceActivityTools(
           }, `Encontré "${community.name}" con ${community.member_count} miembros. Te llevo allí.`);
         }
 
-        // Multiple matches - navigate to communities page
+        // Second try: search by name/description with full query
+        const { data: communities, error } = await supabase
+          .from('communities')
+          .select('id, name, slug, description, member_count, category')
+          .or(`name.ilike.%${query}%,description.ilike.%${query}%,slug.ilike.%${slugQuery}%`)
+          .eq('is_public', true)
+          .order('member_count', { ascending: false })
+          .limit(10);
+
+        if (error) throw error;
+
+        // Score communities by how many query words match
+        const scoredCommunities = (communities || []).map(c => {
+          const nameNorm = normalize(c.name);
+          const slugNorm = normalize(c.slug.replace(/-/g, ' '));
+          const descNorm = normalize(c.description || '');
+          
+          let score = 0;
+          for (const word of queryWords) {
+            if (nameNorm.includes(word)) score += 3; // Name matches worth more
+            if (slugNorm.includes(word)) score += 2;
+            if (descNorm.includes(word)) score += 1;
+          }
+          return { ...c, score };
+        }).filter(c => c.score > 0)
+          .sort((a, b) => b.score - a.score);
+
+        if (scoredCommunities.length === 0) {
+          if (navigate) navigate('/communities');
+          return t('voice.communities.notFound', { query }, `No encontré comunidades sobre "${query}". ¿Te gustaría crear una?`);
+        }
+
+        // If best match has significantly higher score, navigate directly
+        const best = scoredCommunities[0];
+        const secondBest = scoredCommunities[1];
+        const isClearWinner = !secondBest || best.score >= secondBest.score * 1.5;
+
+        if (isClearWinner || scoredCommunities.length === 1) {
+          if (navigate) navigate(`/communities/${best.slug}`);
+          return t('voice.communities.foundOne', { 
+            name: best.name, 
+            members: best.member_count 
+          }, `Encontré "${best.name}" con ${best.member_count} miembros. Te llevo allí.`);
+        }
+
+        // Multiple good matches - navigate to communities page
         if (navigate) navigate('/communities');
-        const names = communities.slice(0, 3).map(c => c.name).join(', ');
+        const names = scoredCommunities.slice(0, 3).map(c => c.name).join(', ');
         return t('voice.communities.foundMultiple', { 
-          count: communities.length, 
+          count: scoredCommunities.length, 
           names 
-        }, `Encontré ${communities.length} comunidades: ${names}. Te muestro la lista.`);
+        }, `Encontré ${scoredCommunities.length} comunidades: ${names}. Te muestro la lista.`);
 
       } catch (error) {
         console.error('[Voice Tool] Error in searchCommunities:', error);

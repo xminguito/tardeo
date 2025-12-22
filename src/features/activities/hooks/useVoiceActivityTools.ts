@@ -16,6 +16,8 @@ import type {
   SetFilterParams,
   SubmitRatingParams,
   GetRatingsParams,
+  SearchCommunitiesParams,
+  NavigateToCommunitiesParams,
 } from '../types/voiceTools.types';
 import type { ActivityFilters } from '../types/activity.types';
 
@@ -484,6 +486,80 @@ export function useVoiceActivityTools(
     [navigate, onFiltersChange, t]
   );
 
+  const searchCommunities = useCallback(
+    async (params: SearchCommunitiesParams): Promise<string> => {
+      try {
+        const query = params.query?.trim();
+        if (!query) {
+          if (navigate) navigate('/communities');
+          return t('voice.communities.browseAll', 'Te muestro todas las comunidades disponibles.');
+        }
+
+        // Search communities by name, description, or tags
+        const { data: communities, error } = await supabase
+          .from('communities')
+          .select('id, name, slug, description, member_count, category')
+          .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
+          .eq('is_public', true)
+          .order('member_count', { ascending: false })
+          .limit(5);
+
+        if (error) throw error;
+
+        if (!communities || communities.length === 0) {
+          if (navigate) navigate('/communities');
+          return t('voice.communities.notFound', { query }, `No encontré comunidades sobre "${query}". ¿Te gustaría crear una?`);
+        }
+
+        // If exactly one match, navigate to it
+        if (communities.length === 1) {
+          const community = communities[0];
+          if (navigate) navigate(`/communities/${community.slug}`);
+          return t('voice.communities.foundOne', { 
+            name: community.name, 
+            members: community.member_count 
+          }, `Encontré "${community.name}" con ${community.member_count} miembros. Te llevo allí.`);
+        }
+
+        // Multiple matches - navigate to communities page
+        if (navigate) navigate('/communities');
+        const names = communities.slice(0, 3).map(c => c.name).join(', ');
+        return t('voice.communities.foundMultiple', { 
+          count: communities.length, 
+          names 
+        }, `Encontré ${communities.length} comunidades: ${names}. Te muestro la lista.`);
+
+      } catch (error) {
+        console.error('[Voice Tool] Error in searchCommunities:', error);
+        if (navigate) navigate('/communities');
+        return t('voice.communities.error', 'Error al buscar comunidades.');
+      }
+    },
+    [navigate, t]
+  );
+
+  const navigateToCommunities = useCallback(
+    async (params: NavigateToCommunitiesParams = {}): Promise<string> => {
+      try {
+        if (!navigate) {
+          return t('voice.navigation.error');
+        }
+
+        navigate('/communities');
+
+        if (params.action === 'create') {
+          return t('voice.communities.create', 'Te llevo a crear una nueva comunidad. Haz clic en el botón "Crear Comunidad".');
+        }
+
+        return t('voice.communities.browse', 'Te muestro las comunidades disponibles.');
+      } catch (error) {
+        console.error('[Voice Tool] Error in navigateToCommunities:', error);
+        return t('voice.navigation.error');
+      }
+    },
+    [navigate, t]
+  );
+
   return {
     searchActivities,
     reserveActivity,
@@ -495,5 +571,7 @@ export function useVoiceActivityTools(
     getMyReservations,
     submitRating,
     getRatings,
+    searchCommunities,
+    navigateToCommunities,
   };
 }

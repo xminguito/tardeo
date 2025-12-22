@@ -47,6 +47,14 @@ export interface SetFilterParams {
   value: string | number | boolean;
 }
 
+export interface SearchCommunitiesParams {
+  query: string;
+}
+
+export interface NavigateToCommunitiesParams {
+  action?: 'browse' | 'create';
+}
+
 export interface VoiceToolResponse {
   success: boolean;
   message: string;
@@ -64,4 +72,6 @@ export type VoiceToolsMap = {
   getMyReservations: () => Promise<string>;
   submitRating: (params: SubmitRatingParams) => Promise<string>;
   getRatings: (params: GetRatingsParams) => Promise<string>;
+  searchCommunities: (params: SearchCommunitiesParams) => Promise<string>;
+  navigateToCommunities: (params: NavigateToCommunitiesParams) => Promise<string>;
 };

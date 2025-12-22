@@ -263,6 +263,71 @@ const VoiceAssistant = ({
           }
           return t('voice.errors.getRatings');
         }
+      },
+      searchCommunities: async (params: any) => {
+        const startTime = Date.now();
+        if (import.meta.env.DEV) {
+          console.log('[Voice Tool Wrapper] searchCommunities called with:', params);
+        }
+        try {
+          const result = await clientTools.searchCommunities(params);
+          if (import.meta.env.DEV) {
+            console.log('[Voice Tool Wrapper] searchCommunities result:', result);
+          }
+
+          // Analytics: Track assistant_used_tool
+          track('assistant_used_tool', {
+            tool_name: 'searchCommunities',
+            success: true,
+            duration_ms: Date.now() - startTime
+          });
+          return result;
+        } catch (error) {
+          if (import.meta.env.DEV) {
+            console.error('[Voice Tool Wrapper] searchCommunities error:', error);
+          }
+
+          track('assistant_used_tool', {
+            tool_name: 'searchCommunities',
+            success: false
+          });
+          return t('voice.errors.searchCommunities', 'Error al buscar comunidades');
+        }
+      },
+      navigateToCommunities: async (params: any) => {
+        const startTime = Date.now();
+        if (import.meta.env.DEV) {
+          console.log('[Voice Tool Wrapper] navigateToCommunities called with:', params);
+        }
+        try {
+          const result = await clientTools.navigateToCommunities(params);
+          if (import.meta.env.DEV) {
+            console.log('[Voice Tool Wrapper] navigateToCommunities result:', result);
+          }
+
+          // Analytics: Track navigation
+          track('assistant_used_tool', {
+            tool_name: 'navigateToCommunities',
+            success: true,
+            duration_ms: Date.now() - startTime
+          });
+
+          track('assistant_action_navigate', {
+            target_route: '/communities',
+            action: params?.action || 'browse'
+          });
+          return result;
+        } catch (error) {
+          if (import.meta.env.DEV) {
+            console.error('[Voice Tool Wrapper] navigateToCommunities error:', error);
+          }
+
+          track('assistant_used_tool', {
+            tool_name: 'navigateToCommunities',
+            success: false
+          });
+          return t('voice.errors.navigate');
+        }
       }
     },
     onConnect: () => {

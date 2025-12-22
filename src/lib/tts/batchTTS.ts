@@ -186,7 +186,7 @@ async function callTTSAPI(
   provider: string;
   expires_at: string;
 }> {
-  const response = await fetch('https://kzcowengsnnuglyrjuto.supabase.co/functions/v1/tts', {
+  const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tts`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

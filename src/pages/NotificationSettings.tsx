@@ -133,7 +133,12 @@ export default function NotificationSettings() {
     const interval = settings.cron_interval_minutes;
     const cronExpression = `*/${interval} * * * *`;
     
-    return `-- Primero, desactivar el cron job existente si existe
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    
+    return `-- ⚠️ IMPORTANTE: Reemplaza <SERVICE_ROLE_KEY> con tu service_role key de Supabase
+-- La puedes encontrar en: Supabase Dashboard > Settings > API > service_role key
+
+-- Primero, desactivar el cron job existente si existe
 SELECT cron.unschedule('invoke-send-activity-reminders');
 
 -- Crear el nuevo cron job con el intervalo configurado (cada ${interval} minutos)
@@ -143,8 +148,8 @@ SELECT cron.schedule(
   $$
   SELECT
     net.http_post(
-        url:='https://kzcowengsnnuglyrjuto.supabase.co/functions/v1/send-activity-reminders',
-        headers:='{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6Y293ZW5nc25udWdseXJqdXRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjExNjkyNTAsImV4cCI6MjA3Njc0NTI1MH0.ZwhhjRJgTKl3NQuTXy0unk2DFIDDjxi7T4zLN8EVyi0"}'::jsonb,
+        url:='${supabaseUrl}/functions/v1/send-activity-reminders',
+        headers:='{"Content-Type": "application/json", "Authorization": "Bearer <SERVICE_ROLE_KEY>"}'::jsonb,
         body:='{}'::jsonb
     ) as request_id;
   $$

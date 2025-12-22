@@ -370,7 +370,7 @@ export async function generateSegmentAudio(
     segments.map(async (segment) => {
       try {
         // Call TTS API
-        const response = await fetch('https://kzcowengsnnuglyrjuto.supabase.co/functions/v1/tts', {
+        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tts`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -387,7 +387,7 @@ export async function generateSegmentAudio(
           if (enableSSML && segment.text !== segment.plainText) {
             console.warn('SSML may not be supported, retrying without SSML');
             
-            const retryResponse = await fetch('https://kzcowengsnnuglyrjuto.supabase.co/functions/v1/tts', {
+            const retryResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tts`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',

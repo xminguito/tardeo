@@ -39,7 +39,7 @@ export function useActivityMessages(activityId: string | null, enabled: boolean 
       }
 
       const response = await fetch(
-        `https://kzcowengsnnuglyrjuto.supabase.co/functions/v1/activity-chat-messages?activity_id=${activityId}&limit=50`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/activity-chat-messages?activity_id=${activityId}&limit=50`,
         {
           method: 'GET',
           headers: {

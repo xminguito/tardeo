@@ -359,7 +359,7 @@ export default function Onboarding() {
         .map(i => i.name);
 
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL || 'https://kzcowengsnnuglyrjuto.supabase.co'}/functions/v1/generate-bio`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-bio`,
         {
           method: 'POST',
           headers: {

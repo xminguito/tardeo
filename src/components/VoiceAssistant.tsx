@@ -39,6 +39,12 @@ const VoiceAssistant = ({
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const peekIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const peekTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Track if user has been greeted this session (not persisted)
+  const hasGreetedRef = useRef(false);
+  
+  // Short greetings for subsequent activations
+  const shortGreetings = ['Dime', 'Te escucho', '¿Sí?', '¿En qué te ayudo?'];
   const {
     toast
   } = useToast();
@@ -338,30 +344,33 @@ const VoiceAssistant = ({
     },
     onConnect: () => {
       setIsConnecting(false);
-
-      // Show popup immediately when connected
       setShowHistory(true);
 
-      // Add welcome message from assistant
-      const welcomeMessage: Message = {
-        role: 'assistant',
-        content: t('voice.welcome', 'Hola, ¿en qué puedo ayudarte? Puedes hablar o escribir un mensaje.'),
-        timestamp: Date.now()
-      };
-      setMessages([welcomeMessage]);
+      // Dynamic greeting: full on first time, short on subsequent
+      const isFirstGreeting = !hasGreetedRef.current;
+      hasGreetedRef.current = true;
 
-      // Reset session and create new session ID for metrics tracking
+      // Only add welcome message if chat is empty
+      setMessages(prev => {
+        if (prev.length > 0) return prev; // Keep existing history
+        
+        const greeting = isFirstGreeting
+          ? t('voice.welcome', 'Hola, ¿en qué puedo ayudarte? Puedo buscar actividades o comunidades.')
+          : shortGreetings[Math.floor(Math.random() * shortGreetings.length)];
+        
+        return [{
+          role: 'assistant',
+          content: greeting,
+          timestamp: Date.now()
+        }];
+      });
+
+      // Reset session for metrics tracking
       VoiceMetricsTracker.resetSession();
       const newSessionId = VoiceMetricsTracker.getSessionId();
       setSessionId(newSessionId);
-      if (import.meta.env.DEV) {
-        console.log('[VoiceAssistant] New session started:', newSessionId);
-      }
 
-      // Analytics: Track assistant_invoked { mode: 'voice' }
-      track('assistant_invoked', {
-        mode: 'voice'
-      });
+      track('assistant_invoked', { mode: 'voice' });
       toast({
         title: t('voice.toast.connected'),
         description: t('voice.toast.connectedDesc')
@@ -580,42 +589,36 @@ const VoiceAssistant = ({
   }, [messages.length, t, track]);
 
   const startConversation = async () => {
-    try {
-      setIsConnecting(true);
+    setIsConnecting(true);
 
-      // Obtener idioma actual de la app
-      const currentLanguage = i18n.language || localStorage.getItem('appLanguage') || 'es';
+    const currentLanguage = i18n.language || localStorage.getItem('appLanguage') || 'es';
 
-      // Obtener signed URL desde nuestro edge function
-      const {
-        data,
-        error
-      } = await supabase.functions.invoke('elevenlabs-signed-url');
-      if (error || !data?.signedUrl) {
-        throw new Error('No se pudo obtener la URL de conexión');
-      }
-      if (import.meta.env.DEV) {
-        console.log('Iniciando conversación con ElevenLabs...');
-      }
-      await conversation.startSession({
-        signedUrl: data.signedUrl,
-        overrides: {
-          agent: {
-            language: currentLanguage
-          }
-        }
-      });
-    } catch (error) {
-      if (import.meta.env.DEV) {
-        console.error('Error al iniciar conversación:', error);
-      }
+    // Dynamic first message for ElevenLabs audio
+    const isFirstGreeting = !hasGreetedRef.current;
+    const firstMessage = isFirstGreeting
+      ? '¡Hola! ¿En qué puedo ayudarte hoy? Puedo buscar actividades o comunidades para ti.'
+      : shortGreetings[Math.floor(Math.random() * shortGreetings.length)];
+
+    const { data, error } = await supabase.functions.invoke('elevenlabs-signed-url');
+    if (error || !data?.signedUrl) {
       setIsConnecting(false);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "No pude iniciar la conversación",
+        description: "No se pudo obtener la URL de conexión",
         variant: "destructive"
       });
+      return;
     }
+
+    await conversation.startSession({
+      signedUrl: data.signedUrl,
+      overrides: {
+        agent: {
+          language: currentLanguage,
+          firstMessage
+        }
+      }
+    });
   };
   const endConversation = async () => {
     try {

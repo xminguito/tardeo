@@ -1,53 +1,67 @@
-# Tardeo: Social Network & AI Assistant for Active Aging
+# Tardeo
+
+> Social Network & AI Assistant for Active Aging
 
 Tardeo is a modern platform designed to connect people through social activities and communities, featuring an advanced conversational assistant (voice and text) powered by Artificial Intelligence.
 
-## 🚀 Technical Vision (Senior Overview)
+## 🚀 Technical Vision
 
-Unlike conventional prototypes, Tardeo is built under robust software engineering principles to ensure scalability and performance:
+Built under robust software engineering principles for scalability and performance:
 
-* **Feature-Based Architecture**: Modular code organization by business domains (`activities`, `social`, `communities`) to maximize maintainability and decoupling.
-* **AI-Driven UX**: Hybrid conversational assistant utilizing **OpenAI Function Calling** to execute real-time business logic such as searches, bookings, and automated navigation.
-* **TOON Protocol**: Implementation of a Token-Oriented Object Notation serialization system to optimize latency and token consumption in assistant responses.
-* **Performance-First**: Strategic use of `React.lazy` and `Suspense` for deferred loading of heavy modules such as Analytics, Site Settings, and User Management, optimizing the LCP (Largest Contentful Paint) Core Web Vital.
-* **BaaS with Supabase**: Distributed backend logic via **Edge Functions** and data security guaranteed through strict RLS (Row Level Security) policies.
+- **Feature-Based Architecture**: Modular code organization by business domains (`activities`, `social`, `communities`) to maximize maintainability and decoupling.
+- **AI-Driven UX**: Hybrid conversational assistant utilizing **OpenAI Function Calling** to execute real-time business logic such as searches, bookings, and automated navigation.
+- **TOON Protocol**: Token-Oriented Object Notation serialization system to optimize latency and token consumption in assistant responses.
+- **Performance-First**: Strategic use of `React.lazy` and `Suspense` for deferred loading of heavy modules, optimizing Core Web Vitals.
+- **BaaS with Supabase**: Distributed backend logic via **Edge Functions** and data security guaranteed through strict RLS (Row Level Security) policies.
 
 ## 🛠️ Tech Stack
 
-* **Frontend**: React 18, Vite, TypeScript, Tailwind CSS.
-* **UI/UX**: shadcn/ui, Radix UI, Lucide Icons.
-* **AI & Voice**: ElevenLabs SDK for voice synthesis and OpenAI GPT-4o-mini for function orchestration.
-* **Backend & DB**: Supabase (PostgreSQL, Edge Functions, Auth, Storage).
-* **Testing & Analytics**: Vitest for unit testing and Mixpanel for observability and KPI tracking.
+| Layer | Technologies |
+|-------|-------------|
+| **Frontend** | React 18, Vite, TypeScript, Tailwind CSS |
+| **UI/UX** | shadcn/ui, Radix UI, Lucide Icons |
+| **AI & Voice** | ElevenLabs SDK, OpenAI GPT-4o-mini |
+| **Backend & DB** | Supabase (PostgreSQL, Edge Functions, Auth, Storage) |
+| **Testing** | Vitest |
+| **Analytics** | Mixpanel |
 
-## ⚙️ Setup and Execution
+## ⚙️ Setup
 
-1. **Cloning and Dependencies**:
-   ```bash
-   git clone [https://github.com/xminguito/tardeo.git](https://github.com/xminguito/tardeo.git)
-   cd tardeo
-   npm install
-Environment Variables: Configure your .env file with your Supabase credentials and Google Maps API Key (required for activity geolocating).
+```bash
+# Clone and install
+git clone https://github.com/xminguito/tardeo.git
+cd tardeo
+npm install
 
-Development Server:
+# Configure environment
+cp .env.example .env
+# Edit .env with your Supabase and API keys
 
-Bash
-
+# Run development server
 npm run dev
-📚 Technical Documentation
-The project includes a detailed technical knowledge base in the /docs directory:
+```
 
-Analytics: Instrumentation guides and Mixpanel setup.
+## 📚 Documentation
 
-Social System: Database specifications and social event triggers.
+```
+docs/
+├── analytics.md              # Mixpanel instrumentation
+├── database/                 # Database migrations & setup
+├── social/                   # Social features & communities
+│   ├── README.md            # Social system overview
+│   ├── DB.md                # Database schema
+│   ├── API.md               # API endpoints
+│   └── ...
+├── tts-*.md                  # Voice/TTS documentation
+└── internal/                 # Internal configuration guides
+```
 
-Voice & TTS: Documentation on cost optimization, quality metrics, and rate limiting for the AI assistant.
+## 📈 Roadmap
 
-📈 Innovation Roadmap
-[ ] Implement Development Mode on Cloudflare for DNS optimization and advanced cache management.
+- [ ] Cloudflare DNS optimization and advanced cache management
+- [ ] Expand assistant capabilities for autonomous community management
+- [ ] Enhance accessibility systems for users with sensory impairments
 
-[ ] Expand assistant capabilities for autonomous community management.
+---
 
-[ ] Enhance hearing accessibility systems for users with sensory impairments.
-
-Developed with a relentless focus on Clean Code, Performance, and Accessibility.
+**v1.0.0** · Built with Clean Code, Performance, and Accessibility in mind.

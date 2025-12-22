@@ -35,63 +35,66 @@ export const useSocialProfile = (identifier: string) => {
   return useQuery({
     queryKey: ["social-profile", identifier],
     queryFn: async () => {
-      // Check if user is authenticated
+      // 1. Get authenticated user ONCE at the start
       const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id;
       
-      // Determine if this is a UUID or username
+      // 2. Determine lookup strategy
       const lookupByUUID = isUUID(identifier);
       
-      // For authenticated users viewing their own profile, use full profiles table
-      const isOwnProfile = user && lookupByUUID && user.id === identifier;
+      // 3. Pre-check if this might be own profile (for table selection)
+      // Note: For username lookups, we can't know yet - will verify after fetch
+      const mightBeOwnProfile = userId && lookupByUUID && userId === identifier;
       
-      // Choose table/view based on authentication
+      // 4. Choose table/view based on authentication
       // - Own profile: use profiles (full data access)
-      // - Authenticated + friend/following: use profiles (checked later with RLS)
       // - Public/unauthenticated: use public_profiles view (safe subset)
-      const tableName = user && isOwnProfile ? "profiles" : "public_profiles";
+      const tableName = mightBeOwnProfile ? "profiles" : "public_profiles";
       
-      // Fetch profile by id or username
+      // 5. Fetch profile by id or username
       let query = supabase.from(tableName).select("*");
       
       if (lookupByUUID) {
         query = query.eq("id", identifier);
       } else {
-        // Lookup by username (case-insensitive)
         query = query.eq("username", identifier.toLowerCase());
       }
       
       const { data: profile, error } = await query.single();
-
       if (error) throw error;
       
       const profileId = profile.id;
+      
+      // 6. Determine if this is own profile (works for both UUID and username lookups)
+      const isOwnProfile = userId === profileId;
 
-      // Fetch relationship status (follow)
-      const { data: { user } } = await supabase.auth.getUser();
+      // 7. Fetch relationship status only if viewing another user's profile
       let isFollowing = false;
-      let friendStatus = null;
-      const isOwnProfile = user?.id === profileId;
+      let friendStatus: "pending" | "accepted" | "blocked" | null = null;
 
-      if (user && !isOwnProfile) {
-        const { data: follow } = await supabase
-          .from("follows")
-          .select("*")
-          .eq("follower_id", user.id)
-          .eq("following_id", profileId)
-          .single();
-        isFollowing = !!follow;
+      if (userId && !isOwnProfile) {
+        // Fetch follow and friend status in parallel
+        const [followResult, friendResult] = await Promise.all([
+          supabase
+            .from("follows")
+            .select("id")
+            .eq("follower_id", userId)
+            .eq("following_id", profileId)
+            .maybeSingle(),
+          supabase
+            .from("friends")
+            .select("status")
+            .or(
+              `and(user_id.eq.${userId},friend_id.eq.${profileId}),and(user_id.eq.${profileId},friend_id.eq.${userId})`,
+            )
+            .maybeSingle(),
+        ]);
 
-        const { data: friend } = await supabase
-          .from("friends")
-          .select("status")
-          .or(
-            `and(user_id.eq.${user.id},friend_id.eq.${profileId}),and(user_id.eq.${profileId},friend_id.eq.${user.id})`,
-          )
-          .single();
-        friendStatus = friend?.status || null;
+        isFollowing = !!followResult.data;
+        friendStatus = (friendResult.data?.status as typeof friendStatus) || null;
       }
 
-      // Fetch follower/following counts
+      // 8. Fetch follower/following counts in parallel
       const [followersResult, followingResult] = await Promise.all([
         supabase
           .from("follows")
@@ -106,7 +109,7 @@ export const useSocialProfile = (identifier: string) => {
       const followersCount = followersResult.count || 0;
       const followingCount = followingResult.count || 0;
 
-      // Check if profile is public or if user is friend/following
+      // 9. Determine visibility
       const profileVisibility = (profile as any).profile_visibility || 'public';
       const isPublic = isOwnProfile || profileVisibility === 'public' || 
         friendStatus === 'accepted' || isFollowing;

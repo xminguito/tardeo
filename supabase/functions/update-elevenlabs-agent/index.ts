@@ -199,6 +199,32 @@ serve(async (req) => {
             },
             required: ["activityId", "activityTitle"]
           }
+        },
+        searchCommunities: {
+          description: "Search for communities, groups, or social clubs. Use this when the user asks for people, groups, 'friends with similar interests', or specific topics where no activity was found. MUST be called if searchActivities returns no results.",
+          parameters: {
+            type: "object",
+            properties: {
+              query: {
+                type: "string",
+                description: "The topic, name, or interest to search for (e.g., 'hiking', 'yoga', 'wine lovers', 'vilanova')"
+              }
+            },
+            required: ["query"]
+          }
+        },
+        navigateToCommunities: {
+          description: "Navigate to the communities page to browse or create a new community. Use when user wants to see all groups or create their own.",
+          parameters: {
+            type: "object",
+            properties: {
+              action: {
+                type: "string",
+                enum: ["browse", "create"],
+                description: "Whether to browse communities or open the create form"
+              }
+            }
+          }
         }
       }
     };
@@ -230,6 +256,7 @@ serve(async (req) => {
     // Build a map of our optimized configs by tool name
     const optimizedByName = toolsConfig.client_tools as Record<string, { description: string; parameters: unknown }>;    
 
+    // Update existing tools with optimized descriptions/parameters
     const updatedTools = existingTools.map((tool: any) => {
       const update = optimizedByName[tool?.name];
       if (!update) return tool;
@@ -239,6 +266,21 @@ serve(async (req) => {
         parameters: update.parameters,
       };
     });
+
+    // Add NEW tools that don't exist yet in ElevenLabs
+    const existingToolNames = new Set(existingTools.map((t: any) => t?.name));
+    const newTools = Object.entries(optimizedByName)
+      .filter(([name]) => !existingToolNames.has(name))
+      .map(([name, config]) => ({
+        type: "client",
+        name,
+        description: config.description,
+        parameters: config.parameters,
+      }));
+
+    // Merge existing (updated) + new tools
+    const allTools = [...updatedTools, ...newTools];
+    console.log(`Tools: ${existingTools.length} existing, ${newTools.length} new → ${allTools.length} total`);
 
     // 2) Patch the agent with updated tool descriptions/parameters, prompt, and first message
     const response = await fetch(`https://api.elevenlabs.io/v1/convai/agents/${agentId}`, {
@@ -251,7 +293,7 @@ serve(async (req) => {
         conversation_config: {
           agent: {
             prompt: {
-              prompt: `Eres María, el asistente de voz de Tardeo, una plataforma de actividades sociales para adultos y personas mayores.
+              prompt: `Eres María, el asistente de voz de Tardeo, una plataforma de actividades sociales y COMUNIDADES para adultos y personas mayores.
 
 REGLAS CRÍTICAS DE RESPUESTA:
 - NUNCA respondas antes de usar las herramientas
@@ -265,17 +307,24 @@ FLUJO CORRECTO:
 2. NO digas "Voy a buscar" o "Encontré X actividades" antes de usar la herramienta
 3. Usa el resultado exacto que devuelve la herramienta
 
+COMPORTAMIENTO INTELIGENTE CON COMUNIDADES:
+- Si searchActivities NO encuentra resultados, SIEMPRE intenta searchCommunities con la misma búsqueda
+- Si el usuario busca "grupo de...", "gente que...", "amigos para...", usa searchCommunities directamente
+- Si no hay actividades ni comunidades, sugiere crear una comunidad: "No encontré nada, pero puedes crear tu propia comunidad"
+
 Herramientas disponibles y cuándo usarlas:
-- searchActivities: Buscar actividades por nombre o con filtros
-- getActivityDetails: Mostrar detalles de una actividad específica  
+- searchActivities: Buscar actividades/eventos por nombre o filtros
+- getActivityDetails: Ver detalles de una actividad específica  
 - reserveActivity: Reservar plaza (confirmar primero)
 - getMyReservations: Ver reservas del usuario
 - suggestActivities: Recomendar actividades personalizadas
+- searchCommunities: Buscar grupos/comunidades por interés (OBLIGATORIO si searchActivities da vacío)
+- navigateToCommunities: Ir a la página de comunidades o crear una nueva
 
 Recuerda: PRIMERO herramienta, DESPUÉS respuesta. No inventes información.`,
-              tools: updatedTools,
+              tools: allTools,
             },
-            first_message: "¡Hola! ¿En qué puedo ayudarte hoy?",
+            first_message: "¡Hola! ¿En qué puedo ayudarte hoy? Puedo buscar actividades o comunidades para ti.",
           },
         },
       }),

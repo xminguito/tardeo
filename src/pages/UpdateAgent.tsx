@@ -129,16 +129,18 @@ const UpdateAgent = () => {
             <div className="pt-4 border-t">
               <h3 className="text-sm font-medium mb-3">Herramientas que se actualizarán:</h3>
               <ul className="text-xs space-y-1 text-muted-foreground">
-                <li>• searchActivities - Descripciones optimizadas con parámetros tipados</li>
-                <li>• getActivityDetails - Clarificación de cuándo usar</li>
-                <li>• reserveActivity - Confirmación de parámetros requeridos</li>
-                <li>• navigateToActivities - Uso específico para navegación genérica</li>
-                <li>• setFilter - Tipos de filtro específicos</li>
-                <li>• clearFilters - Descripción mejorada</li>
-                <li>• getMyReservations - Clarificación de uso</li>
-                <li>• suggestActivities - Parámetros opcionales bien definidos</li>
-                <li>• submitRating - Validación de rating 1-5</li>
-                <li>• getRatings - Descripción de propósito</li>
+                <li>• searchActivities - Buscar actividades por nombre o filtros</li>
+                <li>• getActivityDetails - Ver detalles de una actividad</li>
+                <li>• reserveActivity - Reservar plaza en actividad</li>
+                <li>• navigateToActivities - Navegar a lista de actividades</li>
+                <li>• setFilter - Aplicar filtros de búsqueda</li>
+                <li>• clearFilters - Limpiar filtros</li>
+                <li>• getMyReservations - Ver reservas del usuario</li>
+                <li>• suggestActivities - Recomendaciones personalizadas</li>
+                <li>• submitRating - Valorar actividad</li>
+                <li>• getRatings - Ver valoraciones</li>
+                <li className="text-primary font-medium">• searchCommunities - 🆕 Buscar comunidades/grupos</li>
+                <li className="text-primary font-medium">• navigateToCommunities - 🆕 Ir a comunidades</li>
               </ul>
             </div>
           </CardContent>

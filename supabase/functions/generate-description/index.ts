@@ -1,6 +1,5 @@
-// generate-description - Native Supabase Edge Function
-// Generates AI-powered activity descriptions using OpenAI (gpt-4o-mini)
-// NO Lovable dependencies - 100% native implementation
+// generate-description - Supabase Edge Function
+// Generates AI-powered activity descriptions using OpenAI
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -74,7 +73,6 @@ serve(async (req: Request) => {
       userPrompt += `\nUbicación: ${location}`;
     }
 
-    // Call OpenAI API directly (no Lovable gateway)
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {

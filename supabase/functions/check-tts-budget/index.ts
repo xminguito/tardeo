@@ -213,7 +213,7 @@ serve(async (req) => {
                 type: 'section',
                 text: {
                   type: 'mrkdwn',
-                  text: `<https://tardeo.lovable.app/admin/tts-monitor|View TTS Monitor Dashboard>`,
+                  text: `<https://tardeo.app/admin/tts-monitor|View TTS Monitor Dashboard>`,
                 },
               },
             ],

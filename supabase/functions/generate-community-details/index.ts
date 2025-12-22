@@ -1,6 +1,5 @@
-// generate-community-details - Native Supabase Edge Function
-// Generates AI-powered community details (name, description, category) using OpenAI (gpt-4o-mini)
-// NO Lovable dependencies - 100% native implementation
+// generate-community-details - Supabase Edge Function
+// Generates AI-powered community details (name, description, category) using OpenAI
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 

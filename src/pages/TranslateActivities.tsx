@@ -85,7 +85,7 @@ export default function TranslateActivities() {
               <AlertDescription>
                 Este proceso buscará todas las actividades que tienen título y descripción en español
                 pero no en otros idiomas, y las traducirá automáticamente a inglés, catalán, francés, 
-                italiano y alemán usando Lovable AI.
+                italiano y alemán usando IA.
               </AlertDescription>
             </Alert>
 

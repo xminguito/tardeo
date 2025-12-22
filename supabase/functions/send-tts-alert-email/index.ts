@@ -114,7 +114,7 @@ const handler = async (req: Request): Promise<Response> => {
                       </div>
                       
                       <div style="margin: 30px 0; text-align: center;">
-                        <a href="https://tardeo.lovable.app/tts-monitor" style="display: inline-block; background-color: ${severityColor}; color: #ffffff; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-weight: 600; font-size: 14px;">
+                        <a href="https://tardeo.app/tts-monitor" style="display: inline-block; background-color: ${severityColor}; color: #ffffff; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-weight: 600; font-size: 14px;">
                           Ver Dashboard de Monitoreo
                         </a>
                       </div>

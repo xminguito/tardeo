@@ -1,6 +1,5 @@
-// translate-activity - Native Supabase Edge Function
+// translate-activity - Supabase Edge Function
 // Translates activity title and description to 5 languages using OpenAI
-// NO Lovable dependencies - 100% native implementation
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 

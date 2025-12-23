@@ -224,10 +224,13 @@ All colors MUST be HSL.
 }
 
 /* ============================================================================
-   View Transitions API - Heritage Effect
+   View Transitions API - Seamless Navigation (Horizon-style)
    ============================================================================
    
    Native browser transitions for smooth page navigation.
+   Architecture: Only page-content transitions, static UI elements (BottomNav,
+   VoiceAssistant) remain fixed - similar to Shopify Horizon theme.
+   
    Supported in: Chrome 111+, Edge 111+, Opera 97+
    Fallback: Instant navigation in Safari/Firefox
    
@@ -236,35 +239,61 @@ All colors MUST be HSL.
 
 /* Only apply animations when user hasn't requested reduced motion */
 @media (prefers-reduced-motion: no-preference) {
-  /* Default cross-fade transition for the entire page */
-  ::view-transition-old(root) {
-    animation: heritage-fade-out 300ms cubic-bezier(0.4, 0, 0.2, 1) both;
-  }
-
+  /* ============================================================================
+     ROOT TRANSITION - DISABLED
+     ============================================================================
+     Disabling root transitions prevents the entire UI from animating,
+     allowing fixed elements (BottomNav, overlays) to stay static.
+     ============================================================================ */
+  ::view-transition-old(root),
   ::view-transition-new(root) {
-    animation: heritage-fade-in 300ms cubic-bezier(0.4, 0, 0.2, 1) both;
+    animation: none;
+    mix-blend-mode: normal;
   }
 
-  /* Heritage Effect Keyframes */
-  @keyframes heritage-fade-out {
+  /* ============================================================================
+     PAGE CONTENT TRANSITION
+     ============================================================================
+     Only the main content area transitions. This creates the seamless SPA
+     experience where navigation feels instant and native.
+     ============================================================================ */
+  
+  /* Old page content - fades out with scale down and blur */
+  ::view-transition-old(page-content) {
+    animation: page-fade-out-scale 280ms cubic-bezier(0.32, 0, 0.67, 0) forwards;
+    mix-blend-mode: normal;
+  }
+
+  /* New page content - slides up and fades in */
+  ::view-transition-new(page-content) {
+    animation: page-fade-in-slide 420ms cubic-bezier(0.22, 1, 0.36, 1) 80ms forwards;
+    mix-blend-mode: normal;
+  }
+
+  /* Page Content Keyframes - Heritage-inspired */
+  @keyframes page-fade-out-scale {
     from {
       opacity: 1;
       transform: scale(1) translateY(0);
+      filter: blur(0);
     }
     to {
       opacity: 0;
-      transform: scale(0.98) translateY(8px);
+      transform: scale(0.98) translateY(4px);
+      filter: blur(4px);
     }
   }
 
-  @keyframes heritage-fade-in {
+  @keyframes page-fade-in-slide {
     from {
       opacity: 0;
-      transform: scale(1.02) translateY(-8px);
+      transform: translateY(15px);
+      filter: blur(2px);
     }
     to {
       opacity: 1;
-      transform: scale(1) translateY(0);
+      transform: translateY(0);
+      filter: blur(0);
     }
   }
 
@@ -282,6 +311,7 @@ All colors MUST be HSL.
   ::view-transition-new(community-image) {
     animation-duration: 350ms;
     animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    mix-blend-mode: normal;
   }
 
   /* Activity Card Title - Text morphing */
@@ -289,9 +319,10 @@ All colors MUST be HSL.
   ::view-transition-new(activity-title) {
     animation-duration: 300ms;
     animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    mix-blend-mode: normal;
   }
 
-  /* Header - Persist across transitions */
+  /* Header - Persist across transitions (static) */
   ::view-transition-group(header) {
     animation-duration: 0ms;
   }
@@ -306,15 +337,30 @@ All colors MUST be HSL.
   ::view-transition-group(*) {
     animation-fill-mode: both;
   }
+
+  /* Ensure page-content group is properly isolated */
+  ::view-transition-group(page-content) {
+    isolation: isolate;
+    animation-fill-mode: forwards;
+  }
+
+  /* Image pair for page content - prevent visual artifacts */
+  ::view-transition-image-pair(page-content) {
+    isolation: isolate;
+    mix-blend-mode: normal;
+  }
 }
 
 /* Instant transitions for users who prefer reduced motion */
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(root),
   ::view-transition-new(root),
+  ::view-transition-old(page-content),
+  ::view-transition-new(page-content),
   ::view-transition-old(*),
   ::view-transition-new(*) {
     animation: none !important;
     transition: none !important;
+    filter: none !important;
   }
 }

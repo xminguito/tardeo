@@ -204,113 +204,127 @@ const AppContent = () => {
   return (
     <UserLocationProvider>
       <OnboardingGuard>
-        {/* PageTransition handles native View Transitions API for smooth page changes */}
-        <PageTransition>
-          <Routes>
-            <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/mi-cuenta" element={<MyAccount />} />
-          <Route path="/mis-actividades" element={<MyActivities />} />
-          <Route path="/mis-creaciones" element={<MyCreations />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/perfil" element={<Profile />} />
-          <Route path="/favoritos" element={<Favorites />} />
-          <Route path="/notificaciones" element={<Notifications />} />
-          <Route path="/actividades" element={<ActivitiesCalendar />} />
-          <Route path="/actividades/:slug" element={<ActivityDetail />} />
-          <Route path="/communities" element={<Suspense fallback={<div>Loading...</div>}><CommunitiesList /></Suspense>} />
-          <Route path="/communities/:slug" element={<Suspense fallback={<div>Loading...</div>}><CommunityDetail /></Suspense>} />
-          <Route path="/sobre-tardeo" element={<About />} />
-          <Route path="/privacidad" element={<PrivacyPolicy />} />
-          
-          {/* Social Routes */}
-          <Route path="/chat" element={
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
-              <Chat />
-            </Suspense>
-          } />
-          <Route path="/friends" element={
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
-              <Friends />
-            </Suspense>
-          } />
-          {/* Public profile routes - support both UUID and username */}
-          <Route path="/u/:identifier" element={
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
-              <UserProfile />
-            </Suspense>
-          } />
-          {/* Legacy route for backwards compatibility */}
-          <Route path="/user/:identifier" element={
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
-              <UserProfile />
-            </Suspense>
-          } />
-          <Route path="/explorar-perfiles" element={
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
-              <ExploreProfiles />
-            </Suspense>
-          } />
+        {/* 
+          Main content wrapper with viewTransitionName for seamless navigation.
+          Only this container transitions - BottomNav, VoiceAssistant stay static.
+          Similar to Shopify Horizon theme architecture.
+        */}
+        <main 
+          className="flex-1 flex flex-col min-h-screen"
+          style={{ viewTransitionName: 'page-content' }}
+        >
+          {/* PageTransition handles native View Transitions API for smooth page changes */}
+          <PageTransition>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/mi-cuenta" element={<MyAccount />} />
+              <Route path="/mis-actividades" element={<MyActivities />} />
+              <Route path="/mis-creaciones" element={<MyCreations />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/perfil" element={<Profile />} />
+              <Route path="/favoritos" element={<Favorites />} />
+              <Route path="/notificaciones" element={<Notifications />} />
+              <Route path="/actividades" element={<ActivitiesCalendar />} />
+              <Route path="/actividades/:slug" element={<ActivityDetail />} />
+              <Route path="/communities" element={<Suspense fallback={<div>Loading...</div>}><CommunitiesList /></Suspense>} />
+              <Route path="/communities/:slug" element={<Suspense fallback={<div>Loading...</div>}><CommunityDetail /></Suspense>} />
+              <Route path="/sobre-tardeo" element={<About />} />
+              <Route path="/privacidad" element={<PrivacyPolicy />} />
+              
+              {/* Social Routes */}
+              <Route path="/chat" element={
+                <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+                  <Chat />
+                </Suspense>
+              } />
+              <Route path="/friends" element={
+                <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+                  <Friends />
+                </Suspense>
+              } />
+              {/* Public profile routes - support both UUID and username */}
+              <Route path="/u/:identifier" element={
+                <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+                  <UserProfile />
+                </Suspense>
+              } />
+              {/* Legacy route for backwards compatibility */}
+              <Route path="/user/:identifier" element={
+                <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+                  <UserProfile />
+                </Suspense>
+              } />
+              <Route path="/explorar-perfiles" element={
+                <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+                  <ExploreProfiles />
+                </Suspense>
+              } />
 
+              
+              {/* Admin routes with layout */}
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<Admin />} />
+                <Route path="analytics" element={
+                  <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><p className="text-lg text-muted-foreground">Loading...</p></div>}>
+                    <AnalyticsDashboard />
+                  </Suspense>
+                } />
+                <Route path="hero-banners" element={
+                  <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><p className="text-lg text-muted-foreground">Loading...</p></div>}>
+                    <HeroBannersManager />
+                  </Suspense>
+                } />
+                <Route path="usuarios" element={
+                  <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><p className="text-lg text-muted-foreground">Loading...</p></div>}>
+                    <UserManagement />
+                  </Suspense>
+                } />
+                <Route path="archivos" element={
+                  <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><p className="text-lg text-muted-foreground">Loading...</p></div>}>
+                    <FileManager />
+                  </Suspense>
+                } />
+                <Route path="configuracion" element={
+                  <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><p className="text-lg text-muted-foreground">Loading...</p></div>}>
+                    <SiteSettings />
+                  </Suspense>
+                } />
+                <Route path="notificaciones" element={<NotificationSettings />} />
+                <Route path="tts-costs" element={<TTSCostDashboard />} />
+                <Route path="voice-quality" element={<VoiceQualityDashboard />} />
+                <Route path="tts-monitor" element={<TTSMonitor />} />
+                <Route path="tts-alerts" element={<TTSAlertsConfig />} />
+                <Route path="tts-analytics" element={<TTSAnalytics />} />
+                <Route path="email-tester" element={<EmailTester />} />
+                <Route path="plantillas-email" element={<EmailTemplates />} />
+                <Route path="update-agent" element={<UpdateAgent />} />
+                <Route path="traducir-actividades" element={<TranslateActivities />} />
+                <Route path="paginas" element={
+                  <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><p className="text-lg text-muted-foreground">Loading...</p></div>}>
+                    <PagesManager />
+                  </Suspense>
+                } />
+              </Route>
+              
+              {/* Dynamic CMS Pages - MUST be before the catch-all 404 route */}
+              {/* This catches root-level slugs like /privacidad, /terminos, etc. */}
+              <Route path="/:slug" element={<DynamicPage />} />
+              
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </PageTransition>
           
-          {/* Admin routes with layout */}
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<Admin />} />
-            <Route path="analytics" element={
-              <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><p className="text-lg text-muted-foreground">Loading...</p></div>}>
-                <AnalyticsDashboard />
-              </Suspense>
-            } />
-            <Route path="hero-banners" element={
-              <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><p className="text-lg text-muted-foreground">Loading...</p></div>}>
-                <HeroBannersManager />
-              </Suspense>
-            } />
-            <Route path="usuarios" element={
-              <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><p className="text-lg text-muted-foreground">Loading...</p></div>}>
-                <UserManagement />
-              </Suspense>
-            } />
-            <Route path="archivos" element={
-              <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><p className="text-lg text-muted-foreground">Loading...</p></div>}>
-                <FileManager />
-              </Suspense>
-            } />
-            <Route path="configuracion" element={
-              <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><p className="text-lg text-muted-foreground">Loading...</p></div>}>
-                <SiteSettings />
-              </Suspense>
-            } />
-            <Route path="notificaciones" element={<NotificationSettings />} />
-            <Route path="tts-costs" element={<TTSCostDashboard />} />
-            <Route path="voice-quality" element={<VoiceQualityDashboard />} />
-            <Route path="tts-monitor" element={<TTSMonitor />} />
-            <Route path="tts-alerts" element={<TTSAlertsConfig />} />
-            <Route path="tts-analytics" element={<TTSAnalytics />} />
-            <Route path="email-tester" element={<EmailTester />} />
-            <Route path="plantillas-email" element={<EmailTemplates />} />
-            <Route path="update-agent" element={<UpdateAgent />} />
-            <Route path="traducir-actividades" element={<TranslateActivities />} />
-            <Route path="paginas" element={
-              <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><p className="text-lg text-muted-foreground">Loading...</p></div>}>
-                <PagesManager />
-              </Suspense>
-            } />
-          </Route>
-          
-          {/* Dynamic CMS Pages - MUST be before the catch-all 404 route */}
-          {/* This catches root-level slugs like /privacidad, /terminos, etc. */}
-          <Route path="/:slug" element={<DynamicPage />} />
-          
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-          </Routes>
-        </PageTransition>
+          {/* Footer - Hidden on auth, onboarding, and admin routes (handled internally) */}
+          <Footer />
+        </main>
         
-        {/* Footer - Hidden on auth, onboarding, and admin routes (handled internally) */}
-        <Footer />
-        
+        {/* 
+          Static UI elements - OUTSIDE the page-content transition container.
+          These remain fixed during navigation for seamless SPA experience.
+        */}
         <VoiceAssistant clientTools={voiceTools} />
         <PWAInstallPrompt />
         

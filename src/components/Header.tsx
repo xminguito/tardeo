@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import tardeoLogo from '@/assets/tardeo-logo-white.webp';
 import { Badge } from '@/components/ui/badge';
-import { User, Heart, Settings, LogIn, Users, MessageCircle, Search, Command, UsersRound } from 'lucide-react';
+import { UserRound, Heart, Settings, LogIn, Compass, MessageCircle, Search, Globe } from 'lucide-react';
 import LanguageSelector from '@/components/LanguageSelector';
 import LocationSelector from '@/components/LocationSelector';
 import NotificationsDropdown from '@/components/NotificationsDropdown';
@@ -87,7 +87,7 @@ export default function Header({ user, isUserAdmin = false, favoritesCount = 0 }
                     </Button>
                   )}
                   <Button variant="secondary" onClick={() => navigate("/mi-cuenta")}>
-                    <User className="mr-1 h-5 w-5" />
+                    <UserRound className="mr-1 h-5 w-5" />
                     {t('home.profile')}
                   </Button>
                   <Button 
@@ -105,15 +105,18 @@ export default function Header({ user, isUserAdmin = false, favoritesCount = 0 }
                   <Button 
                     variant="secondary" 
                     onClick={() => navigate("/communities")}
-                    title={t('nav.communities')}
+                    title={t('nav.communities', 'Comunidades')}
+                    aria-label={t('nav.communities', 'Comunidades')}
                   >
-                    <UsersRound className="h-5 w-5" />
+                    <Globe className="h-5 w-5" />
                   </Button>
                   <Button 
                     variant="secondary" 
                     onClick={() => navigate("/explorar-perfiles")}
+                    title={t('nav.exploreProfiles', 'Explorar perfiles')}
+                    aria-label={t('nav.exploreProfiles', 'Explorar perfiles')}
                   >
-                    <Users className="h-5 w-5" />
+                    <Compass className="h-5 w-5" />
                   </Button>
                   <Button 
                     variant="secondary" 

@@ -209,8 +209,8 @@ const AppContent = () => {
           Only this container transitions - BottomNav, VoiceAssistant stay static.
           Similar to Shopify Horizon theme architecture.
         */}
-        <main 
-          className="flex-1 flex flex-col min-h-screen"
+        <div 
+          className="flex-1 overflow-y-auto overflow-x-hidden"
           style={{ viewTransitionName: 'page-content' }}
         >
           {/* PageTransition handles native View Transitions API for smooth page changes */}
@@ -319,7 +319,7 @@ const AppContent = () => {
           
           {/* Footer - Hidden on auth, onboarding, and admin routes (handled internally) */}
           <Footer />
-        </main>
+        </div>
         
         {/* 
           Static UI elements - OUTSIDE the page-content transition container.

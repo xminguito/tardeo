@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useFavorites } from "@/features/activities/hooks/useFavorites";
 import { useActivities, ACTIVITIES_QUERY_KEY } from "@/features/activities/hooks/useActivities";
 import { useNextActivity } from "@/features/activities/hooks/useUpcomingActivities";
+import { useCommunities } from "@/features/communities/hooks/useCommunities";
+import CommunityCard from "@/features/communities/components/CommunityCard";
 import { useSliderByPage } from "@/hooks/useSliderByPage";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
@@ -34,11 +36,17 @@ const Index = () => {
   // Use the enhanced useActivities hook that includes participant data
   const { data: activities = [], isLoading: loading } = useActivities();
   
+  // Fetch communities
+  const { data: communities = [], isLoading: communitiesLoading } = useCommunities();
+  
   // Fetch user's upcoming activities for personalized hero
   const { nextActivity, upcomingActivities, upcomingCount, isLoading: upcomingLoading } = useNextActivity();
   
   // Limit to 6 activities for the home page
   const featuredActivities = activities.slice(0, 6);
+  
+  // Limit to 4 communities for the home page
+  const featuredCommunities = communities.slice(0, 4);
   
   // Load slider for home page
   const { slides: heroSlides, loading: bannersLoading } = useSliderByPage('/');
@@ -218,6 +226,38 @@ const Index = () => {
             </div>
           </div>
         </div>
+
+        {/* Featured Communities Section */}
+        <section className="mb-12">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+            <h2 className="text-2xl md:text-3xl font-semibold">{t('home.featuredCommunities')}</h2>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="md:size-default"
+              onClick={() => navigate("/communities")}
+            >
+              {t('home.viewAllCommunities')}
+            </Button>
+          </div>
+          {communitiesLoading ? (
+            <p className="text-muted-foreground text-lg">{t('common.loading')}</p>
+          ) : featuredCommunities.length === 0 ? (
+            <p className="text-muted-foreground text-lg">{t('home.noCommunities')}</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {featuredCommunities.map((community, index) => (
+                <div 
+                  key={community.id}
+                  className="animate-fade-in"
+                  style={{ animationDelay: `${index * 0.1}s`, animationFillMode: 'backwards' }}
+                >
+                  <CommunityCard community={community} />
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
 
         {!user && (
           <div className="bg-secondary/20 border-2 border-secondary rounded-2xl p-8 mb-12 text-center">

@@ -157,6 +157,9 @@ export default {
     findYourTribe: "Trova la Tua Tribù",
     findYourTribeDesc: "Unisciti a comunità di persone che condividono i tuoi interessi",
     exploreCommunities: "Esplora Comunità",
+    featuredCommunities: "Comunità in evidenza",
+    viewAllCommunities: "Vedi tutte",
+    noCommunities: "Nessuna comunità disponibile ancora",
     createYourOwn: "o crea la tua",
     dashboard: {
       greeting: 'Il tuo prossimo piano',

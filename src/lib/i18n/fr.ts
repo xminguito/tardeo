@@ -156,6 +156,9 @@ export default {
     findYourTribe: 'Trouvez Votre Tribu',
     findYourTribeDesc: "Rejoignez des communautés de personnes qui partagent vos intérêts",
     exploreCommunities: 'Explorer les Communautés',
+    featuredCommunities: 'Communautés en vedette',
+    viewAllCommunities: 'Voir toutes',
+    noCommunities: 'Aucune communauté disponible pour le moment',
     createYourOwn: 'ou créez la vôtre',
     dashboard: {
       greeting: 'Ton prochain plan',

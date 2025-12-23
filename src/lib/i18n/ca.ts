@@ -155,6 +155,9 @@ export default {
     findYourTribe: 'Troba la teva Tribu',
     findYourTribeDesc: "Uneix-te a comunitats de persones que comparteixen els teus interessos",
     exploreCommunities: 'Explorar Comunitats',
+    featuredCommunities: 'Comunitats destacades',
+    viewAllCommunities: 'Veure totes',
+    noCommunities: 'No hi ha comunitats disponibles encara',
     createYourOwn: 'o crea la teva',
     joinNow: 'Uneix-te Ara',
     dashboard: {

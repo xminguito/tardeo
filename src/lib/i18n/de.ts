@@ -156,6 +156,9 @@ export default {
     findYourTribe: 'Finden Sie Ihren Stamm',
     findYourTribeDesc: "Treten Sie Gemeinschaften von Menschen bei, die Ihre Interessen teilen",
     exploreCommunities: 'Gemeinschaften Erkunden',
+    featuredCommunities: 'Ausgewählte Gemeinschaften',
+    viewAllCommunities: 'Alle anzeigen',
+    noCommunities: 'Noch keine Gemeinschaften verfügbar',
     createYourOwn: 'oder erstellen Sie Ihre eigene',
     dashboard: {
       greeting: 'Dein nächster Plan',

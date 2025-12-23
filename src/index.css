@@ -222,3 +222,99 @@ All colors MUST be HSL.
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
+
+/* ============================================================================
+   View Transitions API - Heritage Effect
+   ============================================================================
+   
+   Native browser transitions for smooth page navigation.
+   Supported in: Chrome 111+, Edge 111+, Opera 97+
+   Fallback: Instant navigation in Safari/Firefox
+   
+   @see https://developer.chrome.com/docs/web-platform/view-transitions/
+   ============================================================================ */
+
+/* Only apply animations when user hasn't requested reduced motion */
+@media (prefers-reduced-motion: no-preference) {
+  /* Default cross-fade transition for the entire page */
+  ::view-transition-old(root) {
+    animation: heritage-fade-out 300ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+
+  ::view-transition-new(root) {
+    animation: heritage-fade-in 300ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+
+  /* Heritage Effect Keyframes */
+  @keyframes heritage-fade-out {
+    from {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: scale(0.98) translateY(8px);
+    }
+  }
+
+  @keyframes heritage-fade-in {
+    from {
+      opacity: 0;
+      transform: scale(1.02) translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  /* ============================================================================
+     Shared Element Transitions (Hero Animations)
+     ============================================================================
+     These classes enable elements to "fly" between pages when they share
+     the same view-transition-name across routes.
+     ============================================================================ */
+
+  /* Activity/Community Image - Smooth morph transition */
+  ::view-transition-old(activity-image),
+  ::view-transition-new(activity-image),
+  ::view-transition-old(community-image),
+  ::view-transition-new(community-image) {
+    animation-duration: 350ms;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Activity Card Title - Text morphing */
+  ::view-transition-old(activity-title),
+  ::view-transition-new(activity-title) {
+    animation-duration: 300ms;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Header - Persist across transitions */
+  ::view-transition-group(header) {
+    animation-duration: 0ms;
+  }
+
+  /* Image-specific animations for smoother morphing */
+  ::view-transition-image-pair(activity-image),
+  ::view-transition-image-pair(community-image) {
+    isolation: isolate;
+  }
+
+  /* Prevent layout shift during transition */
+  ::view-transition-group(*) {
+    animation-fill-mode: both;
+  }
+}
+
+/* Instant transitions for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+    transition: none !important;
+  }
+}

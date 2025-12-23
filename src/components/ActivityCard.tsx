@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import type { ActivityWithParticipation, ParticipantPreview } from '@/features/activities/types/activity.types';
 import { cn } from '@/lib/utils';
 import { generateActivitySlug } from '@/lib/utils';
+import { useViewTransitionName } from '@/components/PageTransition';
 
 /** Avatar Stack component for showing participants */
 function ParticipantAvatarStack({
@@ -124,6 +125,9 @@ export default function ActivityCard({ activity, onReserve, isFavorite = false, 
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const isFull = activity.availableSlots <= 0;
+  
+  // View Transitions API: unique name for hero animation
+  const imageTransitionName = useViewTransitionName('activity-image', activity.id);
 
   const getDateLocale = () => {
     switch (i18n.language) {
@@ -157,6 +161,7 @@ export default function ActivityCard({ activity, onReserve, isFavorite = false, 
             src={activity.image_url}
             alt={activity.title}
             className="w-full h-full object-cover"
+            style={{ viewTransitionName: imageTransitionName }}
           />
         </div>
       )}

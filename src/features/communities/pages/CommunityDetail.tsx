@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Users as UsersIcon, Calendar, Settings } from 'lucide-react';
 import Header from '@/components/Header';
-import PageTransition from '@/components/PageTransition';
+import PageTransition, { useViewTransitionName } from '@/components/PageTransition';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -17,6 +17,9 @@ export default function CommunityDetail() {
   const navigate = useNavigate();
   const { data: community, isLoading } = useCommunity(slug!);
   const { join, leave, isJoining, isLeaving } = useJoinCommunity();
+  
+  // View Transitions API: Match the same name used in CommunityCard
+  const imageTransitionName = community ? useViewTransitionName('community-image', community.id) : undefined;
 
   if (isLoading) {
     return (
@@ -57,6 +60,7 @@ export default function CommunityDetail() {
               src={community.cover_image_url}
               alt={community.name}
               className="w-full h-full object-cover"
+              style={imageTransitionName ? { viewTransitionName: imageTransitionName } : undefined}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
           </div>

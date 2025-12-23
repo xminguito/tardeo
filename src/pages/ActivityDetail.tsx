@@ -452,6 +452,7 @@ export default function ActivityDetail() {
                 mainImage={activity.image_url}
                 secondaryImages={activity.secondary_images || []}
                 title={getTranslatedTitle(activity)}
+                activityId={activity.id}
               />
             )}
 

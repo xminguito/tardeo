@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import type { CommunityListItem } from '../types/community.types';
 import { useJoinCommunity } from '../hooks/useJoinCommunity';
+import { useViewTransitionName } from '@/components/PageTransition';
 
 interface CommunityCardProps {
   community: CommunityListItem;
@@ -15,6 +16,9 @@ export default function CommunityCard({ community }: CommunityCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { join, isJoining } = useJoinCommunity();
+  
+  // View Transitions API: unique name for hero animation
+  const imageTransitionName = useViewTransitionName('community-image', community.id);
 
   const handleJoinClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -37,6 +41,7 @@ export default function CommunityCard({ community }: CommunityCardProps) {
             src={community.cover_image_url}
             alt={community.name}
             className="w-full h-full object-cover"
+            style={{ viewTransitionName: imageTransitionName }}
           />
           {/* Avatar overlap */}
           {community.image_url && (

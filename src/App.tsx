@@ -40,6 +40,7 @@ import About from "./pages/About";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import BottomNav from "./components/BottomNav";
 import Footer from "./components/Footer";
+import PageTransition from "./components/PageTransition";
 import { UserLocationProvider } from "@/hooks/useUserLocation";
 import { initAnalytics, track } from "@/lib/analytics";
 import { RealtimeNotificationsProvider } from "@/components/RealtimeNotificationsProvider";
@@ -203,8 +204,10 @@ const AppContent = () => {
   return (
     <UserLocationProvider>
       <OnboardingGuard>
-        <Routes>
-          <Route path="/" element={<Index />} />
+        {/* PageTransition handles native View Transitions API for smooth page changes */}
+        <PageTransition>
+          <Routes>
+            <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/mi-cuenta" element={<MyAccount />} />
@@ -302,7 +305,8 @@ const AppContent = () => {
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
-        </Routes>
+          </Routes>
+        </PageTransition>
         
         {/* Footer - Hidden on auth, onboarding, and admin routes (handled internally) */}
         <Footer />

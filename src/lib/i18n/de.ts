@@ -126,7 +126,7 @@ export default {
   },
   home: {
     title: 'Tardeo',
-    subtitle: 'Finden Sie Aktivitäten und Freunde mit Ihren gleichen Interessen',
+    subtitle: 'Finden Sie Freunde mit Ihren gleichen Interessen',
     profile: 'Profil',
     login: 'Anmelden',
     logout: 'Abmelden',

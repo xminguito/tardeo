@@ -148,7 +148,7 @@ export default {
   },
   home: {
     title: "Tardeo",
-    subtitle: "Encuentra actividades y amigos con tus mismos intereses",
+    subtitle: "Encuentra amigos con tus mismos intereses",
     profile: "Perfil",
     login: "Iniciar sesión",
     logout: "Cerrar sesión",

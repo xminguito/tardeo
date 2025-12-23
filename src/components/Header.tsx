@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import tardeoLogo from '@/assets/tardeo-logo.jpg';
+import tardeoLogo from '@/assets/tardeo-logo-white.webp';
 import { Badge } from '@/components/ui/badge';
 import { User, Heart, Settings, LogIn, Users, MessageCircle, Search, Command, UsersRound } from 'lucide-react';
 import LanguageSelector from '@/components/LanguageSelector';

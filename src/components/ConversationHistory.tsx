@@ -49,8 +49,8 @@ const ConversationHistory = ({ messages, isVisible, onClose, onSendTextMessage, 
   if (!isVisible) return null;
 
   return (
-    <Card className="fixed bottom-32 right-8 z-40 w-96 h-[500px] flex flex-col shadow-2xl">
-      <div className="p-4 border-b bg-primary/5 flex items-center justify-between">
+    <Card className="fixed bottom-36 lg:bottom-24 left-0 lg:left-4 z-40 w-full lg:w-96 h-[500px] flex flex-col justify-start items-start shadow-2xl">
+      <div className="p-4 w-full border-b bg-primary/5 flex items-center justify-between">
         <h3 className="font-semibold text-sm">{t('voice.conversationHistory')}</h3>
         <div className="flex items-center gap-1">
           {onClearHistory && messages.length > 0 && (
@@ -120,7 +120,7 @@ const ConversationHistory = ({ messages, isVisible, onClose, onSendTextMessage, 
       </ScrollArea>
       
       {onSendTextMessage && (
-        <div className="p-4 border-t bg-background/50 flex gap-2">
+        <div className="w-full p-4 border-t bg-background/50 flex gap-2">
           <Input
             value={textInput}
             onChange={(e) => setTextInput(e.target.value)}

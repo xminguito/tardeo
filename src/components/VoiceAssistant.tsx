@@ -801,7 +801,7 @@ const VoiceAssistant = ({
       <div 
         className={`
           fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-4 left-4 z-50 
-          flex gap-2 items-end transition-all duration-500 ease-in-out
+          flex gap-2 items-center transition-all duration-500 ease-in-out
           ${isHidden ? '-translate-x-[90%] opacity-60' : 'translate-x-0 opacity-100'}
         `}
         onMouseEnter={handleInteractionStart}
@@ -809,7 +809,7 @@ const VoiceAssistant = ({
         onTouchStart={handleInteractionStart}
       >
         {/* Botón para activar voz cuando el chat está abierto */}
-        {showHistory && !isConnected && !isConnecting && <Button onClick={startConversation} size="sm" variant="outline" className="text-xs bg-background/90 px-3 py-2 rounded-full shadow-lg border hover:bg-primary hover:text-primary-foreground transition-colors">
+        {showHistory && !isConnected && !isConnecting && <Button onClick={startConversation} size="lg" variant="outline" className="text-xs bg-primary/90 text-primary-foreground px-3 py-2 rounded-full shadow-lg border hover:bg-background/90 hover:text-green-900 transition-colors">
             💬 Modo texto · Presiona 🎙️ para voz
           </Button>}
         

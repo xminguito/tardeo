@@ -393,6 +393,23 @@ export function useCommunityCreation(
 
       queryClient.invalidateQueries({ queryKey: ['communities'] });
 
+      // Trigger translation in background (fire-and-forget)
+      // Don't await - let it run asynchronously
+      supabase.functions
+        .invoke('translate-community', {
+          body: { communityId: community.id },
+        })
+        .then(({ error }) => {
+          if (error) {
+            console.error('Background translation failed:', error);
+          } else {
+            console.log('Community translation completed in background');
+          }
+        })
+        .catch((err) => {
+          console.error('Translation invocation failed:', err);
+        });
+
       // Reset all state
       resetForm();
       onSuccess?.();

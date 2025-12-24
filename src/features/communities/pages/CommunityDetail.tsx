@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Users as UsersIcon, Calendar, Settings } from 'lucide-react';
+import { ArrowLeft, Users as UsersIcon, Calendar, Settings, Languages, Loader2 } from 'lucide-react';
 import PageTransition, { useViewTransitionName } from '@/components/PageTransition';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,17 +9,55 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCommunity } from '../hooks/useCommunity';
 import { useJoinCommunity } from '../hooks/useJoinCommunity';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import NotFound from '@/pages/NotFound';
+
+// Show translation button only in development or for admins
+const isDev = import.meta.env.DEV;
 
 export default function CommunityDetail() {
   const { slug } = useParams<{ slug: string }>();
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { data: community, isLoading } = useCommunity(slug!);
+  const { toast } = useToast();
+  const { data: community, isLoading, refetch } = useCommunity(slug!);
   const { join, leave, isJoining, isLeaving } = useJoinCommunity();
+  const [isTranslating, setIsTranslating] = useState(false);
   
   // View Transitions API: Match the same name used in CommunityCard
   const imageTransitionName = community ? useViewTransitionName('community-image', community.id) : undefined;
+
+  // Force translation handler (dev/admin only)
+  const handleForceTranslation = async () => {
+    if (!community) return;
+    
+    setIsTranslating(true);
+    try {
+      const { error } = await supabase.functions.invoke('translate-community', {
+        body: { communityId: community.id },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Traducción completada',
+        description: 'La comunidad ha sido traducida a todos los idiomas.',
+      });
+
+      // Refetch to show updated translations
+      refetch();
+    } catch (err) {
+      console.error('Translation error:', err);
+      toast({
+        title: 'Error de traducción',
+        description: err instanceof Error ? err.message : 'Error desconocido',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsTranslating(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -113,6 +152,22 @@ export default function CommunityDetail() {
                     {community.user_role === 'admin' && (
                       <Button variant="outline" size="lg">
                         <Settings className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {/* Force Translation Button - Dev/Admin only */}
+                    {(isDev || community.user_role === 'admin') && (
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={handleForceTranslation}
+                        disabled={isTranslating}
+                        title="Forzar traducción a todos los idiomas"
+                      >
+                        {isTranslating ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Languages className="h-4 w-4" />
+                        )}
                       </Button>
                     )}
                   </div>

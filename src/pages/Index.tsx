@@ -162,16 +162,13 @@ const Index = () => {
                             userName={userProfile?.full_name?.split(' ')[0] || user.email?.split('@')[0] || 'Usuario'}
                             activities={upcomingActivities}
                         />
-                    ) : !user ? (
-                        /* State B: Discovery Mode for non-logged users */
-                        !bannersLoading && heroSlides.length > 0 ? (
-                            <HeroSlider slides={heroSlides} autoplayInterval={5000}/>
-                        ) : null
                     ) : (
-                        /* State C: Logged in but no upcoming activities - show discovery slider */
-                        !bannersLoading && heroSlides.length > 0 && (
-                            <HeroSlider slides={heroSlides} autoplayInterval={5000}/>
-                        )
+                        /* State B & C: Discovery Mode - Always render slider to prevent CLS */
+                        <HeroSlider 
+                            slides={heroSlides} 
+                            autoplayInterval={5000}
+                            isLoading={bannersLoading}
+                        />
                     )}
                 </div>
 

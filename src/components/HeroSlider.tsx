@@ -6,12 +6,14 @@
  * - Intersection Observer
  * - Minimal JavaScript
  * - Responsive
+ * - CLS Prevention: Reserved space with skeleton
  */
 
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
 interface Slide {
@@ -30,17 +32,20 @@ interface HeroSliderProps {
   slides: Slide[];
   autoplayInterval?: number; // milliseconds, 0 to disable
   className?: string;
+  isLoading?: boolean; // Loading state for skeleton
 }
 
 export default function HeroSlider({
   slides,
   autoplayInterval = 5000,
   className,
+  isLoading = false,
 }: HeroSliderProps) {
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoplayPaused, setIsAutoplayPaused] = useState(false);
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set([0]));
+  const [imageLoadStates, setImageLoadStates] = useState<Record<number, boolean>>({});
   const sliderRef = useRef<HTMLDivElement>(null);
   const autoplayTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -100,62 +105,88 @@ export default function HeroSlider({
     goToSlide(newIndex);
   };
 
-  if (slides.length === 0) {
-    return null;
-  }
+  const handleImageLoad = (index: number) => {
+    setImageLoadStates((prev) => ({ ...prev, [index]: true }));
+  };
+
+  // Always render container to prevent CLS - show skeleton when loading or no slides
+  const showSkeleton = isLoading || slides.length === 0;
 
   return (
     <div
       ref={sliderRef}
       className={cn(
-        'relative w-full h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden rounded-xl',
+        'relative w-full h-[300px] md:h-[500px] lg:h-[600px] overflow-hidden rounded-xl',
         className
       )}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      onMouseEnter={!showSkeleton ? handleMouseEnter : undefined}
+      onMouseLeave={!showSkeleton ? handleMouseLeave : undefined}
       role="region"
       aria-label="Hero carousel"
       aria-live="polite"
     >
-      {/* Slides */}
-      <div className="relative w-full h-full">
-        {slides.map((slide, index) => {
-          const isActive = index === currentIndex;
-          const shouldLoad = loadedImages.has(index);
+      {/* Skeleton State - Prevents CLS */}
+      {showSkeleton ? (
+        <div className="relative w-full h-full">
+          <Skeleton className="w-full h-full rounded-xl" />
+          {/* Optional: Add a subtle loading indicator */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-white/50 text-sm">Cargando...</div>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Slides */}
+          <div className="relative w-full h-full">
+            {slides.map((slide, index) => {
+              const isActive = index === currentIndex;
+              const shouldLoad = loadedImages.has(index);
+              const isImageLoaded = imageLoadStates[index];
 
-          return (
-            <div
-              key={slide.id}
-              className={cn(
-                'absolute inset-0 transition-opacity duration-700 ease-in-out',
-                isActive ? 'opacity-100 z-10' : 'opacity-0 z-0'
-              )}
-              aria-hidden={!isActive}
-            >
-              {/* Image with gradient overlay */}
-              <div className="relative w-full h-full">
-                {shouldLoad ? (
-                  <picture>
-                    {slide.mobileImage && (
-                      <source 
-                        media="(max-width: 768px)" 
-                        srcSet={slide.mobileImage}
-                      />
+              return (
+                <div
+                  key={slide.id}
+                  className={cn(
+                    'absolute inset-0 transition-opacity duration-700 ease-in-out',
+                    isActive ? 'opacity-100 z-10' : 'opacity-0 z-0'
+                  )}
+                  aria-hidden={!isActive}
+                >
+                  {/* Image with gradient overlay */}
+                  <div className="relative w-full h-full">
+                    {shouldLoad ? (
+                      <>
+                        <picture>
+                          {slide.mobileImage && (
+                            <source 
+                              media="(max-width: 768px)" 
+                              srcSet={slide.mobileImage}
+                            />
+                          )}
+                          <img
+                            src={slide.image}
+                            alt={slide.title}
+                            className={cn(
+                              'w-full h-full object-cover transition-opacity duration-500',
+                              isImageLoaded ? 'opacity-100' : 'opacity-0'
+                            )}
+                            loading={index === 0 ? 'eager' : 'lazy'}
+                            decoding={index === 0 ? 'sync' : 'async'}
+                            fetchPriority={index === 0 ? 'high' : 'auto'}
+                            onLoad={() => handleImageLoad(index)}
+                          />
+                        </picture>
+                        {/* Show skeleton behind image until it loads */}
+                        {!isImageLoaded && (
+                          <div className="absolute inset-0 bg-muted animate-pulse" />
+                        )}
+                      </>
+                    ) : (
+                      <div className="w-full h-full bg-muted animate-pulse" />
                     )}
-                    <img
-                      src={slide.image}
-                      alt={slide.title}
-                      className="w-full h-full object-cover"
-                      loading={index === 0 ? 'eager' : 'lazy'}
-                      decoding={index === 0 ? 'sync' : 'async'}
-                    />
-                  </picture>
-                ) : (
-                  <div className="w-full h-full bg-muted animate-pulse" />
-                )}
-                {/* Gradient overlay for text readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-              </div>
+                    {/* Gradient overlay for text readability */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+                  </div>
 
               {/* Content */}
               <div className="absolute inset-0 flex lg:items-end z-20 top-12">
@@ -219,7 +250,7 @@ export default function HeroSlider({
       </div>
 
       {/* Navigation Arrows */}
-      {slides.length > 1 && (
+      {!showSkeleton && slides.length > 1 && (
         <>
           <button
             onClick={goToPrevious}
@@ -239,7 +270,7 @@ export default function HeroSlider({
       )}
 
       {/* Dots Navigation */}
-      {slides.length > 1 && (
+      {!showSkeleton && slides.length > 1 && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex gap-2 items-center">
           {slides.map((slide, index) => (
             <button
@@ -265,10 +296,12 @@ export default function HeroSlider({
       )}
 
       {/* Pause indicator (optional) */}
-      {autoplayInterval > 0 && isAutoplayPaused && (
+      {!showSkeleton && autoplayInterval > 0 && isAutoplayPaused && (
         <div className="absolute top-4 right-4 z-30 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 text-xs text-white">
           Paused
         </div>
+      )}
+        </>
       )}
     </div>
   );

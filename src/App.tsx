@@ -267,8 +267,8 @@ const AppContent = () => {
                 <Route path="/notificaciones" element={<Notifications />} />
                 <Route path="/actividades" element={<ActivitiesCalendar />} />
                 <Route path="/actividades/:slug" element={<ActivityDetail />} />
-                <Route path="/communities" element={<Suspense fallback={<div>Loading...</div>}><CommunitiesList /></Suspense>} />
-                <Route path="/communities/:slug" element={<Suspense fallback={<div>Loading...</div>}><CommunityDetail /></Suspense>} />
+                <Route path="/communities" element={<Suspense fallback={<div className="min-h-screen bg-background"><div className="bg-gradient-to-r from-primary/10 to-primary/5 h-[280px] md:h-[320px]" /></div>}><CommunitiesList /></Suspense>} />
+                <Route path="/communities/:slug" element={<Suspense fallback={<div className="min-h-screen bg-background"><div className="bg-gradient-to-r from-primary/10 to-primary/5 h-[280px] md:h-[320px]" /></div>}><CommunityDetail /></Suspense>} />
                 <Route path="/sobre-tardeo" element={<About />} />
                 <Route path="/privacidad" element={<PrivacyPolicy />} />
                 

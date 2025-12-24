@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, MessageCircle, ArrowLeft, Menu } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
-import Header from "@/components/Header";
 import { useTranslation } from "react-i18next";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -144,7 +143,6 @@ const Chat = () => {
 
   return (
     <PageTransition>
-      <Header user={user} isUserAdmin={isUserAdmin} favoritesCount={0} />
       <div className="container mx-auto px-0 md:px-4 py-0 md:py-4">
         <div className="flex h-[calc(100vh-8rem)] md:h-[calc(100vh-10rem)] bg-background md:rounded-xl md:border md:shadow-sm overflow-hidden">
           {/* Sidebar - Desktop */}

@@ -9,7 +9,6 @@ import { Search, MapPin, Users, Calendar, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/PageHeader";
 import PageTransition from "@/components/PageTransition";
-import Header from "@/components/Header";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useFavorites } from "@/features/activities/hooks/useFavorites";
@@ -157,11 +156,6 @@ export default function ExploreProfiles() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header 
-        user={user} 
-        isUserAdmin={isUserAdmin} 
-        favoritesCount={favorites.size}
-      />
       <PageTransition>
         <div className="container mx-auto px-4 py-8 max-w-7xl">
           <PageHeader 

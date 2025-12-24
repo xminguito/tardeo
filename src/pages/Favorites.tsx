@@ -10,7 +10,6 @@ import { useFavorites } from '@/features/activities/hooks/useFavorites';
 import type { ActivityWithParticipation } from '@/features/activities/types/activity.types';
 import PageHeader from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
-import Header from '@/components/Header';
 import PageTransition from '@/components/PageTransition';
 
 interface Activity {
@@ -147,11 +146,6 @@ export default function Favorites() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header 
-        user={user} 
-        isUserAdmin={isUserAdmin} 
-        favoritesCount={favorites.size}
-      />
       <PageTransition>
         <div className="container mx-auto px-4 py-8 max-w-7xl">
         <PageHeader

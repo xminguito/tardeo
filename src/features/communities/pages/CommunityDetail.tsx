@@ -1,7 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Users as UsersIcon, Calendar, Settings } from 'lucide-react';
-import Header from '@/components/Header';
 import PageTransition, { useViewTransitionName } from '@/components/PageTransition';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,7 +24,6 @@ export default function CommunityDetail() {
     return (
       <PageTransition>
         <div className="min-h-screen bg-background">
-          <Header user={null} />
           <div className="container mx-auto px-4 py-6">
             <Skeleton className="h-64 w-full rounded-xl mb-6" />
             <Skeleton className="h-12 w-3/4 mb-4" />
@@ -51,8 +49,6 @@ export default function CommunityDetail() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-background pb-20">
-        <Header user={null} />
-
         {/* Cover Image */}
         {community.cover_image_url && (
           <div className="h-64 md:h-96 w-full overflow-hidden relative">

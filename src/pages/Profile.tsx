@@ -21,7 +21,6 @@ import { z } from "zod";
 import { useFavorites } from "@/features/activities/hooks/useFavorites";
 import PageHeader from "@/components/PageHeader";
 import { useTranslation } from "react-i18next";
-import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { compressImage, AVATAR_OPTIONS, GALLERY_OPTIONS, calculateSavings } from "@/lib/utils/imageCompression";
@@ -678,11 +677,6 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header 
-        user={{ id: userId }} 
-        isUserAdmin={isUserAdmin} 
-        favoritesCount={favorites.size}
-      />
       <PageTransition>
         <div className="container mx-auto px-4 py-8 max-w-7xl">
         <PageHeader

@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import PageHeader from "@/components/PageHeader";
 import PageTransition from "@/components/PageTransition";
-import Header from "@/components/Header";
 import UserProfileAbout from "../components/UserProfileAbout";
 import UserGallery from "../components/UserGallery";
 import UserCreations from "../components/UserCreations";
@@ -79,11 +78,6 @@ const UserProfile = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <Header 
-          user={user} 
-          isUserAdmin={isUserAdmin} 
-          favoritesCount={favorites.size}
-        />
         <PageTransition>
           <div className="container mx-auto px-4 py-8">
             <div className="flex justify-center items-center min-h-[400px]">
@@ -98,11 +92,6 @@ const UserProfile = () => {
   if (error || !profile) {
     return (
       <div className="min-h-screen bg-background">
-        <Header 
-          user={user} 
-          isUserAdmin={isUserAdmin} 
-          favoritesCount={favorites.size}
-        />
         <PageTransition>
           <div className="container mx-auto px-4 py-8">
             <div className="flex justify-center items-center min-h-[400px]">
@@ -119,11 +108,6 @@ const UserProfile = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header 
-        user={user} 
-        isUserAdmin={isUserAdmin} 
-        favoritesCount={favorites.size}
-      />
       <PageTransition>
         <div className="container mx-auto px-4 py-8 max-w-7xl">
           <PageHeader 

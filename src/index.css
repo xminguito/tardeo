@@ -238,9 +238,9 @@ All colors MUST be HSL.
    ============================================================================ */
 
 @layer utilities {
-  /* 1. Desactivar animación global para congelar el menú */
+  /* PASO 1: CONGELAR EL ROOT (Evita que el menú parpadee) */
   ::view-transition-group(root) {
-    animation-duration: 0s;
+    animation-duration: 0s !important;
   }
 
   /* 2. Configurar el scope del contenido */

@@ -14,7 +14,6 @@ import { useNextActivity } from "@/features/activities/hooks/useUpcomingActiviti
 import { useCommunities } from "@/features/communities/hooks/useCommunities";
 import CommunityCard from "@/features/communities/components/CommunityCard";
 import { useSliderByPage } from "@/hooks/useSliderByPage";
-import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
 import HeroSlider from "@/components/HeroSlider";
 import UserDashboardHero from "@/components/UserDashboardHero";
@@ -154,12 +153,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
-      <Header 
-        user={user} 
-        isUserAdmin={isUserAdmin} 
-        favoritesCount={favorites.size}
-      />
-
       <PageTransition>
         {/* Hero Section - Conditional based on user state */}
         <div className="container mx-auto px-4 pt-8 pb-4 max-w-7xl">

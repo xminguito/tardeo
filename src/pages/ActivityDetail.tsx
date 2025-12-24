@@ -17,7 +17,6 @@ import ActivityImageGallery from '@/components/ActivityImageGallery';
 import ActivityMap from '@/components/ActivityMap';
 import ActivityChatDrawer from '@/features/activities/components/ActivityChatDrawer';
 import PageHeader from '@/components/PageHeader';
-import Header from '@/components/Header';
 import { useFavorites } from '@/features/activities/hooks/useFavorites';
 import PageTransition from '@/components/PageTransition';
 import type { ActivityFilters } from '@/features/activities/types/activity.types';
@@ -425,11 +424,6 @@ export default function ActivityDetail() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header 
-        user={user} 
-        isUserAdmin={isUserAdmin} 
-        favoritesCount={favorites.size}
-      />
       <PageTransition>
         <div className="container mx-auto px-4 py-8 max-w-7xl">
         <PageHeader

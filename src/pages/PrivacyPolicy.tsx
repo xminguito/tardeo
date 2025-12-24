@@ -1,7 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Shield, Mail, UserCheck, Database, Target, Scale } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import Header from '@/components/Header';
 import PageTransition from '@/components/PageTransition';
 import PageHeader from '@/components/PageHeader';
 
@@ -76,7 +75,6 @@ export default function PrivacyPolicy() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-background">
-        <Header user={null} />
         
         <main className="container mx-auto px-4 py-8 max-w-4xl">
           <PageHeader

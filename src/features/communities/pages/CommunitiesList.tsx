@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Search, Filter, Users } from 'lucide-react';
-import Header from '@/components/Header';
 import PageTransition from '@/components/PageTransition';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,8 +44,6 @@ export default function CommunitiesList() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-background pb-20">
-        <Header user={null} />
-
         {/* Hero Section */}
         <div className="bg-gradient-to-r from-primary/10 to-primary/5 py-12">
           <div className="container mx-auto px-4">

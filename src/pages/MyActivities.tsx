@@ -4,7 +4,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks/use-toast';
 import { Calendar } from 'lucide-react';
-import Header from '@/components/Header';
 import PageHeader from '@/components/PageHeader';
 import PageTransition from '@/components/PageTransition';
 import ActivityCard from '@/components/ActivityCard';
@@ -158,11 +157,6 @@ export default function MyActivities() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header 
-        user={user} 
-        isUserAdmin={isAdmin} 
-        favoritesCount={favorites.size}
-      />
       <PageTransition>
         <div className="container mx-auto px-4 py-8 max-w-7xl">
           <PageHeader

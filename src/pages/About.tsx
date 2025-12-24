@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { Heart, Users, MapPin, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import Header from '@/components/Header';
 import PageTransition from '@/components/PageTransition';
 import Breadcrumbs from '@/components/Breadcrumbs';
 
@@ -36,7 +35,6 @@ export default function About() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-background">
-        <Header user={null} />
         
         <main className="container mx-auto px-4 py-8 max-w-4xl">
           {/* Breadcrumbs */}

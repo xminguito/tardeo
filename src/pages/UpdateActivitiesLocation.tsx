@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, MapPin } from 'lucide-react';
-import Header from '@/components/Header';
 
 export default function UpdateActivitiesLocation() {
   const [loading, setLoading] = useState(false);
@@ -89,7 +88,6 @@ export default function UpdateActivitiesLocation() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header user={null} />
       <div className="container mx-auto px-4 py-8">
         <Card className="max-w-2xl mx-auto">
           <CardHeader>

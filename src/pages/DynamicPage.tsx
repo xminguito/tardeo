@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import Header from '@/components/Header';
 import PageTransition from '@/components/PageTransition';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import NotFound from '@/pages/NotFound';
@@ -78,7 +77,6 @@ export default function DynamicPage() {
     return (
       <PageTransition>
         <div className="min-h-screen bg-background">
-          <Header user={null} />
           <div className="flex items-center justify-center min-h-[60vh]">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
@@ -122,8 +120,6 @@ export default function DynamicPage() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-background">
-        <Header user={null} />
-        
         <main className="container mx-auto p-6 max-w-4xl">
           {/* Breadcrumbs */}
           <Breadcrumbs

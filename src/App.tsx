@@ -228,7 +228,7 @@ const AppContent = () => {
   }
 
   // Rutas donde el Header NO debe aparecer
-  const hideHeaderRoutes = ['/auth', '/onboarding', '/admin'];
+  const hideHeaderRoutes = ['/onboarding', '/admin'];
   const shouldShowHeader = !hideHeaderRoutes.some(route => location.pathname.startsWith(route));
 
   return (
@@ -364,9 +364,8 @@ const AppContent = () => {
           {/* ESTO DEBE ESTAR FUERA del div con viewTransitionName */}
           <div className="z-50 relative">
             <VoiceAssistant clientTools={voiceTools} />
-            {/* Bottom Navigation - Hide on auth, onboarding, and admin routes */}
-            {!location.pathname.startsWith('/auth') && 
-             !location.pathname.startsWith('/onboarding') && 
+            {/* Bottom Navigation - Hide on onboarding and admin routes */}
+            {!location.pathname.startsWith('/onboarding') && 
              !location.pathname.startsWith('/admin') && (
               <BottomNav user={user} />
             )}

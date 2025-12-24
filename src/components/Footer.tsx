@@ -7,7 +7,7 @@ export default function Footer() {
   const location = useLocation();
 
   // Hide footer on certain routes
-  const hiddenRoutes = ['/auth', '/onboarding', '/admin'];
+  const hiddenRoutes = ['/onboarding', '/admin'];
   const shouldHide = hiddenRoutes.some(route => location.pathname.startsWith(route));
 
   if (shouldHide) {

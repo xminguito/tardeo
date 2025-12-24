@@ -177,12 +177,19 @@ const Index = () => {
 
                 <main className="container mx-auto px-4 py-12 max-w-7xl">
                     {!user && (
-                        <div className="bg-secondary/20 border-2 border-secondary rounded-2xl p-8 mb-12 text-center">
-                            <h2 className="text-3xl font-semibold mb-4">{t('home.joinCommunity')}</h2>
-                            <p className="text-lg text-muted-foreground mb-6">
+                        <div 
+                            className="border-2 border-secondary rounded-2xl p-8 mb-12 text-center"
+                            style={{ background: 'linear-gradient(200deg, rgba(219, 38, 119, 0.7) 0%, rgba(218, 37, 119, 1) 50%, rgba(218, 37, 119, 0.7) 100%)' }}
+                        >
+                            <h2 className="text-3xl font-semibold mb-4 text-white">{t('home.joinCommunity')}</h2>
+                            <p className="text-lg text-white/80 mb-6">
                                 {t('home.joinCommunityDesc')}
                             </p>
-                            <Button size="lg" onClick={() => navigate("/auth")}>
+                            <Button 
+                                size="lg" 
+                                onClick={() => navigate("/auth")}
+                                className="bg-transparent border border-white hover:bg-white/10"
+                            >
                                 {t('home.joinFree')}
                             </Button>
                         </div>

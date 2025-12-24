@@ -285,8 +285,8 @@ const Auth = () => {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <div className="flex-1 flex items-center justify-center p-4">
+    <div className="flex flex-col bg-background">
+      <div className="flex-1 flex items-center justify-center p-4 py-8 md:py-12">
         <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl">{t('auth.welcome')}</CardTitle>

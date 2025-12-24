@@ -78,6 +78,24 @@ export default function Header({ user, isUserAdmin = false, favoritesCount = 0 }
                 <span className="flex-1 text-left text-white">{t('globalSearch.button')}</span>
               </Button>
 
+              {/* Comunidades y Explorar perfiles - siempre visibles */}
+              <Button 
+                variant="secondary" 
+                onClick={() => navigate("/communities")}
+                title={t('nav.communities', 'Comunidades')}
+                aria-label={t('nav.communities', 'Comunidades')}
+              >
+                <Globe className="h-5 w-5" />
+              </Button>
+              <Button 
+                variant="secondary" 
+                onClick={() => navigate("/explorar-perfiles")}
+                title={t('nav.exploreProfiles', 'Explorar perfiles')}
+                aria-label={t('nav.exploreProfiles', 'Explorar perfiles')}
+              >
+                <Compass className="h-5 w-5" />
+              </Button>
+
               {user ? (
                 <>
                   {isUserAdmin && (
@@ -101,22 +119,6 @@ export default function Header({ user, isUserAdmin = false, favoritesCount = 0 }
                         {favoritesCount}
                       </Badge>
                     )}
-                  </Button>
-                  <Button 
-                    variant="secondary" 
-                    onClick={() => navigate("/communities")}
-                    title={t('nav.communities', 'Comunidades')}
-                    aria-label={t('nav.communities', 'Comunidades')}
-                  >
-                    <Globe className="h-5 w-5" />
-                  </Button>
-                  <Button 
-                    variant="secondary" 
-                    onClick={() => navigate("/explorar-perfiles")}
-                    title={t('nav.exploreProfiles', 'Explorar perfiles')}
-                    aria-label={t('nav.exploreProfiles', 'Explorar perfiles')}
-                  >
-                    <Compass className="h-5 w-5" />
                   </Button>
                   <Button 
                     variant="secondary" 

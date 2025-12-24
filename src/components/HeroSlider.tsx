@@ -240,17 +240,23 @@ export default function HeroSlider({
 
       {/* Dots Navigation */}
       {slides.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex gap-2">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex gap-2 items-center">
           {slides.map((slide, index) => (
             <button
               key={slide.id}
               onClick={() => goToSlide(index)}
               className={cn(
-                'w-2 h-2 rounded-full transition-all duration-300',
+                'p-0 border-0 rounded-full transition-all duration-300 cursor-pointer',
                 index === currentIndex
-                  ? 'bg-white w-8'
+                  ? 'bg-white'
                   : 'bg-white/50 hover:bg-white/75'
               )}
+              style={{
+                width: index === currentIndex ? '2rem' : '0.5rem',
+                height: '0.5rem',
+                minWidth: 'unset',
+                minHeight: 'unset',
+              }}
               aria-label={`Go to slide ${index + 1}`}
               aria-current={index === currentIndex ? 'true' : 'false'}
             />

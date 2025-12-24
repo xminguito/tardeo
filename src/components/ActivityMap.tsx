@@ -214,7 +214,7 @@ export default function ActivityMap({
         {!showDistanceCalculator ? (
           <Button 
             variant="outline" 
-            className="w-full gap-2"
+            className="w-full gap-2 [background:linear-gradient(200deg,rgba(219,36,119,0.7)_0%,rgba(219,36,119,1)_50%,rgba(219,36,119,0.7)_100%)] text-white border-transparent hover:opacity-90 hover:text-white"
             onClick={() => setShowDistanceCalculator(true)}
           >
             <Calculator className="h-4 w-4" />

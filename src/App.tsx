@@ -20,6 +20,7 @@ import ActivityDetail from "./pages/ActivityDetail";
 import UpdateAgent from "./pages/UpdateAgent";
 import UpdateActivitiesLocation from "./pages/UpdateActivitiesLocation";
 import TranslateActivities from "./pages/TranslateActivities";
+import TranslateCommunities from "./pages/TranslateCommunities";
 import Admin from "./pages/Admin";
 import Favorites from "./pages/Favorites";
 import MyAccount from "./pages/MyAccount";
@@ -340,6 +341,7 @@ const AppContent = () => {
                   <Route path="plantillas-email" element={<EmailTemplates />} />
                   <Route path="update-agent" element={<UpdateAgent />} />
                   <Route path="traducir-actividades" element={<TranslateActivities />} />
+                  <Route path="traducir-comunidades" element={<TranslateCommunities />} />
                   <Route path="paginas" element={
                     <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><p className="text-lg text-muted-foreground">Loading...</p></div>}>
                       <PagesManager />

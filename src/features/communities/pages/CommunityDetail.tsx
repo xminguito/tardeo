@@ -1,7 +1,6 @@
-import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Users as UsersIcon, Calendar, Settings, Languages, Loader2 } from 'lucide-react';
+import { ArrowLeft, Users as UsersIcon, Calendar, Settings } from 'lucide-react';
 import PageTransition, { useViewTransitionName } from '@/components/PageTransition';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,55 +8,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCommunity } from '../hooks/useCommunity';
 import { useJoinCommunity } from '../hooks/useJoinCommunity';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { getTranslatedName, getTranslatedDescription } from '../utils/communityTranslations';
 import NotFound from '@/pages/NotFound';
-
-// Show translation button only in development or for admins
-const isDev = import.meta.env.DEV;
 
 export default function CommunityDetail() {
   const { slug } = useParams<{ slug: string }>();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { data: community, isLoading, refetch } = useCommunity(slug!);
+  const { data: community, isLoading } = useCommunity(slug!);
   const { join, leave, isJoining, isLeaving } = useJoinCommunity();
-  const [isTranslating, setIsTranslating] = useState(false);
   
   // View Transitions API: Match the same name used in CommunityCard
   const imageTransitionName = community ? useViewTransitionName('community-image', community.id) : undefined;
 
-  // Force translation handler (dev/admin only)
-  const handleForceTranslation = async () => {
-    if (!community) return;
-    
-    setIsTranslating(true);
-    try {
-      const { error } = await supabase.functions.invoke('translate-community', {
-        body: { communityId: community.id },
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: 'Traducción completada',
-        description: 'La comunidad ha sido traducida a todos los idiomas.',
-      });
-
-      // Refetch to show updated translations
-      refetch();
-    } catch (err) {
-      console.error('Translation error:', err);
-      toast({
-        title: 'Error de traducción',
-        description: err instanceof Error ? err.message : 'Error desconocido',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsTranslating(false);
-    }
-  };
+  // Get translated fields based on current language
+  const translatedName = community ? getTranslatedName(community, i18n.language) : '';
+  const translatedDescription = community ? getTranslatedDescription(community, i18n.language) : null;
 
   if (isLoading) {
     return (
@@ -93,7 +59,7 @@ export default function CommunityDetail() {
           <div className="h-64 md:h-96 w-full overflow-hidden relative">
             <img
               src={community.cover_image_url}
-              alt={community.name}
+              alt={translatedName}
               className="w-full h-full object-cover"
               style={imageTransitionName ? { viewTransitionName: imageTransitionName } : undefined}
             />
@@ -119,7 +85,7 @@ export default function CommunityDetail() {
               {community.image_url && (
                 <img
                   src={community.image_url}
-                  alt={community.name}
+                  alt={translatedName}
                   className="w-32 h-32 rounded-full border-4 border-background object-cover shadow-xl -mt-16 md:-mt-20"
                 />
               )}
@@ -128,7 +94,7 @@ export default function CommunityDetail() {
                 <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
                   <div>
                     <h1 className="text-3xl md:text-4xl font-bold mb-2">
-                      {community.name}
+                      {translatedName}
                     </h1>
                     {community.category && (
                       <Badge variant="secondary">
@@ -154,22 +120,6 @@ export default function CommunityDetail() {
                         <Settings className="h-4 w-4" />
                       </Button>
                     )}
-                    {/* Force Translation Button - Dev/Admin only */}
-                    {(isDev || community.user_role === 'admin') && (
-                      <Button
-                        variant="outline"
-                        size="lg"
-                        onClick={handleForceTranslation}
-                        disabled={isTranslating}
-                        title="Forzar traducción a todos los idiomas"
-                      >
-                        {isTranslating ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Languages className="h-4 w-4" />
-                        )}
-                      </Button>
-                    )}
                   </div>
                 </div>
 
@@ -188,9 +138,9 @@ export default function CommunityDetail() {
                 </div>
 
                 {/* Description */}
-                {community.description && (
+                {translatedDescription && (
                   <p className="mt-4 text-muted-foreground leading-relaxed">
-                    {community.description}
+                    {translatedDescription}
                   </p>
                 )}
 
@@ -250,7 +200,7 @@ export default function CommunityDetail() {
               <TabsContent value="about" className="space-y-4">
                 <div className="prose prose-lg dark:prose-invert max-w-none">
                   <h2>{t('communities.about')}</h2>
-                  <p>{community.description || t('communities.empty')}</p>
+                  <p>{translatedDescription || t('communities.empty')}</p>
                   
                   {community.tags && community.tags.length > 0 && (
                     <>

@@ -50,6 +50,11 @@ const adminTools = [
     path: '/admin/traducir-actividades',
   },
   {
+    title: 'Traducir Comunidades',
+    icon: Languages,
+    path: '/admin/traducir-comunidades',
+  },
+  {
     title: 'Configuración de Notificaciones',
     icon: Bell,
     path: '/admin/notificaciones',

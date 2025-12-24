@@ -3,6 +3,22 @@
  * TypeScript interfaces for the Communities feature
  */
 
+/**
+ * JSONB translations structure for communities
+ */
+export interface CommunityTranslations {
+  name_en?: string;
+  name_ca?: string;
+  name_fr?: string;
+  name_it?: string;
+  name_de?: string;
+  description_en?: string;
+  description_ca?: string;
+  description_fr?: string;
+  description_it?: string;
+  description_de?: string;
+}
+
 export interface Community {
   id: string;
   name: string;
@@ -17,6 +33,8 @@ export interface Community {
   created_by: string;
   created_at: string;
   updated_at: string;
+  /** JSONB translations for multilingual support */
+  translations?: CommunityTranslations | null;
 }
 
 export interface CommunityMember {
@@ -63,6 +81,8 @@ export interface CommunityListItem {
   is_member: boolean;
   user_role?: 'admin' | 'moderator' | 'member';
   activities_count: number;
+  /** JSONB translations for multilingual support */
+  translations?: CommunityTranslations | null;
 }
 
 /**

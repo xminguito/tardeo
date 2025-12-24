@@ -7,18 +7,23 @@ import { useNavigate } from 'react-router-dom';
 import type { CommunityListItem } from '../types/community.types';
 import { useJoinCommunity } from '../hooks/useJoinCommunity';
 import { useViewTransitionName } from '@/components/PageTransition';
+import { getTranslatedName, getTranslatedDescription } from '../utils/communityTranslations';
 
 interface CommunityCardProps {
   community: CommunityListItem;
 }
 
 export default function CommunityCard({ community }: CommunityCardProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { join, isJoining } = useJoinCommunity();
   
   // View Transitions API: unique name for hero animation
   const imageTransitionName = useViewTransitionName('community-image', community.id);
+
+  // Get translated fields based on current language
+  const translatedName = getTranslatedName(community, i18n.language);
+  const translatedDescription = getTranslatedDescription(community, i18n.language);
 
   const handleJoinClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -39,7 +44,7 @@ export default function CommunityCard({ community }: CommunityCardProps) {
         <div className="h-48 w-full overflow-hidden relative">
           <img
             src={community.cover_image_url}
-            alt={community.name}
+            alt={translatedName}
             className="w-full h-full object-cover"
             style={{ viewTransitionName: imageTransitionName }}
           />
@@ -48,7 +53,7 @@ export default function CommunityCard({ community }: CommunityCardProps) {
             <div className="absolute -bottom-6 left-4">
               <img
                 src={community.image_url}
-                alt={community.name}
+                alt={translatedName}
                 className="w-16 h-16 rounded-full border-4 border-background object-cover"
               />
             </div>
@@ -63,7 +68,7 @@ export default function CommunityCard({ community }: CommunityCardProps) {
       <CardHeader className={community.cover_image_url && community.image_url ? 'pt-8' : ''}>
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
-            <h3 className="text-xl font-bold leading-tight">{community.name}</h3>
+            <h3 className="text-xl font-bold leading-tight">{translatedName}</h3>
             {community.category && (
               <Badge variant="secondary" className="mt-2">
                 {t(`communities.categories.${community.category}`)}
@@ -81,7 +86,7 @@ export default function CommunityCard({ community }: CommunityCardProps) {
 
       <CardContent className="space-y-3">
         <p className="text-muted-foreground line-clamp-2">
-          {community.description || t('communities.empty')}
+          {translatedDescription || t('communities.empty')}
         </p>
 
         <div className="flex items-center gap-4 text-sm text-muted-foreground">

@@ -20,6 +20,7 @@ const COMMUNITY_LIST_SELECT = `
   cover_image_url,
   tags,
   member_count,
+  translations,
   community_members!left(role, user_id),
   activities(count)
 `;
@@ -34,6 +35,7 @@ interface CommunityQueryResult {
   cover_image_url: string | null;
   tags: string[] | null;
   member_count: number;
+  translations: Record<string, string> | null;
   community_members: { role: string; user_id: string }[] | null;
   activities: { count: number }[];
 }
@@ -96,6 +98,7 @@ export function useCommunities(filters?: CommunityFilters) {
           cover_image_url: community.cover_image_url,
           tags: community.tags,
           member_count: community.member_count,
+          translations: community.translations,
           is_member: !!membership,
           user_role: membership?.role as 'admin' | 'moderator' | 'member' | undefined,
           activities_count: activitiesCount,

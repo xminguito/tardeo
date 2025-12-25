@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import tardeoLogo from '@/assets/tardeo-logo-white.webp';
@@ -45,10 +45,10 @@ export default function Header({ user, isUserAdmin = false, favoritesCount = 0 }
               isUserAdmin={isUserAdmin} 
               favoritesCount={favoritesCount}
             />
-            <div className="min-w-0 flex-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/')}>
-              <img src={tardeoLogo} alt="Tardeo" className="h-10 md:h-16 w-auto" />
+            <Link to="/" className="min-w-0 flex-1 hover:opacity-80 transition-opacity" aria-label={t('nav.goHome', 'Ir a inicio')}>
+              <img src={tardeoLogo} alt="Tardeo" className="h-10 md:h-16 w-auto" fetchPriority="high" />
               <p className="hidden md:inline-block text-sm pl-3.5 opacity-90 truncate">{t('home.subtitle')}</p>
-            </div>
+            </Link>
           </div>
           <div className="flex gap-1 md:gap-3 items-center flex-shrink-0 pr-4">
             {/* Search Button - Mobile */}
@@ -56,9 +56,10 @@ export default function Header({ user, isUserAdmin = false, favoritesCount = 0 }
               variant="ghost"
               size="icon"
               onClick={() => setSearchOpen(true)}
-              className="md:hidden text-primary-foreground hover:bg-primary-foreground/10"
+              className="md:hidden text-primary-foreground hover:bg-primary-foreground/10 min-w-[44px] min-h-[44px]"
+              aria-label={t('globalSearch.button', 'Buscar')}
             >
-              <Search className="h-5 w-5" />
+              <Search className="h-5 w-5" aria-hidden="true" />
             </Button>
 
             <div className="hidden md:block">
@@ -84,16 +85,18 @@ export default function Header({ user, isUserAdmin = false, favoritesCount = 0 }
                 onClick={() => navigate("/communities")}
                 title={t('nav.communities', 'Comunidades')}
                 aria-label={t('nav.communities', 'Comunidades')}
+                className="min-w-[44px] min-h-[44px]"
               >
-                <Globe className="h-5 w-5" />
+                <Globe className="h-5 w-5" aria-hidden="true" />
               </Button>
               <Button 
                 variant="secondary" 
                 onClick={() => navigate("/explorar-perfiles")}
                 title={t('nav.exploreProfiles', 'Explorar perfiles')}
                 aria-label={t('nav.exploreProfiles', 'Explorar perfiles')}
+                className="min-w-[44px] min-h-[44px]"
               >
-                <Compass className="h-5 w-5" />
+                <Compass className="h-5 w-5" aria-hidden="true" />
               </Button>
 
               {user ? (
@@ -111,9 +114,11 @@ export default function Header({ user, isUserAdmin = false, favoritesCount = 0 }
                   <Button 
                     variant="secondary" 
                     onClick={() => navigate("/favoritos")}
-                    className="relative"
+                    className="relative min-w-[44px] min-h-[44px]"
+                    aria-label={t('favorites.title', 'Favoritos')}
+                    title={t('favorites.title', 'Favoritos')}
                   >
-                    <Heart className="h-5 w-5 fill-current" />
+                    <Heart className="h-5 w-5 fill-current" aria-hidden="true" />
                     {favoritesCount > 0 && (
                       <Badge className="absolute -top-2 -right-2 bg-accent text-accent-foreground min-w-[20px] h-5 flex items-center justify-center">
                         {favoritesCount}
@@ -123,8 +128,11 @@ export default function Header({ user, isUserAdmin = false, favoritesCount = 0 }
                   <Button 
                     variant="secondary" 
                     onClick={() => navigate("/chat")}
+                    className="min-w-[44px] min-h-[44px]"
+                    aria-label={t('nav.chat', 'Mensajes')}
+                    title={t('nav.chat', 'Mensajes')}
                   >
-                    <MessageCircle className="h-5 w-5" />
+                    <MessageCircle className="h-5 w-5" aria-hidden="true" />
                   </Button>
                 </>
               ) : (

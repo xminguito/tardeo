@@ -33,8 +33,13 @@ export default function MobileNav({ user, isUserAdmin, favoritesCount }: MobileN
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="pl-6 md:hidden flex-shrink-0">
-          <Menu className="h-5 w-5 !size-8" />
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="pl-6 md:hidden flex-shrink-0 min-w-[44px] min-h-[44px]"
+          aria-label="Abrir menú de navegación"
+        >
+          <Menu className="h-5 w-5 !size-8" aria-hidden="true" />
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-64">

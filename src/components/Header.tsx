@@ -56,10 +56,10 @@ export default function Header({ user, isUserAdmin = false, favoritesCount = 0 }
               variant="ghost"
               size="icon"
               onClick={() => setSearchOpen(true)}
-              className="md:hidden text-primary-foreground hover:bg-primary-foreground/10 min-w-[44px] min-h-[44px]"
+              className="md:hidden text-primary-foreground hover:bg-primary-foreground/10 min-w-[48px] min-h-[48px]"
               aria-label={t('globalSearch.button', 'Buscar')}
             >
-              <Search className="h-5 w-5" aria-hidden="true" />
+              <Search className="h-6 w-6" aria-hidden="true" />
             </Button>
 
             <div className="hidden md:block">

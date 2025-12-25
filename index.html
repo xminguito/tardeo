@@ -41,8 +41,25 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Merriweather:wght@400;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-    <!-- Preload critical LCP image -->
-    <link rel="preload" as="image" href="/assets/tardeo-logo-white.webp" fetchpriority="high" />
+    <!-- Preconnect to Supabase Storage for hero image -->
+    <link rel="preconnect" href="https://kzcowengsnnuglyrjuto.supabase.co" crossorigin />
+
+    <!-- 
+      CRITICAL LCP: Preload hero banner image
+      MUST match INITIAL_HERO_SLIDE in src/pages/Index.tsx
+      Using imagesrcset for responsive loading (mobile doesn't download desktop image)
+    -->
+    <link 
+      rel="preload" 
+      as="image" 
+      href="https://kzcowengsnnuglyrjuto.supabase.co/storage/v1/object/public/hero_banners/hero-principal.webp"
+      imagesrcset="
+        https://kzcowengsnnuglyrjuto.supabase.co/storage/v1/object/public/hero_banners/hero-principal-mobile.webp 768w,
+        https://kzcowengsnnuglyrjuto.supabase.co/storage/v1/object/public/hero_banners/hero-principal.webp 1920w
+      "
+      imagesizes="100vw"
+      fetchpriority="high"
+    />
   </head>
 
   <body>

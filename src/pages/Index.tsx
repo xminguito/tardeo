@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import {useEffect, useState, useMemo} from "react";
 import {useLocation, useNavigate} from "react-router-dom";
 import {useTranslation} from "react-i18next";
 import {useQueryClient} from "@tanstack/react-query";
@@ -18,6 +18,27 @@ import PageTransition from "@/components/PageTransition";
 import HeroSlider from "@/components/HeroSlider";
 import UserDashboardHero from "@/components/UserDashboardHero";
 import {Plus, UsersRound} from "lucide-react";
+
+/**
+ * CRITICAL LCP OPTIMIZATION: Hardcoded initial slide
+ * This eliminates the waterfall: HTML → JS → Supabase → Image
+ * Instead: HTML preloads image immediately while JS hydrates
+ * 
+ * UPDATE THIS URL to match your actual hero banner in Supabase Storage
+ */
+const INITIAL_HERO_SLIDE = {
+    id: 'initial-hero',
+    // Desktop image (also used for preload in index.html)
+    image: 'https://kzcowengsnnuglyrjuto.supabase.co/storage/v1/object/public/hero_banners/hero-principal.webp',
+    // Mobile image (optional - can be same as desktop if responsive)
+    mobileImage: 'https://kzcowengsnnuglyrjuto.supabase.co/storage/v1/object/public/hero_banners/hero-principal-mobile.webp',
+    title: 'Rejoignez la communauté',
+    description: 'Des milliers de personnes profitent déjà de nouvelles expériences',
+    cta: {
+        text: 'Rejoindre Maintenant',
+        link: '/auth'
+    }
+};
 
 const Index = () => {
     const [user, setUser] = useState<any>(null);
@@ -47,8 +68,18 @@ const Index = () => {
     // Limit to 4 communities for the home page
     const featuredCommunities = communities.slice(0, 4);
 
-    // Load slider for home page
-    const {slides: heroSlides, loading: bannersLoading} = useSliderByPage('/');
+    // Load slider for home page - with instant initial slide for LCP
+    const {slides: remoteSlides, loading: bannersLoading} = useSliderByPage('/');
+    
+    // Merge: Use hardcoded slide immediately, replace with remote data when ready
+    const heroSlides = useMemo(() => {
+        if (bannersLoading || remoteSlides.length === 0) {
+            // Show hardcoded slide instantly (no skeleton, no wait)
+            return [INITIAL_HERO_SLIDE];
+        }
+        // Once remote data loads, use it (richer content from CMS)
+        return remoteSlides;
+    }, [remoteSlides, bannersLoading]);
 
     useEffect(() => {
         checkUser();
@@ -163,11 +194,10 @@ const Index = () => {
                             activities={upcomingActivities}
                         />
                     ) : (
-                        /* State B & C: Discovery Mode - Always render slider to prevent CLS */
+                        /* State B & C: Discovery Mode - Instant render with hardcoded slide */
                         <HeroSlider 
                             slides={heroSlides} 
                             autoplayInterval={5000}
-                            isLoading={bannersLoading}
                         />
                     )}
                 </div>

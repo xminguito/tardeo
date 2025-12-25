@@ -32,20 +32,20 @@ interface HeroSliderProps {
   slides: Slide[];
   autoplayInterval?: number; // milliseconds, 0 to disable
   className?: string;
-  isLoading?: boolean; // Loading state for skeleton
 }
 
 export default function HeroSlider({
   slides,
   autoplayInterval = 5000,
   className,
-  isLoading = false,
 }: HeroSliderProps) {
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoplayPaused, setIsAutoplayPaused] = useState(false);
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set([0]));
   const [imageLoadStates, setImageLoadStates] = useState<Record<number, boolean>>({});
+  // Track if user has interacted or autoplay has changed slide (for animation)
+  const [hasTransitioned, setHasTransitioned] = useState(false);
   const sliderRef = useRef<HTMLDivElement>(null);
   const autoplayTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -64,6 +64,7 @@ export default function HeroSlider({
     }
 
     autoplayTimerRef.current = setInterval(() => {
+      setHasTransitioned(true); // Enable animations after first auto-transition
       setCurrentIndex((prev) => (prev + 1) % slides.length);
     }, autoplayInterval);
 
@@ -88,6 +89,7 @@ export default function HeroSlider({
   };
 
   const goToSlide = (index: number) => {
+    setHasTransitioned(true); // Enable animations when user interacts
     setCurrentIndex(index);
     // Preload this slide if not loaded
     if (!loadedImages.has(index)) {
@@ -109,8 +111,8 @@ export default function HeroSlider({
     setImageLoadStates((prev) => ({ ...prev, [index]: true }));
   };
 
-  // Always render container to prevent CLS - show skeleton when loading or no slides
-  const showSkeleton = isLoading || slides.length === 0;
+  // With hardcoded initial slide, we never need skeleton (slides always has content)
+  const showSkeleton = slides.length === 0;
 
   return (
     <div
@@ -142,13 +144,21 @@ export default function HeroSlider({
               const isActive = index === currentIndex;
               const shouldLoad = loadedImages.has(index);
               const isImageLoaded = imageLoadStates[index];
+              // CRITICAL: First slide on initial load = NO animation (instant LCP)
+              const isInitialFirstSlide = index === 0 && !hasTransitioned;
 
               return (
                 <div
                   key={slide.id}
                   className={cn(
-                    'absolute inset-0 transition-opacity duration-700 ease-in-out',
-                    isActive ? 'opacity-100 z-10' : 'opacity-0 z-0'
+                    'absolute inset-0',
+                    // Skip transition for first slide on initial load
+                    isInitialFirstSlide 
+                      ? 'opacity-100 z-10' 
+                      : cn(
+                          'transition-opacity duration-700 ease-in-out',
+                          isActive ? 'opacity-100 z-10' : 'opacity-0 z-0'
+                        )
                   )}
                   aria-hidden={!isActive}
                 >
@@ -167,8 +177,14 @@ export default function HeroSlider({
                             src={slide.image}
                             alt={slide.title}
                             className={cn(
-                              'w-full h-full object-cover transition-opacity duration-500',
-                              isImageLoaded ? 'opacity-100' : 'opacity-0'
+                              'w-full h-full object-cover',
+                              // NO fade-in animation for first slide on initial load
+                              isInitialFirstSlide 
+                                ? 'opacity-100' 
+                                : cn(
+                                    'transition-opacity duration-500',
+                                    isImageLoaded ? 'opacity-100' : 'opacity-0'
+                                  )
                             )}
                             loading={index === 0 ? 'eager' : 'lazy'}
                             decoding={index === 0 ? 'sync' : 'async'}
@@ -176,8 +192,8 @@ export default function HeroSlider({
                             onLoad={() => handleImageLoad(index)}
                           />
                         </picture>
-                        {/* Show skeleton behind image until it loads */}
-                        {!isImageLoaded && (
+                        {/* Show skeleton behind image until it loads - skip for initial first slide */}
+                        {!isImageLoaded && !isInitialFirstSlide && (
                           <div className="absolute inset-0 bg-muted animate-pulse" />
                         )}
                       </>

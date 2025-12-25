@@ -36,10 +36,10 @@ export default function MobileNav({ user, isUserAdmin, favoritesCount }: MobileN
         <Button 
           variant="ghost" 
           size="icon" 
-          className="pl-6 md:hidden flex-shrink-0 min-w-[44px] min-h-[44px]"
+          className="pl-6 md:hidden flex-shrink-0 min-w-[48px] min-h-[48px]"
           aria-label="Abrir menú de navegación"
         >
-          <Menu className="h-5 w-5 !size-8" aria-hidden="true" />
+          <Menu className="h-6 w-6" aria-hidden="true" />
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-64">

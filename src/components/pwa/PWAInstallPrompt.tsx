@@ -163,7 +163,7 @@ export default function PWAInstallPrompt() {
           )}
 
           {/* Decorative gradient */}
-          <div className="absolute -bottom-10 -right-10 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
+          <div className="pointer-events-none absolute -bottom-10 -right-10 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
         </div>
       </div>
     </div>

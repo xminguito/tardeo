@@ -225,6 +225,7 @@ export async function trackEvent(
 
 /**
  * Send event to server for storage in recent_events table
+ * Only sends if user is authenticated (edge function requires auth)
  */
 async function sendToServer(event: string, properties: Record<string, any>): Promise<void> {
   try {
@@ -233,12 +234,16 @@ async function sendToServer(event: string, properties: Record<string, any>): Pro
 
     const { data: { session } } = await supabase.auth.getSession();
 
-    // Send event with user_id if authenticated, otherwise send anonymously
+    // Only send to server if authenticated (edge function requires auth)
+    if (!session) {
+      return;
+    }
+
     await supabase.functions.invoke('mixpanel-proxy', {
       body: {
         event,
         properties,
-        user_id: session?.user.id || null,
+        user_id: session.user.id,
       },
     });
   } catch (error) {
